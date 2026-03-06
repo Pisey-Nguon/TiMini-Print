@@ -27,6 +27,28 @@ class DeviceResolver:
         name_or_address: Optional[str],
         transport: Optional[DeviceTransport] = None,
     ) -> DeviceInfo:
+        # If a MAC/UUID is given, skip BLE scanning and connect directly.
+        # This avoids the 5-second scan window and works even when the printer
+        # is not in active advertising mode.
+        if name_or_address and self._looks_like_address(name_or_address):
+            registry = self._registry
+            async def _detect_name() -> Optional[str]:
+                """Try a quick scan to get the device name for model detection."""
+                try:
+                    devices, _ = await SppBackend.scan_with_failures(timeout=3.0, include_classic=False, include_ble=True)
+                    for d in devices:
+                        if d.address.lower() == name_or_address.lower():
+                            return d.name
+                except Exception:
+                    pass
+                return None
+            device_name = await _detect_name() or ""
+            return DeviceInfo(
+                name=device_name,
+                address=name_or_address,
+                paired=None,
+                transport=DeviceTransport.BLE,
+            )
         if transport == DeviceTransport.CLASSIC:
             devices, _ = await SppBackend.scan_with_failures(include_classic=True, include_ble=False)
         elif transport == DeviceTransport.BLE:

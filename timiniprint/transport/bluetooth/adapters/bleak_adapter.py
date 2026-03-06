@@ -21,13 +21,14 @@ class _BleakSocket:
     def __init__(self, pairing_hint: Optional[bool] = None) -> None:
         self._client: Any = None
         self._write_char: Any = None
+        self._notify_char: Any = None
         self._address: Optional[str] = None
         self._connected = False
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._mtu_size = 180  # Start with a reasonable size, will negotiate larger if possible
+        self._mtu_size = 100  # Safe chunk size for X6h buffer
         self._timeout = 30.0
-        # BLE thermal printers need longer delays than classic Bluetooth
-        self._write_delay_ms = 50  # ms between BLE GATT writes
+        # BLE thermal printers need small delays between GATT writes
+        self._write_delay_ms = 20  # ms between BLE GATT writes
         self._pairing_hint = pairing_hint is True and not IS_MACOS
 
     def settimeout(self, timeout: float) -> None:
@@ -107,8 +108,8 @@ class _BleakSocket:
         if self._pairing_hint:
             await self._pair_if_supported()
 
-        # Discover services and find write characteristic
-        self._write_char = await self._find_write_characteristic()
+        # Discover services and find write + notify characteristics
+        self._write_char, self._notify_char = await self._find_printer_characteristics()
         if not self._write_char:
             await self._client.disconnect()
             self._connected = False
@@ -117,26 +118,56 @@ class _BleakSocket:
                 "The device may not support BLE printing, or uses unknown UUIDs."
             )
 
-    async def _find_write_characteristic(self) -> Optional[Any]:
-        """Find a suitable write characteristic on the connected device."""
+        # Subscribe to the notify characteristic — many printers require this
+        # before they will act on incoming print data.
+        if self._notify_char:
+            try:
+                await self._client.start_notify(self._notify_char, lambda _s, _d: None)
+            except Exception:
+                pass  # Non-fatal; printer may still work without it
+
+    async def _find_printer_characteristics(self) -> "Tuple[Optional[Any], Optional[Any]]":
+        """Find the write and notify characteristics for a thermal printer.
+
+        Thermal printers use write-without-response for bulk data (the print
+        channel) and a paired notify characteristic for status/flow control.
+        Write+read characteristics are config registers — not the data channel.
+        Returns (write_char, notify_char).
+        """
         if not self._client or not self._connected:
-            return None
+            return None, None
 
         services = self._client.services
 
-        # Find first writable characteristic; prefer write-with-response for reliability.
+        # Pass 1: find a service that has BOTH a write-without-response char AND
+        # a notify char — this is the canonical SPP-over-BLE pattern used by
+        # virtually all Chinese thermal printers (service ae30, ae3a, ff00, …).
         for service in services:
-            for char in service.characteristics:
+            chars = list(service.characteristics)
+            write_char = None
+            notify_char = None
+            for char in chars:
                 props = char.properties
-                if "write" in props:
-                    return char
-        for service in services:
-            for char in service.characteristics:
-                props = char.properties
-                if "write-without-response" in props:
-                    return char
+                if "write-without-response" in props and write_char is None:
+                    write_char = char
+                if "notify" in props and notify_char is None:
+                    notify_char = char
+            if write_char and notify_char:
+                return write_char, notify_char
 
-        return None
+        # Pass 2: any write-without-response char (no paired notify required).
+        for service in services:
+            for char in service.characteristics:
+                if "write-without-response" in char.properties:
+                    return char, None
+
+        # Pass 3: fall back to write-with-response (config chars — last resort).
+        for service in services:
+            for char in service.characteristics:
+                if "write" in char.properties:
+                    return char, None
+
+        return None, None
 
     def send(self, data: bytes) -> int:
         """Send data to the BLE device."""
@@ -160,28 +191,24 @@ class _BleakSocket:
         if not self._write_char:
             raise RuntimeError("No write characteristic available")
 
-        # For thermal printers, prefer write-with-response for reliability
-        # Only use write-without-response if it's the only option
         props = self._write_char.properties
-        if "write" in props:
-            response = True  # Use write-with-response for reliability
-        elif "write-without-response" in props:
-            response = False
+        if "write-without-response" in props:
+            response = False  # thermal printer data channel — no ACK needed
+        elif "write" in props:
+            response = True
         else:
             raise RuntimeError("Characteristic does not support writing")
         
-        # BLE has MTU limitations - use negotiated MTU or fallback
-        # Most thermal printers work well with 20-byte chunks for maximum compatibility
-        chunk_size = min(self._mtu_size, 20)  # Conservative chunk size for reliability
-        
+        # Use safe chunk size to avoid overflowing the printer's input buffer.
+        chunk_size = max(20, min(self._mtu_size, 100))
+
         delay_seconds = self._write_delay_ms / 1000.0
-        
+
         for i in range(0, len(data), chunk_size):
             chunk = data[i:i + chunk_size]
             await self._client.write_gatt_char(self._write_char, chunk, response=response)
-            # Thermal printers need time to process each chunk
-            # This delay is critical for reliable printing
-            await asyncio.sleep(delay_seconds)
+            if delay_seconds > 0:
+                await asyncio.sleep(delay_seconds)
 
     async def _pair_if_supported(self) -> None:
         pair = getattr(self._client, "pair", None)
