@@ -423,8 +423,10 @@ class TiMiniPrinter(
      */
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_SCAN", "android.permission.BLUETOOTH_CONNECT"])
     fun scan(
-        timeoutMs: Long = 8000,
+        timeoutMs: Long = 4000,
         onEvent: ((ScanEvent) -> Unit)? = null,
+        /** If non-null, scanning stops as soon as a device whose address matches is found. */
+        earlyExitAddress: String? = null,
         onResult: (List<ScannedPrinter>) -> Unit,
     ) {
         val adapter = bluetoothAdapter
@@ -443,7 +445,19 @@ class TiMiniPrinter(
             return
         }
         val found = mutableListOf<ScannedPrinter>()
-        val cb = object : ScanCallback() {
+        var timeoutJob: Job? = null
+        var finished = false
+        lateinit var cb: ScanCallback
+
+        fun finishScan() {
+            if (finished) return
+            finished = true
+            timeoutJob?.cancel()
+            try { scanner.stopScan(cb) } catch (_: Exception) {}
+            onResult(found.toList())
+        }
+
+        cb = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
                 val name = result.device.name?.takeIf { it.isNotBlank() } ?: return
                 val addr = result.device.address ?: return
@@ -452,6 +466,10 @@ class TiMiniPrinter(
                     found.add(device)
                     scope.launch(Dispatchers.Main) {
                         onEvent?.invoke(ScanEvent.DeviceFound(device))
+                        // Early exit: stop scan immediately if we found the target device
+                        if (earlyExitAddress != null && addr.equals(earlyExitAddress, ignoreCase = true)) {
+                            finishScan()
+                        }
                     }
                 }
             }
@@ -466,15 +484,14 @@ class TiMiniPrinter(
                 }
                 scope.launch(Dispatchers.Main) {
                     onEvent?.invoke(ScanEvent.ScanFailed(errorCode, reason))
-                    onResult(found)
+                    finishScan()
                 }
             }
         }
         scanner.startScan(cb)
-        scope.launch {
+        timeoutJob = scope.launch {
             delay(timeoutMs)
-            try { scanner.stopScan(cb) } catch (_: Exception) {}
-            withContext(Dispatchers.Main) { onResult(found) }
+            withContext(Dispatchers.Main) { finishScan() }
         }
     }
 
