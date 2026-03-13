@@ -20,6 +20,9 @@
 //
 //       // 3. Print
 //       try await printer.printText("Hello World!\nSecond line.")
+//       try await printer.printText("Hello World!\nSecond line.") { percent in
+//           print("Progress: \(percent)%")
+//       }
 //
 //       let opts = PrintOptions(depth: .dark, speed: .high, copies: 2, textSize: .medium)
 //       try await printer.printText("Receipt line 1\nReceipt line 2", options: opts)
@@ -684,17 +687,27 @@ public final class TiMiniPrinter: NSObject {
     /// - Parameters:
     ///   - text:    The string to print — use `\n` for line breaks.
     ///   - options: Print settings (depth, speed, copies, text size, …).
-    public func printText(_ text: String, options: PrintOptions? = nil) async throws {
+    ///   - onProgressPercent: Optional callback with overall progress `0...100`.
+    public func printText(
+        _ text: String,
+        options: PrintOptions? = nil,
+        onProgressPercent: ((Int) -> Void)? = nil
+    ) async throws {
         let options = options ?? PrintOptions()
         let isText = options.type != .image
         let img    = PrinterRenderer.textToImage(text, printerWidth: model.printWidth, fontSize: options.textSize.points)
         let pixels = PrinterRenderer.imageToPixels(img, targetWidth: model.printWidth)
         let job    = PrinterProtocol.buildJob(pixels: pixels, width: model.printWidth, isText: isText, model: model, options: options)
         let count  = max(1, options.copies)
+        emitProgress(onProgressPercent, 0)
         for idx in 0..<count {
             if idx > 0 { try await Task.sleep(nanoseconds: 300_000_000) }
-            try await sendRaw(job, speed: options.speed)
+            try await sendRaw(job, speed: options.speed) { copyPercent in
+                let overall = ((idx * 100) + copyPercent) / count
+                self.emitProgress(onProgressPercent, overall)
+            }
         }
+        emitProgress(onProgressPercent, 100)
     }
 
     // MARK: - Print: Image
@@ -704,16 +717,26 @@ public final class TiMiniPrinter: NSObject {
     /// - Parameters:
     ///   - image:   Source image (any size / format).
     ///   - options: Print settings.
-    public func printImage(_ image: UIImage, options: PrintOptions? = nil) async throws {
+    ///   - onProgressPercent: Optional callback with overall progress `0...100`.
+    public func printImage(
+        _ image: UIImage,
+        options: PrintOptions? = nil,
+        onProgressPercent: ((Int) -> Void)? = nil
+    ) async throws {
         let options = options ?? PrintOptions()
         let isText = options.type == .text
         let pixels = PrinterRenderer.imageToPixels(image, targetWidth: model.printWidth)
         let job    = PrinterProtocol.buildJob(pixels: pixels, width: model.printWidth, isText: isText, model: model, options: options)
         let count  = max(1, options.copies)
+        emitProgress(onProgressPercent, 0)
         for idx in 0..<count {
             if idx > 0 { try await Task.sleep(nanoseconds: 300_000_000) }
-            try await sendRaw(job, speed: options.speed)
+            try await sendRaw(job, speed: options.speed) { copyPercent in
+                let overall = ((idx * 100) + copyPercent) / count
+                self.emitProgress(onProgressPercent, overall)
+            }
         }
+        emitProgress(onProgressPercent, 100)
     }
 
     // MARK: - Print: PDF
@@ -724,10 +747,12 @@ public final class TiMiniPrinter: NSObject {
     ///   - url:     File URL of the PDF on device storage.
     ///   - options: Print settings (`copies` applies per full document run).
     ///   - pages:   0-based closed range of pages to print. Defaults to all pages.
+    ///   - onProgressPercent: Optional callback with overall progress `0...100`.
     public func printPDF(
         url: URL,
         options: PrintOptions? = nil,
-        pages: ClosedRange<Int>? = nil
+        pages: ClosedRange<Int>? = nil,
+        onProgressPercent: ((Int) -> Void)? = nil
     ) async throws {
         let options = options ?? PrintOptions()
         guard let doc = PDFDocument(url: url) else {
@@ -736,14 +761,17 @@ public final class TiMiniPrinter: NSObject {
         let pageCount = doc.pageCount
         guard pageCount > 0 else { return }
         let range = pages ?? (0...(pageCount - 1))
+        let printablePages = range.filter { $0 >= 0 && $0 < pageCount }
         let isText = options.type == .text
 
         let count = max(1, options.copies)
+        let totalUnits = max(1, printablePages.count * count)
+        emitProgress(onProgressPercent, 0)
         for copyIdx in 0..<count {
             if copyIdx > 0 { try await Task.sleep(nanoseconds: 300_000_000) }
 
-            for pageIdx in range {
-                guard pageIdx < pageCount, let page = doc.page(at: pageIdx) else { continue }
+            for (pagePos, pageIdx) in printablePages.enumerated() {
+                guard let page = doc.page(at: pageIdx) else { continue }
 
                 let pageBounds = page.bounds(for: .mediaBox)
                 guard pageBounds.width > 0, pageBounds.height > 0 else { continue }
@@ -766,14 +794,19 @@ public final class TiMiniPrinter: NSObject {
 
                 let pixels = PrinterRenderer.imageToPixels(bmp, targetWidth: model.printWidth)
                 let job    = PrinterProtocol.buildJob(pixels: pixels, width: model.printWidth, isText: isText, model: model, options: options)
-                try await sendRaw(job, speed: options.speed)
+                try await sendRaw(job, speed: options.speed) { pagePercent in
+                    let doneUnits = (copyIdx * printablePages.count) + pagePos
+                    let overall = ((doneUnits * 100) + pagePercent) / totalUnits
+                    self.emitProgress(onProgressPercent, overall)
+                }
 
-                let isLastPage = pageIdx == (range.upperBound)
+                let isLastPage = pagePos == (printablePages.count - 1)
                 if !isLastPage {
                     try await Task.sleep(nanoseconds: options.pdfPageGapMs * 1_000_000)
                 }
             }
         }
+        emitProgress(onProgressPercent, 100)
     }
 
     // MARK: - Feed Paper
@@ -805,7 +838,11 @@ public final class TiMiniPrinter: NSObject {
     ///
     /// Uses `canSendWriteWithoutResponse` to avoid overflowing the CoreBluetooth
     /// transmit queue, which would silently drop packets and truncate tall images.
-    private func sendRaw(_ data: Data, speed: PrintSpeed) async throws {
+    private func sendRaw(
+        _ data: Data,
+        speed: PrintSpeed,
+        onProgressPercent: ((Int) -> Void)? = nil
+    ) async throws {
         guard let peripheral else { throw TiMiniPrinterError.notConnected }
         guard let char = writeChar else { throw TiMiniPrinterError.characteristicNotFound }
 
@@ -813,6 +850,9 @@ public final class TiMiniPrinter: NSObject {
         let chunk = speed.chunkSize
 
         var offset = 0
+        var sentBytes = 0
+        let totalBytes = bytes.count
+        emitProgress(onProgressPercent, 0)
         while offset < bytes.count {
             // If the BLE transmit queue is full, suspend until peripheralIsReady fires.
             if !peripheral.canSendWriteWithoutResponse {
@@ -824,12 +864,20 @@ public final class TiMiniPrinter: NSObject {
             let end   = min(offset + chunk, bytes.count)
             let slice = Data(bytes[offset..<end])
             peripheral.writeValue(slice, for: char, type: .withoutResponse)
-            offset += chunk
+            sentBytes += (end - offset)
+            offset = end
+            let percent = totalBytes == 0 ? 100 : (sentBytes * 100) / totalBytes
+            emitProgress(onProgressPercent, percent)
 
             if offset < bytes.count && speed.intervalMs > 0 {
                 try await Task.sleep(nanoseconds: speed.intervalMs * 1_000_000)
             }
         }
+        emitProgress(onProgressPercent, 100)
+    }
+
+    private func emitProgress(_ callback: ((Int) -> Void)?, _ percent: Int) {
+        callback?(max(0, min(100, percent)))
     }
 }
 

@@ -27,6 +27,11 @@ import java.util.UUID
 //   // Print text with default options
 //   printer.printText("Hello World!\nSecond line.")
 //
+//   // Print with progress callback
+//   printer.printText("Hello progress") { percent ->
+//       // percent: 0..100
+//   }
+//
 //   // Print with custom options
 //   val opts = PrintOptions(
 //       depth    = PrintDepth.DARK,
@@ -408,6 +413,16 @@ class TiMiniPrinter(
     private var gatt: BluetoothGatt? = null
     private var writeChar: BluetoothGattCharacteristic? = null
 
+    private fun emitProgressPercent(
+        onProgressPercent: ((Int) -> Unit)?,
+        percent: Int,
+    ) {
+        if (onProgressPercent == null) return
+        scope.launch(Dispatchers.Main) {
+            onProgressPercent(percent.coerceIn(0, 100))
+        }
+    }
+
     // ── Scan ──────────────────────────────────────────────────────────────────
 
     /**
@@ -600,15 +615,29 @@ class TiMiniPrinter(
      * @param text     The string to print (\n for line breaks).
      * @param options  Print settings: depth, speed, copies, text size, etc.
      */
-    suspend fun printText(text: String, options: PrintOptions = PrintOptions()) {
+    suspend fun printText(
+        text: String,
+        options: PrintOptions = PrintOptions(),
+        onProgressPercent: ((Int) -> Unit)? = null,
+    ) {
+        emitProgressPercent(onProgressPercent, 0)
         val isText = options.type != PrintType.IMAGE   // TEXT or AUTO → text mode
         val bmp    = Renderer.textToBitmap(text, model.printWidth, options.textSize.sp)
         val pixels = Renderer.bitmapToPixels(bmp, model.printWidth)
         val job    = Protocol.buildJob(pixels, model.printWidth, isText, model, options)
-        repeat(options.copies.coerceAtLeast(1)) { idx ->
+        val copies = options.copies.coerceAtLeast(1)
+        repeat(copies) { idx ->
             if (idx > 0) delay(300)
-            sendRaw(job, options.speed)
+            sendRaw(
+                data = job,
+                speed = options.speed,
+                onProgressPercent = { copyPercent ->
+                    val overall = ((idx * 100) + copyPercent) / copies
+                    emitProgressPercent(onProgressPercent, overall)
+                },
+            )
         }
+        emitProgressPercent(onProgressPercent, 100)
     }
 
     // ── Print: Bitmap / Image ─────────────────────────────────────────────────
@@ -619,14 +648,28 @@ class TiMiniPrinter(
      * @param bitmap   Source bitmap (any size; will be scaled to printer width).
      * @param options  Print settings.
      */
-    suspend fun printBitmap(bitmap: Bitmap, options: PrintOptions = PrintOptions()) {
+    suspend fun printBitmap(
+        bitmap: Bitmap,
+        options: PrintOptions = PrintOptions(),
+        onProgressPercent: ((Int) -> Unit)? = null,
+    ) {
+        emitProgressPercent(onProgressPercent, 0)
         val isText = options.type == PrintType.TEXT
         val pixels = Renderer.bitmapToPixels(bitmap, model.printWidth)
         val job    = Protocol.buildJob(pixels, model.printWidth, isText, model, options)
-        repeat(options.copies.coerceAtLeast(1)) { idx ->
+        val copies = options.copies.coerceAtLeast(1)
+        repeat(copies) { idx ->
             if (idx > 0) delay(300)
-            sendRaw(job, options.speed)
+            sendRaw(
+                data = job,
+                speed = options.speed,
+                onProgressPercent = { copyPercent ->
+                    val overall = ((idx * 100) + copyPercent) / copies
+                    emitProgressPercent(onProgressPercent, overall)
+                },
+            )
         }
+        emitProgressPercent(onProgressPercent, 100)
     }
 
     // ── Print: PDF ────────────────────────────────────────────────────────────
@@ -638,15 +681,26 @@ class TiMiniPrinter(
      * @param options  Print settings (copies = per full document).
      * @param pages    Range of 0-based page indices to print (default: all pages).
      */
-    suspend fun printPdf(file: File, options: PrintOptions = PrintOptions(), pages: IntRange? = null) {
+    suspend fun printPdf(
+        file: File,
+        options: PrintOptions = PrintOptions(),
+        pages: IntRange? = null,
+        onProgressPercent: ((Int) -> Unit)? = null,
+    ) {
+        emitProgressPercent(onProgressPercent, 0)
         val pfd      = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         val renderer = PdfRenderer(pfd)
         val pageRange = pages ?: (0 until renderer.pageCount)
+        val totalPages = pageRange.count { it in 0 until renderer.pageCount }
+        val copies = options.copies.coerceAtLeast(1)
+        val totalUnits = (totalPages * copies).coerceAtLeast(1)
 
-        suspend fun renderAndPrintAllPages() {
+        suspend fun renderAndPrintAllPages(copyIndex: Int) {
             try {
+                var printedPage = 0
                 for (pageIdx in pageRange) {
                     if (pageIdx >= renderer.pageCount) break
+                    printedPage += 1
                     val page  = renderer.openPage(pageIdx)
                     val scale = model.printWidth.toFloat() / page.width
                     val bmpH  = (page.height * scale).toInt().coerceAtLeast(1)
@@ -659,10 +713,17 @@ class TiMiniPrinter(
                     val isText = options.type == PrintType.TEXT
                     val pixels = Renderer.bitmapToPixels(bmp, model.printWidth)
                     val job    = Protocol.buildJob(pixels, model.printWidth, isText, model, options)
-                    sendRaw(job, options.speed)
+                    sendRaw(
+                        data = job,
+                        speed = options.speed,
+                        onProgressPercent = { pagePercent ->
+                            val doneUnits = (copyIndex - 1) * totalPages + (printedPage - 1)
+                            val overall = ((doneUnits * 100) + pagePercent) / totalUnits
+                            emitProgressPercent(onProgressPercent, overall)
+                        },
+                    )
 
-                    val isLastPage = pageIdx == (pages?.last ?: (renderer.pageCount - 1))
-                    if (!isLastPage) delay(options.pdfPageGapMs)
+                    if (printedPage < totalPages) delay(options.pdfPageGapMs)
                 }
             } finally {
                 renderer.close()
@@ -670,10 +731,11 @@ class TiMiniPrinter(
             }
         }
 
-        repeat(options.copies.coerceAtLeast(1)) { idx ->
+        repeat(copies) { idx ->
             if (idx > 0) delay(300)
-            renderAndPrintAllPages()
+            renderAndPrintAllPages(copyIndex = idx + 1)
         }
+        emitProgressPercent(onProgressPercent, 100)
     }
 
     // ── Feed paper ────────────────────────────────────────────────────────────
@@ -717,15 +779,28 @@ class TiMiniPrinter(
      * Send raw bytes to the printer using the given [speed] profile.
      * Data is split into [PrintSpeed.chunkSize] chunks separated by [PrintSpeed.intervalMs].
      */
-    private suspend fun sendRaw(data: ByteArray, speed: PrintSpeed) {
+    private suspend fun sendRaw(
+        data: ByteArray,
+        speed: PrintSpeed,
+        onProgressPercent: ((Int) -> Unit)? = null,
+    ) {
         val g    = gatt      ?: error("Not connected to printer")
         val char = writeChar ?: error("No write characteristic found")
+
+        val totalBytes = data.size
+        emitProgressPercent(onProgressPercent, 0)
+
+        var sentBytes = 0
 
         for (offset in data.indices step speed.chunkSize) {
             val chunk = data.copyOfRange(offset, minOf(offset + speed.chunkSize, data.size))
             withContext(Dispatchers.IO) { writeChunk(g, char, chunk) }
+            sentBytes += chunk.size
+            val percent = if (totalBytes <= 0) 100 else (sentBytes * 100 / totalBytes)
+            emitProgressPercent(onProgressPercent, percent)
             if (speed.intervalMs > 0L) delay(speed.intervalMs)
         }
+        emitProgressPercent(onProgressPercent, 100)
     }
 
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
