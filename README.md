@@ -9,18 +9,27 @@ TiMini Print works on Windows, Linux, and macOS as a standalone tool without a s
 
 ![TiMini Print LOGO EMX-040256 Printer Psi Patrol](EMX_040256.jpg)
 
-## We need you!
+# We need you!
 - This project is open source! Your small monthly support on [Buy Me a Coffee](https://buymeacoffee.com/dejniel) can make a real difference and help keep it going—even a one-time donation helps. Building and maintaining a project like this takes a lot of time; if you find it useful, please consider supporting it so I can keep improving it: [support the project](https://buymeacoffee.com/dejniel)
 - If you're a developer, contributions and bug reports are always welcome—please jump in. Especially if you use or build on non-Linux systems, please consider contributing fixes or improvements
 
-## Requirements
+# Requirements
+You can find the latest standalone executable files on the [releases page](https://github.com/Dejniel/TiMini-Print/releases) and choose the asset that starts with `TiMini-Print-GUI-...` or `TiMini-Print-Command-Line-...` for your platform, or you can build the project yourself.
+
+Theoretically, I support Windows, macOS, and Linux, but I test builds only on Ubuntu-like systems—if you need to run this elsewhere, please report issues or submit a fix :P
+
+## Manual building requirements
 - Python 3.8+
-- `pip install -r requirements.txt`
+- `pip install -r requirements.txt` (Note: Windows + Python 3.13+: installing `winsdk` may require building binaries during download)
 - (optional, GUI only) if `tkinter` is missing, install it from your system packages:
   Linux (Ubuntu/Debian): `sudo apt install python3-tk`
   macOS (Homebrew Python): `brew install python-tk`
 
-## Quick start (GUI)
+# Quick start
+If you use release binaries, run the executable directly without `python3`.
+Examples below show how to run the source files from the project directory.
+
+## Graphical user interface
 You can scan, connect or disconnect with one button, choose a file, and print.
 Start the graphical app directly:
 
@@ -28,7 +37,7 @@ Start the graphical app directly:
 python3 timiniprint_gui.py
 ```
 
-## Quick start (Command line)
+## Command line interface
 - Print to the first supported Bluetooth printer:
   ```bash
   python3 timiniprint_command_line.py /path/to/file.pdf
@@ -59,23 +68,21 @@ python3 timiniprint_gui.py
   python3 timiniprint_command_line.py --scan
   ```
 
-### Notes
+## Notes
 - If `--bluetooth` is omitted, the first supported printer found is used
 - For `--serial`, you must pass `--model` (see `--list-models`)
 - For Bluetooth printing, you can pass `--model` to override auto-detection
 
-## Supported formats
+# Notes
+- On first Classic connection on Windows/macOS, the system may request pairing confirmation
+- Protocol integration guide: [docs/protocol.md](docs/protocol.md)
+
+# Supported formats
 - Images: .png .jpg .jpeg .gif .bmp
 - PDF: prints all pages
 - Text: .txt (monospace bold, word-wrapped by default)
 
-## Notes
-- Theoretically, I support Windows, macOS, and Linux, but I test builds only on Ubuntu-like systems—if you need to run this elsewhere, please report issues or submit a fix :P
-- Windows + Python 3.13+: installing `winsdk` may require building binaries during download
-- On first Classic connection on Windows/macOS, the system may request pairing confirmation
-- Protocol integration guide: [docs/protocol.md](docs/protocol.md)
-
-## Supported printer models
+# Supported printer models
 A200, A33, A41II, A41III, A42II, A43, A4300, CMT-0510, CP01, D1, D100, DL GE225, DL X2, DL X2 Pro,
 DL X7, DL X7 Pro, DT1-0, DTR-R0, DY03, DY49, EMX-040256, FC02, GB02SH, GB03PH, GB03PL, GB03SH,
 GB03SL, GL-VS9, GT09, GT10, GV-MA211, GW08, GW09, HD1, HT0125, IM.04, IprintIt Printer,
