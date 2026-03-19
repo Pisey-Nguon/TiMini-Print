@@ -1,0 +1,329 @@
+name: Release Executables
+
+on:
+  push:
+    branches:
+      - "build/*"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+
+  test:
+    name: Test ${{ matrix.platform_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform_name: Linux
+          - os: windows-latest
+            platform_name: Windows
+          - os: macos-latest
+            platform_name: macOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        shell: bash
+        run: python -m unittest discover -s tests -p 'test_*.py'
+
+  build_cli:
+    name: Build CLI ${{ matrix.platform_name }}
+    needs:
+      - create_release
+      - test
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.create_release.result == 'success' || needs.create_release.result == 'skipped')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform_name: Linux
+          - os: windows-latest
+            platform_name: Windows
+          - os: macos-latest
+            platform_name: macOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt "pyinstaller>=6.0,<7"
+
+      - name: Resolve artifact metadata
+        id: meta
+        shell: bash
+        run: |
+          arch="$RUNNER_ARCH"
+          case "$arch" in
+            X64) arch="x86_64" ;;
+            ARM64) arch="aarch64" ;;
+            *) arch="$(echo "$arch" | tr '[:upper:]' '[:lower:]')" ;;
+          esac
+          artifact_name="TiMini-Print-Command-Line-${{ matrix.platform_name }}-$arch"
+          echo "arch=$arch" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Build command-line executable
+        shell: bash
+        run: |
+          extra_args=""
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            extra_args="$extra_args --hidden-import objc --hidden-import IOBluetooth --hidden-import Foundation --hidden-import CoreBluetooth"
+          fi
+
+          python -m PyInstaller \
+            --noconfirm \
+            --clean \
+            --onefile \
+            --paths . \
+            --distpath dist \
+            --workpath build/command-line \
+            --specpath build/spec \
+            --collect-all bleak \
+            --collect-all pypdfium2 \
+            --collect-all pypdfium2_raw \
+            --name "${{ steps.meta.outputs.artifact_name }}" \
+            $extra_args \
+            timiniprint_command_line.py
+
+      - name: Resolve built artifact path
+        id: built
+        shell: bash
+        run: |
+          target="dist/${{ steps.meta.outputs.artifact_name }}"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            target="${target}.exe"
+          elif [ -d "${target}.app" ]; then
+            target="${target}.app"
+          fi
+          echo "path=$target" >> "$GITHUB_OUTPUT"
+
+      - name: Package command-line artifact
+        shell: bash
+        env:
+          ARTIFACT_NAME: ${{ steps.meta.outputs.artifact_name }}
+          TARGET_PATH: ${{ steps.built.outputs.path }}
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import tarfile
+          import zipfile
+
+          name = os.environ["ARTIFACT_NAME"]
+          target = pathlib.Path(os.environ["TARGET_PATH"])
+          outdir = pathlib.Path("release")
+          outdir.mkdir(exist_ok=True)
+          if not target.exists():
+              raise SystemExit(f"Missing built artifact: {target}")
+
+          if os.environ["RUNNER_OS"] == "Windows":
+              archive = outdir / f"{name}.zip"
+              with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+                  zf.write(target, arcname=target.name)
+          else:
+              archive = outdir / f"{name}.tar.gz"
+              with tarfile.open(archive, "w:gz") as tf:
+                  tf.add(target, arcname=target.name)
+
+          print(f"Created {archive}")
+          PY
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact_name }}
+          path: release/*
+
+      - name: Upload files to GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+
+  build_gui:
+    name: Build GUI ${{ matrix.platform_name }}
+    needs:
+      - create_release
+      - test
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.create_release.result == 'success' || needs.create_release.result == 'skipped')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform_name: Linux
+          - os: windows-latest
+            platform_name: Windows
+          - os: macos-latest
+            platform_name: macOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt "pyinstaller>=6.0,<7"
+
+      - name: Install tkinter runtime on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
+
+      - name: Verify tkinter for GUI build
+        shell: bash
+        run: python -c "import tkinter"
+
+      - name: Resolve artifact metadata
+        id: meta
+        shell: bash
+        run: |
+          arch="$RUNNER_ARCH"
+          case "$arch" in
+            X64) arch="x86_64" ;;
+            ARM64) arch="aarch64" ;;
+            *) arch="$(echo "$arch" | tr '[:upper:]' '[:lower:]')" ;;
+          esac
+          artifact_name="TiMini-Print-GUI-${{ matrix.platform_name }}-$arch"
+          echo "arch=$arch" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Build graphical executable
+        shell: bash
+        run: |
+          extra_args=""
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            extra_args="$extra_args --hidden-import objc --hidden-import IOBluetooth --hidden-import Foundation --hidden-import CoreBluetooth"
+          fi
+
+          python -m PyInstaller \
+            --noconfirm \
+            --clean \
+            --onefile \
+            --windowed \
+            --paths . \
+            --distpath dist \
+            --workpath build/graphical \
+            --specpath build/spec \
+            --collect-all bleak \
+            --collect-all pypdfium2 \
+            --collect-all pypdfium2_raw \
+            --name "${{ steps.meta.outputs.artifact_name }}" \
+            $extra_args \
+            timiniprint_gui.py
+
+      - name: Resolve built artifact path
+        id: built
+        shell: bash
+        run: |
+          target="dist/${{ steps.meta.outputs.artifact_name }}"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            target="${target}.exe"
+          elif [ -d "${target}.app" ]; then
+            target="${target}.app"
+          fi
+          echo "path=$target" >> "$GITHUB_OUTPUT"
+
+      - name: Package GUI artifact
+        shell: bash
+        env:
+          ARTIFACT_NAME: ${{ steps.meta.outputs.artifact_name }}
+          TARGET_PATH: ${{ steps.built.outputs.path }}
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import tarfile
+          import zipfile
+
+          name = os.environ["ARTIFACT_NAME"]
+          target = pathlib.Path(os.environ["TARGET_PATH"])
+          outdir = pathlib.Path("release")
+          outdir.mkdir(exist_ok=True)
+          if not target.exists():
+              raise SystemExit(f"Missing built artifact: {target}")
+
+          if os.environ["RUNNER_OS"] == "Windows":
+              archive = outdir / f"{name}.zip"
+              with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+                  if target.is_dir():
+                      for path in target.rglob("*"):
+                          if path.is_file():
+                              zf.write(path, arcname=path.relative_to(target.parent))
+                  else:
+                      zf.write(target, arcname=target.name)
+          else:
+              archive = outdir / f"{name}.tar.gz"
+              with tarfile.open(archive, "w:gz") as tf:
+                  tf.add(target, arcname=target.name)
+
+          print(f"Created {archive}")
+          PY
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact_name }}
+          path: release/*
+
+      - name: Upload files to GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
