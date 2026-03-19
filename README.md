@@ -15,31 +15,49 @@ TiMini Print works on Windows, Linux, and macOS as a standalone tool without a s
 
 ## Requirements
 - Python 3.8+
-- pip install -r requirements.txt
+- `pip install -r requirements.txt`
+- (optional, GUI only) if `tkinter` is missing, install it from your system packages:
+  Linux (Ubuntu/Debian): `sudo apt install python3-tk`
+  macOS (Homebrew Python): `brew install python-tk`
 
 ## Quick start (GUI)
 You can scan, connect or disconnect with one button, choose a file, and print.
 Start the graphical app directly:
-  python3 timiniprint_gui.py
+
+```bash
+python3 timiniprint_gui.py
+```
 
 ## Quick start (Command line)
 - Print to the first supported Bluetooth printer:
+  ```bash
   python3 timiniprint_command_line.py /path/to/file.pdf
+  ```
 
 - Print to a specific Bluetooth printer:
+  ```bash
   python3 timiniprint_command_line.py --bluetooth "PRINTER_NAME" /path/to/file.pdf
+  ```
 
 - Print via a serial port (skip Bluetooth connection):
+  ```bash
   python3 timiniprint_command_line.py --serial /dev/rfcomm0 --model A200 /path/to/file.pdf
+  ```
 
 - Print raw text without creating a file:
+  ```bash
   python3 timiniprint_command_line.py --text "Hello from CLI"
+  ```
 
 - List available printer models:
+  ```bash
   python3 timiniprint_command_line.py --list-models
+  ```
 
 - Scan for supported printers:
+  ```bash
   python3 timiniprint_command_line.py --scan
+  ```
 
 ### Notes
 - If `--bluetooth` is omitted, the first supported printer found is used
