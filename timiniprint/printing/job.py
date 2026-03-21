@@ -77,6 +77,7 @@ class PrintJobBuilder:
                 protocol_family=self.protocol_family,
                 feed_padding=self.settings.feed_padding,
                 dev_dpi=self.model.dev_dpi,
+                can_print_label=self.model.can_print_label,
             )
             data_parts.append(job)
         return b"".join(data_parts)

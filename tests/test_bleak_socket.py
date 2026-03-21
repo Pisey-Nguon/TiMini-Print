@@ -5,6 +5,15 @@ import unittest
 
 from timiniprint.transport.bluetooth.adapters.bleak_adapter import _BleakSocket
 from timiniprint.protocol.family import ProtocolFamily
+from timiniprint.protocol.families.v5x import (
+    V5X_FINALIZE_PACKET,
+    V5X_GET_SERIAL_PACKET,
+    V5X_NOTIFY_GET_SERIAL_ACK,
+    V5X_NOTIFY_START_PRINT_OK,
+    V5X_NOTIFY_START_READY,
+    V5X_NOTIFY_TRIGGER_STATUS_POLL,
+    V5X_STATUS_POLL_PACKET,
+)
 
 
 class _Char:
@@ -91,18 +100,35 @@ class BleakSocketTests(unittest.TestCase):
         bindings.write_char_uuid = cmd.uuid
         bindings.bulk_write_char_uuid = bulk.uuid
         data = (
-            bytes.fromhex("2221A70000000000")
-            + bytes.fromhex("2221A9000200010000FF")
+            V5X_GET_SERIAL_PACKET
+            + bytes.fromhex("2221A20001005D94FF")
+            + bytes.fromhex("2221A9000600010030010000EBFF")
             + (b"\xAA\x55" * 16)
-            + bytes.fromhex("2221AD000100000000")
+            + V5X_FINALIZE_PACKET
         )
-        asyncio.run(s._send_async(data))
+
+        async def run() -> None:
+            async def notify() -> None:
+                while len(client.calls) < 1:
+                    await asyncio.sleep(0.001)
+                s._handle_notification("", bytearray(V5X_NOTIFY_GET_SERIAL_ACK))
+                s._handle_notification("", bytearray(V5X_NOTIFY_START_READY))
+                while len(client.calls) < 3:
+                    await asyncio.sleep(0.001)
+                s._handle_notification("", bytearray(V5X_NOTIFY_START_PRINT_OK))
+
+            task = asyncio.create_task(notify())
+            await s._send_async(data)
+            await task
+
+        asyncio.run(run())
         self.assertEqual(client.calls[0][0], cmd.uuid)
         self.assertEqual(client.calls[1][0], cmd.uuid)
-        self.assertEqual(client.calls[2][0], bulk.uuid)
-        self.assertEqual(client.calls[3][0], cmd.uuid)
-        self.assertEqual(client.calls[0][1], bytes.fromhex("2221A70000000000"))
-        self.assertEqual(client.calls[3][1], bytes.fromhex("2221AD000100000000"))
+        self.assertEqual(client.calls[2][0], cmd.uuid)
+        self.assertEqual(client.calls[3][0], bulk.uuid)
+        self.assertEqual(client.calls[4][0], cmd.uuid)
+        self.assertEqual(client.calls[0][1], V5X_GET_SERIAL_PACKET)
+        self.assertEqual(client.calls[4][1], V5X_FINALIZE_PACKET)
 
     def test_v5x_notify_updates_flow_state(self) -> None:
         s = _BleakSocket(protocol_family=ProtocolFamily.V5X)
@@ -111,6 +137,26 @@ class BleakSocketTests(unittest.TestCase):
         self.assertFalse(s._flow_can_write)
         s._handle_notification("", bytearray(bytes.fromhex("AA00")))
         self.assertTrue(s._flow_can_write)
+
+    def test_v5x_b2_notification_schedules_status_poll(self) -> None:
+        s = _BleakSocket(protocol_family=ProtocolFamily.V5X)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        client = _Client([])
+        bindings = s._transport.bindings
+        s._client = client
+        s._connected = True
+        bindings.write_char = cmd
+        bindings.write_selection_strategy = "preferred_uuid"
+        bindings.write_response_preference = False
+        bindings.write_char_uuid = cmd.uuid
+        s._transport._client = client
+
+        async def run() -> None:
+            s._handle_notification("", bytearray(V5X_NOTIFY_TRIGGER_STATUS_POLL))
+            await asyncio.sleep(0.75)
+
+        asyncio.run(run())
+        self.assertEqual(client.calls, [(cmd.uuid, V5X_STATUS_POLL_PACKET, False)])
 
     def test_find_notify_characteristic_prefers_generic_notifier(self) -> None:
         services = [

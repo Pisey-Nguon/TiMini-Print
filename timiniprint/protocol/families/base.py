@@ -20,6 +20,8 @@ class FlowControlProfile:
 class BleTransportProfile:
     # Transport settings drive endpoint selection and write routing.
     split_bulk_writes: bool = False
+    connect_packets: tuple[bytes, ...] = ()
+    connect_delay_ms: int = 0
     preferred_service_uuid: str = ""
     bulk_char_uuid: str = ""
     notify_char_uuid: str = ""
@@ -51,6 +53,7 @@ class PrintJobRequest:
     protocol_family: ProtocolFamily
     feed_padding: int
     dev_dpi: int
+    can_print_label: bool = False
 
 
 @dataclass(frozen=True)

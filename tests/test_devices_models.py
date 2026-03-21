@@ -133,7 +133,7 @@ class DevicesModelsTests(unittest.TestCase):
     def test_experimental_models_are_marked_testing(self) -> None:
         reg = PrinterModelRegistry.load()
 
-        for model_no in ("P100", "MP100", "P100S", "MP100S", "LP100S", "P3", "P3S"):
+        for model_no in ("P100", "MP100", "P100S", "MP100S", "LP100S", "P3", "P3S", "V5X"):
             model = reg.get(model_no)
             self.assertIsNotNone(model)
             self.assertTrue(model.testing)
@@ -150,15 +150,15 @@ class DevicesModelsTests(unittest.TestCase):
             "LP220S-ABCD": "LP100S",
             "MP300-ABCD": "P3",
             "MP300S-ABCD": "P3S",
-            "JK01-ABCD": "GT02",
-            "KERUI-ABCD": "GT02",
-            "BH03-ABCD": "GT02",
-            "MXW01-ABCD": "GT02",
-            "MXW01-1-ABCD": "GT02",
-            "X2-ABCD": "GT02",
-            "C17-ABCD": "GT02",
-            "MXW-W5-ABCD": "GT02",
-            "AC695X_PRINT-ABCD": "GT02",
+            "JK01-ABCD": "V5X",
+            "KERUI-ABCD": "V5X",
+            "BH03-ABCD": "V5X",
+            "MXW01-ABCD": "V5X",
+            "MXW01-1-ABCD": "V5X",
+            "X2-ABCD": "V5X",
+            "C17-ABCD": "V5X",
+            "MXW-W5-ABCD": "V5X",
+            "AC695X_PRINT-ABCD": "V5X",
             "C21-ABCD": "D1",
             "MXW-A4-ABCD": "M08F",
             "YTB01-ABCD": "GT01",
@@ -187,6 +187,14 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertIsNotNone(v5c)
         self.assertEqual(v5c.protocol_family, ProtocolFamily.V5C)
 
+    def test_direct_gt02_keeps_legacy_protocol_family(self) -> None:
+        reg = PrinterModelRegistry.load()
+
+        match = reg.detect_with_origin("GT02-ABCD")
+        self.assertIsNotNone(match)
+        self.assertEqual(match.model.model_no, "GT02")
+        self.assertEqual(match.protocol_family, ProtocolFamily.LEGACY)
+
     def test_testing_flag_reaches_match_for_direct_and_alias_detection(self) -> None:
         reg = PrinterModelRegistry.load()
 
@@ -209,7 +217,7 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertEqual(match.source, PrinterModelMatchSource.HEAD_NAME)
         self.assertFalse(match.used_alias)
         self.assertTrue(match.has_brand_conflict)
-        self.assertEqual(match.conflict_models, ("GT02",))
+        self.assertEqual(match.conflict_models, ("V5X",))
 
     def test_non_conflicting_model_has_no_brand_conflict(self) -> None:
         reg = PrinterModelRegistry.load()
@@ -224,7 +232,7 @@ class DevicesModelsTests(unittest.TestCase):
 
         match = reg.detect_with_origin("MX01-ABCD", "AA:BB:CC:DD:EE:59")
         self.assertIsNotNone(match)
-        self.assertEqual(match.model.model_no, "GT02")
+        self.assertEqual(match.model.model_no, "V5X")
         self.assertEqual(match.source, PrinterModelMatchSource.ALIAS)
         self.assertEqual(match.alias_kind, PrinterModelAliasKind.MAC)
         self.assertEqual(match.protocol_family, ProtocolFamily.V5X)

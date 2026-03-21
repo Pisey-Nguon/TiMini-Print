@@ -75,6 +75,7 @@ class ProtocolGoldenTests(unittest.TestCase):
             protocol_family=ProtocolFamily.V5X,
             feed_padding=12,
             dev_dpi=203,
+            can_print_label=True,
         )
         self.assertEqual(data.hex(), self.golden["v5x_single_row"])
 

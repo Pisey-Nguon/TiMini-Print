@@ -30,6 +30,7 @@ def build_print_payload(
     compress: bool,
     lsb_first: bool,
     protocol_family: ProtocolFamily | str,
+    can_print_label: bool = False,
 ) -> bytes:
     """Build the main payload for a print job (no final feed/state)."""
     family = ProtocolFamily.from_value(protocol_family)
@@ -45,6 +46,7 @@ def build_print_payload(
         protocol_family=family,
         feed_padding=0,
         dev_dpi=203,
+        can_print_label=can_print_label,
     )
     family_payload = _build_family_job(request)
     if family_payload is not None:
@@ -74,6 +76,7 @@ def build_print_payload_from_raster(
     compress: bool,
     lsb_first: bool,
     protocol_family: ProtocolFamily | str,
+    can_print_label: bool = False,
 ) -> bytes:
     """Build the main payload from a Raster helper object."""
     raster.validate()
@@ -86,6 +89,7 @@ def build_print_payload_from_raster(
         compress,
         lsb_first,
         protocol_family,
+        can_print_label=can_print_label,
     )
 
 
@@ -101,6 +105,7 @@ def build_job(
     protocol_family: ProtocolFamily | str,
     feed_padding: int,
     dev_dpi: int,
+    can_print_label: bool = False,
 ) -> bytes:
     """Build a full job payload ready to send to the printer."""
     family = ProtocolFamily.from_value(protocol_family)
@@ -116,6 +121,7 @@ def build_job(
         protocol_family=family,
         feed_padding=feed_padding,
         dev_dpi=dev_dpi,
+        can_print_label=can_print_label,
     )
     family_job = _build_family_job(request)
     if family_job is not None:
@@ -132,6 +138,7 @@ def build_job(
         compress,
         lsb_first,
         family,
+        can_print_label=can_print_label,
     )
     job += feed_paper_cmd(feed_padding, family)
     job += paper_cmd(dev_dpi, family)
@@ -152,6 +159,7 @@ def build_job_from_raster(
     protocol_family: ProtocolFamily | str,
     feed_padding: int,
     dev_dpi: int,
+    can_print_label: bool = False,
 ) -> bytes:
     """Build a full job payload from a Raster helper object."""
     raster.validate()
@@ -167,4 +175,5 @@ def build_job_from_raster(
         protocol_family,
         feed_padding,
         dev_dpi,
+        can_print_label=can_print_label,
     )

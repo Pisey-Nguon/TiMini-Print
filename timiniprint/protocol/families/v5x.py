@@ -5,44 +5,61 @@ from ..packet import make_packet
 from ..family import ProtocolFamily
 from .base import BleTransportProfile, FlowControlProfile, PrintJobRequest, ProtocolBehavior
 
-_AE30_SERVICE_UUID = "0000ae30-0000-1000-8000-00805f9b34fb"
-_AE03_DATA_UUID = "0000ae03-0000-1000-8000-00805f9b34fb"
-_AE02_NOTIFY_UUID = "0000ae02-0000-1000-8000-00805f9b34fb"
+def _hex_bytes(value: str) -> bytes:
+    return bytes.fromhex(value)
 
-_GET_SERIAL_PACKET = bytes.fromhex("2221A70000000000")
-_FINALIZE_PACKET = bytes.fromhex("2221AD000100000000")
+
+V5X_SERVICE_UUID = "0000ae30-0000-1000-8000-00805f9b34fb"
+V5X_BULK_DATA_UUID = "0000ae03-0000-1000-8000-00805f9b34fb"
+V5X_NOTIFY_UUID = "0000ae02-0000-1000-8000-00805f9b34fb"
+
+V5X_GET_SERIAL_PACKET = _hex_bytes("2221A70000000000")
+V5X_CONNECT_INIT_PACKET = _hex_bytes("2221B10001000000FF")
+V5X_STATUS_POLL_PACKET = _hex_bytes("2221A300020000000000")
+V5X_FINALIZE_PACKET = _hex_bytes("2221AD000100000000")
+V5X_NOTIFY_GET_SERIAL_ACK = _hex_bytes("2221A7000000")
+V5X_NOTIFY_START_READY = _hex_bytes("2221AA0000")
+V5X_NOTIFY_START_PRINT_OK = _hex_bytes("2221A9000000")
+V5X_NOTIFY_TRIGGER_STATUS_POLL = _hex_bytes("2221B20000")
+V5X_NOTIFY_IDLE_GET_SERIAL = _hex_bytes("2221A60000")
+
 _MANUAL_MOTION_PAYLOAD = bytes([0x05, 0x00])
+V5X_LABEL_MODE_SUFFIX = _hex_bytes("30010000")
+V5X_GRAY_MODE_SUFFIX = _hex_bytes("30020000")
+V5X_STANDARD_MODE_SUFFIX = _hex_bytes("30000000")
+_DOT_DENSITY_BY_LEVEL = (0x58, 0x5A, 0x5D, 0x5F, 0x62)
+_GRAY_DENSITY_BY_LEVEL = (0x4B, 0x50, 0x55, 0x5A, 0x62)
+_FLOW_PAUSE_HEX = (
+    "AA01",
+    "5178AE0101001070FF",
+    "2221A800010020E0FF",
+    "2221AE0101001070FF",
+    "2221AE0001000000",
+)
+_FLOW_RESUME_HEX = (
+    "AA00",
+    "5178AE0101000000FF",
+    "2221A80001003090FF",
+    "2221AE0101000000FF",
+    "2221AE0001001000",
+)
 
 _FLOW_CONTROL = FlowControlProfile(
-    pause_packets=frozenset(
-        {
-            bytes.fromhex("AA01"),
-            bytes.fromhex("5178AE0101001070FF"),
-            bytes.fromhex("2221A800010020E0FF"),
-            bytes.fromhex("2221AE0101001070FF"),
-            bytes.fromhex("2221AE0001000000"),
-        }
-    ),
-    resume_packets=frozenset(
-        {
-            bytes.fromhex("AA00"),
-            bytes.fromhex("5178AE0101000000FF"),
-            bytes.fromhex("2221A80001003090FF"),
-            bytes.fromhex("2221AE0101000000FF"),
-            bytes.fromhex("2221AE0001001000"),
-        }
-    ),
+    pause_packets=frozenset(_hex_bytes(value) for value in _FLOW_PAUSE_HEX),
+    resume_packets=frozenset(_hex_bytes(value) for value in _FLOW_RESUME_HEX),
 )
 
 
 TRANSPORT = BleTransportProfile(
     split_bulk_writes=True,
-    preferred_service_uuid=_AE30_SERVICE_UUID,
-    bulk_char_uuid=_AE03_DATA_UUID,
-    notify_char_uuid=_AE02_NOTIFY_UUID,
+    connect_packets=(V5X_CONNECT_INIT_PACKET,),
+    connect_delay_ms=200,
+    preferred_service_uuid=V5X_SERVICE_UUID,
+    bulk_char_uuid=V5X_BULK_DATA_UUID,
+    notify_char_uuid=V5X_NOTIFY_UUID,
     flow_control=_FLOW_CONTROL,
     bulk_chunk_size=180,
-    split_tail_packets=(_FINALIZE_PACKET,),
+    split_tail_packets=(V5X_FINALIZE_PACKET,),
 )
 
 
@@ -67,16 +84,35 @@ def retract_paper_cmd(_dpi: int, protocol_family: ProtocolFamily) -> bytes:
     return make_packet(0xA4, _MANUAL_MOTION_PAYLOAD, protocol_family)
 
 
+def _density_payload(request: PrintJobRequest) -> bytes:
+    level = max(1, min(5, request.blackening))
+    table = _GRAY_DENSITY_BY_LEVEL if request.compress else _DOT_DENSITY_BY_LEVEL
+    return bytes([table[level - 1]])
+
+
+def _start_print_mode_suffix(request: PrintJobRequest) -> bytes:
+    if request.compress:
+        return V5X_GRAY_MODE_SUFFIX
+    if request.can_print_label:
+        return V5X_LABEL_MODE_SUFFIX
+    return V5X_STANDARD_MODE_SUFFIX
+
+
+def _start_print_payload(height: int, request: PrintJobRequest) -> bytes:
+    return height.to_bytes(2, "little") + _start_print_mode_suffix(request)
+
+
 def build_job(request: PrintJobRequest) -> bytes:
     if request.width <= 0 or len(request.pixels) % request.width != 0:
         raise ValueError("Pixel count must be a multiple of width")
 
     height = len(request.pixels) // request.width
     job = bytearray()
-    job += _GET_SERIAL_PACKET
-    job += make_packet(0xA9, height.to_bytes(2, "little"), request.protocol_family)
+    job += V5X_GET_SERIAL_PACKET
+    job += make_packet(0xA2, _density_payload(request), request.protocol_family)
+    job += make_packet(0xA9, _start_print_payload(height, request), request.protocol_family)
     job += _raw_lsb_payload(list(request.pixels), request.width)
-    job += _FINALIZE_PACKET
+    job += V5X_FINALIZE_PACKET
     return bytes(job)
 
 

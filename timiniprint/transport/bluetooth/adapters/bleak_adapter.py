@@ -135,6 +135,12 @@ class _BleakSocket:
         self._transport.apply_write_selection(selection)
         self._transport.configure_endpoints(getattr(self._client, "services", None) or [])
         await self._transport.start_notify_if_available(self._client, self._handle_notification)
+        await self._transport.initialize_connection(
+            self._client,
+            mtu_size=self._mtu_size,
+            timeout=self._timeout,
+            write_delay_ms=self._write_delay_ms,
+        )
 
     async def _resolve_client_target(self, address: str) -> Any:
         """Return the address or discovered device object passed to BleakClient."""

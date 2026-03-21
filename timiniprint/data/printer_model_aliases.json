@@ -169,10 +169,10 @@
         "AC695X_PRINT"
       ]
     },
-    "map_model_head_name": "GT02-",
+    "map_model_head_name": "V5X-",
     "protocol_family": "v5x",
     "testing": true,
-    "testing_note": "Experimental V5X family aliases mapped to GT02 defaults."
+    "testing_note": "Experimental V5X family aliases mapped to the local V5X family profile."
   },
   {
     "head_name": {
@@ -186,10 +186,10 @@
         "BH03"
       ]
     },
-    "map_model_head_name": "GT02-",
+    "map_model_head_name": "V5X-",
     "protocol_family": "v5x",
     "testing": true,
-    "testing_note": "Experimental V5X_S family aliases mapped to GT02 defaults."
+    "testing_note": "Experimental V5X_S family aliases mapped to the local V5X family profile."
   },
   {
     "head_name": {
@@ -235,7 +235,7 @@
     "only_for_targets": [
       "GT01-"
     ],
-    "map_model_head_name": "GT02-",
+    "map_model_head_name": "V5X-",
     "protocol_family": "v5x"
   }
 ]
