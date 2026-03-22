@@ -4,6 +4,7 @@ from typing import List
 
 from .packet import make_packet
 from .family import ProtocolFamily
+from .types import ImageEncoding
 
 
 def encode_run(color: int, count: int) -> List[int]:
@@ -65,7 +66,7 @@ def build_line_packets(
     pixels: List[int],
     width: int,
     speed: int,
-    compress: bool,
+    image_encoding: ImageEncoding,
     lsb_first: bool,
     protocol_family: ProtocolFamily | str,
     line_feed_every: int,
@@ -78,16 +79,18 @@ def build_line_packets(
     out = bytearray()
     for row in range(height):
         line = pixels[row * width : (row + 1) * width]
-        if compress:
+        if image_encoding == ImageEncoding.LEGACY_RLE:
             rle = rle_encode_line(line)
             if len(rle) <= width_bytes:
                 out += make_packet(0xBF, bytes(rle), protocol_family)
             else:
                 raw = pack_line(line, lsb_first)
                 out += make_packet(0xA2, raw, protocol_family)
-        else:
+        elif image_encoding == ImageEncoding.LEGACY_RAW:
             raw = pack_line(line, lsb_first)
             out += make_packet(0xA2, raw, protocol_family)
+        else:
+            raise ValueError(f"Unsupported legacy image encoding: {image_encoding.value}")
         if line_feed_every and (row + 1) % line_feed_every == 0:
             out += make_packet(0xBD, bytes([speed & 0xFF]), protocol_family)
     return bytes(out)

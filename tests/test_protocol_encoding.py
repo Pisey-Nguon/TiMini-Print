@@ -11,6 +11,7 @@ class ProtocolEncodingTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         install_crc8_stub()
         cls.encoding = importlib.import_module("timiniprint.protocol.encoding")
+        cls.types = importlib.import_module("timiniprint.protocol.types")
 
     def test_encode_run_splits_over_127(self) -> None:
         out = self.encoding.encode_run(1, 130)
@@ -29,11 +30,35 @@ class ProtocolEncodingTests(unittest.TestCase):
 
     def test_build_line_packets_width_validation(self) -> None:
         with self.assertRaisesRegex(ValueError, "Width must be divisible by 8"):
-            self.encoding.build_line_packets([0, 1, 0], 3, 5, False, True, False, 0)
+            self.encoding.build_line_packets(
+                [0, 1, 0],
+                3,
+                5,
+                self.types.ImageEncoding.LEGACY_RAW,
+                True,
+                False,
+                0,
+            )
 
     def test_build_line_packets_rle_vs_raw_and_line_feed(self) -> None:
-        rle_bytes = self.encoding.build_line_packets([1, 1, 1, 1, 1, 1, 1, 1], 8, 9, True, True, False, 1)
-        raw_bytes = self.encoding.build_line_packets([1, 0, 1, 0, 1, 0, 1, 0], 8, 9, True, True, False, 1)
+        rle_bytes = self.encoding.build_line_packets(
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            8,
+            9,
+            self.types.ImageEncoding.LEGACY_RLE,
+            True,
+            False,
+            1,
+        )
+        raw_bytes = self.encoding.build_line_packets(
+            [1, 0, 1, 0, 1, 0, 1, 0],
+            8,
+            9,
+            self.types.ImageEncoding.LEGACY_RLE,
+            True,
+            False,
+            1,
+        )
         self.assertIn(bytes([0xBF]), rle_bytes)
         self.assertIn(bytes([0xA2]), raw_bytes)
         self.assertGreaterEqual(rle_bytes.count(bytes([0xBD])), 1)

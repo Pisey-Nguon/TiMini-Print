@@ -112,17 +112,19 @@ LY05, LY10, LY11, M01, M2, MX05, MX06, MX08, MX09, MX10, MX11, P1, P10, P5AI, P7
 S01, S101, S102, XiaoWa, SC03, SC03h, SC04, SC04h, SC05, wts07, X1, X100, X101H, X102, X2H, X2h, X5,
 X5H, X5HP, X5h, X6, X6H, X6HP, X6h, X7, X7H, X7HP, X7h, X8, X8-L, X8-W, X9, XW001 PR20, XW002 PR30,
 XW003 PR25, XW004 PR35, XW005 PR88, XW006 PR89, XW007 PR893, XW008 PR02, XW009 PR07,
-M08F, TP81, M832, Q302, T02
+M08F, TP81, M832, Q302, T02, V5X, YTB01
 
 Alias-based Bluetooth name prefixes:
-- mapped to GT01- defaults: YT02, MX01, MX02, MX03, MX07, MINIPRINTER, JL-BR22, URBANWORXKIDSCAMERA,
+- mapped to GT01 defaults: YT02, MX01, MX02, MX03, MX07, MINIPRINTER, JL-BR22, URBANWORXKIDSCAMERA,
   CYLOBTPRINTER, MXTP-100, AZ-P2108X, MX12, PD01, XOPOPPY, MX13, BQ01, BQ02, EWTTOET-Z0499, BQ05, BQ06,
   BQ07, BQ7A, BQ7B, BQ08, BQ95, BQ96, MXW009, MXW010, EWTTOET-N3689, EWTTOET-N3687, MXPC-100, KP-IM606,
   BQ95B, BQ03, BQ95C, BQ06B, K06, BQ17
-- mapped to TP81- defaults: TP84, TP85, TP86, TP87, TP88
-- mapped to M832- defaults: M836
-- mapped to Q302- defaults: Q580
-- mapped to T02- defaults: T02E, Q02E, C02E
+- mapped to TP81 defaults: TP84, TP85, TP86, TP87, TP88
+- mapped to M832 defaults: M836
+- mapped to Q302 defaults: Q580
+- mapped to T02 defaults: T02E, Q02E, C02E
+- mapped to V5X defaults: MXW01, MXW01-1, X1, X2, C17, MXW-W5, AC695X_PRINT, JK01, PORTABLEPRINTER,
+  INSTANTPRINTPLUS, REKA, HDMDT-00, KERUI, BH03
 
 ## Experimental support
 These entries are available, but they still need more real-device reports and tuning. In Bluetooth device lists they appear as `[experimental]`.
@@ -131,12 +133,8 @@ Experimental printer models:
 P100, MP100, P100S, MP100S, LP100S, P3, P3S
 
 Experimental alias-based Bluetooth name prefixes:
-- mapped to P100- defaults: YINTIBAO-V5, MP200, MP220, AEQ918N4
-- mapped to P100S- defaults: YINTIBAO-V5PRO, MP200S, MP220S
+- mapped to P100 defaults: YINTIBAO-V5, MP200, MP220, AEQ918N4
+- mapped to P100S defaults: YINTIBAO-V5PRO, MP200S, MP220S
 - mapped to LP100 / LP100S defaults: LP220, LY100_BLE, LP220S
 - mapped to P3 / P3S defaults: MP300, MP300S
-- mapped to V5X- defaults: MXW01, MXW01-1, X1, X2, C17, MXW-W5, AC695X_PRINT
-- mapped to V5X- defaults: JK01, PORTABLEPRINTER, INSTANTPRINTPLUS, REKA, HDMDT-00, KERUI, BH03
-- mapped to GT01- defaults: YTB01
-- mapped to D1- defaults: C21, D2, E2, NEWSMY
-- mapped to M08F- defaults: MXW-A4
+- mapped to M08F defaults: MXW-A4

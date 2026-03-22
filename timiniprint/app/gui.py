@@ -14,7 +14,7 @@ from tkinter import filedialog, ttk
 from .diagnostics import emit_startup_warnings
 from .. import reporting
 from ..devices import DeviceResolver, PrinterModelRegistry
-from ..protocol import ProtocolFamily
+from ..protocol import ImagePipelineConfig, ProtocolFamily
 from ..rendering.converters.text import TextConverter
 from ..transport.bluetooth import SppBackend
 from ..transport.bluetooth.types import DeviceTransport
@@ -78,6 +78,7 @@ class TiMiniPrintGUI(tk.Tk):
         )
         self.connected_model = None
         self.connected_protocol_family: ProtocolFamily | None = None
+        self.connected_image_pipeline: ImagePipelineConfig | None = None
         self._connecting = False
         self._paper_motion_action = None
         self._paper_motion_job = None
@@ -443,7 +444,12 @@ class TiMiniPrintGUI(tk.Tk):
             pdf_page_gap_mm=pdf_page_gap_mm,
         )
         protocol_family = self.connected_protocol_family or model.protocol_family
-        builder = PrintJobBuilder(model, protocol_family=protocol_family, settings=settings)
+        builder = PrintJobBuilder(
+            model,
+            protocol_family=protocol_family,
+            image_pipeline=self.connected_image_pipeline,
+            settings=settings,
+        )
 
         def done(fut):
             try:
@@ -547,10 +553,12 @@ class TiMiniPrintGUI(tk.Tk):
         self._connecting = False
         self.connected_model = None
         self.connected_protocol_family = None
+        self.connected_image_pipeline = None
         if connected and device:
             match = device.model_match
             self.connected_model = match.model
             self.connected_protocol_family = match.protocol_family
+            self.connected_image_pipeline = match.image_pipeline
             self.model_var.set(match.model.model_no)
             used_alias = getattr(match, "used_alias", False) is True
             is_testing = getattr(match, "testing", False) is True

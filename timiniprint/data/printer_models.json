@@ -12,7 +12,6 @@
     "img_print_speed": 20,
     "text_print_speed": 30,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 10500,
@@ -26,7 +25,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": true,
-    "add_mor_pix": false
+    "add_mor_pix": false,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "A33",
@@ -41,7 +44,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -55,7 +57,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "A41II",
@@ -70,7 +76,6 @@
     "img_print_speed": 20,
     "text_print_speed": 30,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 10500,
@@ -84,7 +89,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": true,
-    "add_mor_pix": false
+    "add_mor_pix": false,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "A41III",
@@ -99,7 +108,6 @@
     "img_print_speed": 20,
     "text_print_speed": 30,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 10500,
@@ -113,7 +121,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": true,
-    "add_mor_pix": false
+    "add_mor_pix": false,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "A42II",
@@ -128,7 +140,6 @@
     "img_print_speed": 20,
     "text_print_speed": 30,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 10500,
@@ -142,7 +153,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": true,
-    "add_mor_pix": false
+    "add_mor_pix": false,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "A43",
@@ -157,7 +172,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 300,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 17000,
@@ -171,7 +185,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "A4300",
@@ -186,7 +204,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 10000,
@@ -200,7 +217,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "CMT-0510",
@@ -215,7 +236,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -229,7 +249,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "CP01",
@@ -244,7 +268,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -258,7 +281,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "D1",
@@ -273,7 +300,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -287,7 +313,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "D100",
@@ -302,7 +332,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -316,7 +345,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DL_GE225",
@@ -331,7 +364,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -345,7 +377,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DL_X2",
@@ -360,7 +396,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -374,7 +409,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DL_X2Pro",
@@ -389,7 +428,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 280,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -403,7 +441,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DL_X7",
@@ -418,7 +460,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7000,
@@ -432,7 +473,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DL_X7Pro",
@@ -447,7 +492,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7000,
@@ -461,7 +505,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DT1-0",
@@ -476,7 +524,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -490,7 +537,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DTR-R0",
@@ -505,7 +556,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -519,7 +569,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DY03",
@@ -534,7 +588,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -548,7 +601,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DY49",
@@ -563,7 +620,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -577,7 +633,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "EMX-040256",
@@ -592,7 +652,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -606,7 +665,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "FC02",
@@ -621,7 +684,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -635,7 +697,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB02SH",
@@ -650,7 +716,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7000,
@@ -664,7 +729,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB03PH",
@@ -679,7 +748,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -693,7 +761,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB03PL",
@@ -708,7 +780,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -722,7 +793,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB03SH",
@@ -737,7 +812,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -751,7 +825,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB03SL",
@@ -766,7 +844,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 10,
     "thin_energy": 5000,
@@ -780,7 +857,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GL-VS9",
@@ -795,7 +876,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -809,7 +889,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GT09",
@@ -824,7 +908,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 383,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -838,7 +921,11 @@
     "label_value": "0",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GT10",
@@ -853,7 +940,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 383,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -867,7 +953,11 @@
     "label_value": "0",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GV-MA211",
@@ -882,7 +972,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -896,7 +985,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GW08",
@@ -911,7 +1004,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -925,7 +1017,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GW09",
@@ -940,7 +1036,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -954,7 +1049,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "HD1",
@@ -969,7 +1068,6 @@
     "img_print_speed": 40,
     "text_print_speed": 35,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 8500,
@@ -983,7 +1081,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "HT0125",
@@ -998,7 +1100,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1012,7 +1113,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "IM.04",
@@ -1027,7 +1132,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -1041,7 +1145,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "IprintIt",
@@ -1056,7 +1164,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -1070,7 +1177,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JRX01",
@@ -1085,7 +1196,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -1099,7 +1209,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "KF-5",
@@ -1114,7 +1228,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7500,
@@ -1128,7 +1241,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "LGM01",
@@ -1143,7 +1260,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -1157,7 +1273,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LP6",
@@ -1172,7 +1292,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -1186,7 +1305,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Label Printer",
@@ -1201,7 +1324,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1215,7 +1337,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "Luxorp.PX10",
@@ -1230,7 +1356,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1244,7 +1369,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ML-MP-01",
@@ -1259,7 +1388,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1273,7 +1401,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "MPA81",
@@ -1288,7 +1420,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 17000,
@@ -1302,7 +1433,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "MV-B530",
@@ -1317,7 +1452,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -1331,7 +1465,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Mini Printer",
@@ -1346,7 +1484,6 @@
     "img_print_speed": 20,
     "text_print_speed": 20,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 14000,
@@ -1360,7 +1497,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P2",
@@ -1375,7 +1516,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1389,7 +1529,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P4",
@@ -1404,7 +1548,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 17000,
@@ -1418,7 +1561,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P5",
@@ -1433,7 +1580,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 280,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1447,7 +1593,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P6",
@@ -1462,7 +1612,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -1476,7 +1625,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P7H",
@@ -1491,7 +1644,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -1505,7 +1657,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PT001",
@@ -1520,7 +1676,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -1534,7 +1689,11 @@
     "label_value": "1",
     "back_paper_num": 32,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Pocket Printer",
@@ -1549,7 +1708,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1563,7 +1721,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Professional Printer",
@@ -1578,7 +1740,6 @@
     "img_print_speed": 20,
     "text_print_speed": 15,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 5,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -1592,7 +1753,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "QDID",
@@ -1607,7 +1772,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -1621,7 +1785,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "QDX01",
@@ -1636,7 +1804,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -1650,7 +1817,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "ROSSMANN",
@@ -1665,7 +1836,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1679,7 +1849,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "RS9000",
@@ -1694,7 +1868,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -1708,7 +1881,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "SC03H",
@@ -1723,7 +1900,6 @@
     "img_print_speed": 25,
     "text_print_speed": 25,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -1737,7 +1913,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SeznikEcho",
@@ -1752,7 +1932,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1766,7 +1945,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SeznikNeo",
@@ -1781,7 +1964,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -1795,7 +1977,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "Shipping Printer",
@@ -1810,7 +1996,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -1824,7 +2009,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Shipping Printer",
@@ -1839,7 +2028,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -1853,7 +2041,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "TCM690464",
@@ -1868,7 +2060,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1882,7 +2073,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "U1",
@@ -1897,7 +2092,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -1911,7 +2105,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "UXPORTMIP",
@@ -1926,7 +2124,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -1940,7 +2137,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "WL01",
@@ -1955,7 +2156,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 6500,
@@ -1969,7 +2169,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X103H",
@@ -1984,7 +2188,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -1998,7 +2201,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X103h",
@@ -2013,7 +2220,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2027,7 +2233,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X16",
@@ -2042,7 +2252,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2056,7 +2265,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XC9",
@@ -2071,7 +2284,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2085,7 +2297,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "YK06",
@@ -2100,7 +2316,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2114,7 +2329,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ZHHC",
@@ -2129,7 +2348,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9000,
@@ -2143,7 +2361,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ZP801",
@@ -2158,7 +2380,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -2172,7 +2393,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ZP802",
@@ -2187,7 +2412,6 @@
     "img_print_speed": 20,
     "text_print_speed": 1,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -2201,7 +2425,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ZPA4Z1",
@@ -2216,7 +2444,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -2230,7 +2457,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "0019B-C",
@@ -2245,7 +2476,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2259,7 +2489,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "0019B-D",
@@ -2274,7 +2508,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2288,7 +2521,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "15P3",
@@ -2303,7 +2540,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -2317,7 +2553,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "58P5",
@@ -2332,7 +2572,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 6500,
@@ -2346,7 +2585,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "AI01",
@@ -2361,7 +2604,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -2375,7 +2617,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "AN01",
@@ -2390,7 +2636,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 103,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 4000,
@@ -2404,7 +2649,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "DY01",
@@ -2419,7 +2668,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -2433,7 +2681,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "ewtto ET-Z0504",
@@ -2448,7 +2700,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -2462,7 +2713,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "FL01",
@@ -2477,7 +2732,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7500,
@@ -2491,7 +2745,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GB01",
@@ -2506,7 +2764,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -2520,7 +2777,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GB02",
@@ -2535,7 +2796,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 83,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 8600,
@@ -2549,7 +2809,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GB03",
@@ -2564,7 +2828,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 9000,
@@ -2578,7 +2841,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB03",
@@ -2593,7 +2860,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -2607,7 +2873,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB04",
@@ -2622,7 +2892,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 83,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8600,
@@ -2636,7 +2905,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "GB05",
@@ -2651,7 +2924,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 10000,
@@ -2665,7 +2937,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB06",
@@ -2680,7 +2956,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 9000,
@@ -2694,7 +2969,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GB06",
@@ -2709,7 +2988,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -2723,7 +3001,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GT01",
@@ -2738,7 +3020,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -2752,7 +3033,43 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
+  },
+  {
+    "model_no": "YTB01",
+    "model": 0,
+    "size": 2,
+    "paper_size": 384,
+    "print_size": 384,
+    "one_length": 8,
+    "head_name": "YTB01-",
+    "can_change_mtu": true,
+    "dev_dpi": 200,
+    "img_print_speed": 30,
+    "text_print_speed": 25,
+    "img_mtu": 123,
+    "paper_num": 2,
+    "interval_ms": 4,
+    "thin_energy": 12000,
+    "moderation_energy": 12000,
+    "deepen_energy": 12000,
+    "text_energy": 0,
+    "has_id": true,
+    "use_spp": false,
+    "protocol_family": "v5c",
+    "can_print_label": false,
+    "label_value": "0",
+    "back_paper_num": 0,
+    "a4xii": false,
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "v5c_a4"
   },
   {
     "model_no": "GT02",
@@ -2767,7 +3084,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9000,
@@ -2781,7 +3097,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GT03",
@@ -2796,7 +3116,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -2810,7 +3129,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GT04",
@@ -2825,7 +3148,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -2839,7 +3161,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "GT08",
@@ -2854,7 +3180,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -2868,7 +3193,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX001",
@@ -2883,7 +3212,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -2897,7 +3225,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX002",
@@ -2912,7 +3244,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -2926,7 +3257,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX003",
@@ -2941,7 +3276,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -2955,7 +3289,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX004",
@@ -2970,7 +3308,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -2984,7 +3321,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX005",
@@ -2999,7 +3340,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -3013,7 +3353,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JX006",
@@ -3028,7 +3372,6 @@
     "img_print_speed": 90,
     "text_print_speed": 45,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 3,
     "thin_energy": 0,
@@ -3042,7 +3385,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "JXM800",
@@ -3057,7 +3404,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5,
@@ -3071,7 +3417,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LP100",
@@ -3086,7 +3436,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 100,
@@ -3100,7 +3449,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LT01",
@@ -3115,7 +3468,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 4500,
@@ -3129,7 +3481,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY01",
@@ -3144,7 +3500,6 @@
     "img_print_speed": 40,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 0,
@@ -3158,7 +3513,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY02",
@@ -3173,7 +3532,6 @@
     "img_print_speed": 45,
     "text_print_speed": 35,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 0,
@@ -3187,7 +3545,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY03",
@@ -3202,7 +3564,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -3216,7 +3577,11 @@
     "label_value": "16",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY05",
@@ -3231,7 +3596,6 @@
     "img_print_speed": 40,
     "text_print_speed": 35,
     "img_mtu": 153,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 12000,
@@ -3245,7 +3609,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY10",
@@ -3260,7 +3628,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8,
@@ -3274,7 +3641,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LY11",
@@ -3289,7 +3660,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 0,
@@ -3303,7 +3673,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "M01",
@@ -3318,7 +3692,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -3332,7 +3705,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "M2",
@@ -3347,7 +3724,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 4500,
@@ -3361,7 +3737,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "MX05",
@@ -3376,7 +3756,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3390,7 +3769,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "MX06",
@@ -3405,7 +3788,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3419,7 +3801,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "MX08",
@@ -3434,7 +3820,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3448,7 +3833,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "MX09",
@@ -3463,7 +3852,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3477,7 +3865,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "MX10",
@@ -3492,7 +3884,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3506,7 +3897,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "MX11",
@@ -3521,7 +3916,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3535,7 +3929,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "YT01",
@@ -3550,7 +3948,6 @@
     "img_print_speed": 35,
     "text_print_speed": 25,
     "img_mtu": 63,
-    "new_compress": false,
     "paper_num": 4,
     "interval_ms": 6,
     "thin_energy": 8000,
@@ -3564,7 +3961,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "P1",
@@ -3579,7 +3980,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -3593,7 +3993,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P10",
@@ -3608,7 +4012,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 5500,
@@ -3622,7 +4025,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P5AI",
@@ -3637,7 +4044,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -3651,7 +4057,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P7",
@@ -3666,7 +4076,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7500,
@@ -3680,7 +4089,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR02",
@@ -3695,7 +4108,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 5500,
@@ -3709,7 +4121,11 @@
     "label_value": "0",
     "back_paper_num": 80,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR07",
@@ -3724,7 +4140,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -3738,7 +4153,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR30",
@@ -3753,7 +4172,6 @@
     "img_print_speed": 18,
     "text_print_speed": 18,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5,
@@ -3767,7 +4185,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR35",
@@ -3782,7 +4204,6 @@
     "img_print_speed": 18,
     "text_print_speed": 18,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 12000,
@@ -3796,7 +4217,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR88",
@@ -3811,7 +4236,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -3825,7 +4249,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR89",
@@ -3840,7 +4268,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -3854,7 +4281,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR89",
@@ -3869,7 +4300,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -3883,7 +4313,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "PR893",
@@ -3898,7 +4332,6 @@
     "img_print_speed": 65,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -3912,7 +4345,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "RT034h",
@@ -3927,7 +4364,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -3941,7 +4377,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "S01",
@@ -3956,7 +4396,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 6500,
@@ -3970,7 +4409,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "S101",
@@ -3985,7 +4428,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 6500,
@@ -3999,7 +4441,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "S101",
@@ -4014,7 +4460,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4028,7 +4473,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "S102",
@@ -4043,7 +4492,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 6500,
@@ -4057,7 +4505,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "S102",
@@ -4072,7 +4524,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4086,7 +4537,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XiaoWa",
@@ -4101,7 +4556,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -4115,7 +4569,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "SC03",
@@ -4130,7 +4588,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4144,7 +4601,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SC03h",
@@ -4159,7 +4620,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4173,7 +4633,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SC04",
@@ -4188,7 +4652,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 83,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4202,7 +4665,11 @@
     "label_value": "1",
     "back_paper_num": 45,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SC04h",
@@ -4217,7 +4684,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4231,7 +4697,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "SC05",
@@ -4246,7 +4716,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4260,7 +4729,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "wts07",
@@ -4275,7 +4748,6 @@
     "img_print_speed": 20,
     "text_print_speed": 10,
     "img_mtu": 183,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -4289,7 +4761,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "X1",
@@ -4304,7 +4780,6 @@
     "img_print_speed": 40,
     "text_print_speed": 35,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 8500,
@@ -4318,7 +4793,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X100",
@@ -4333,7 +4812,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4347,7 +4825,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": " X101H",
@@ -4362,7 +4844,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 10,
     "thin_energy": 9500,
@@ -4376,7 +4857,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X101H",
@@ -4391,7 +4876,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 10,
     "thin_energy": 9500,
@@ -4405,7 +4889,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X102",
@@ -4420,7 +4908,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4434,7 +4921,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X2H",
@@ -4449,7 +4940,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4463,7 +4953,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X2h",
@@ -4478,7 +4972,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4492,7 +4985,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X5",
@@ -4507,7 +5004,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4521,7 +5017,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X5H",
@@ -4536,7 +5036,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4550,7 +5049,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X5HP",
@@ -4565,7 +5068,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4579,7 +5081,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X5",
@@ -4594,7 +5100,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4608,7 +5113,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X5h",
@@ -4623,7 +5132,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4637,7 +5145,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X6",
@@ -4652,7 +5164,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9000,
@@ -4666,7 +5177,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X6H",
@@ -4681,7 +5196,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4695,7 +5209,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X6HP",
@@ -4710,7 +5228,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4724,7 +5241,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X6",
@@ -4739,7 +5260,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4753,7 +5273,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X6h",
@@ -4768,7 +5292,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4782,7 +5305,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X7",
@@ -4797,7 +5324,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4811,7 +5337,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X7H",
@@ -4826,7 +5356,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -4840,7 +5369,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X7HP",
@@ -4855,7 +5388,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 20000,
@@ -4869,7 +5401,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X7",
@@ -4884,7 +5420,6 @@
     "img_print_speed": 30,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 7500,
@@ -4898,7 +5433,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X7h",
@@ -4913,7 +5452,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -4927,7 +5465,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X8",
@@ -4942,7 +5484,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -4956,7 +5497,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X8-L",
@@ -4971,7 +5516,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -4985,7 +5529,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X8-W",
@@ -5000,7 +5548,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -5014,7 +5561,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "X9",
@@ -5029,7 +5580,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 3,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -5043,7 +5593,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW001",
@@ -5058,7 +5612,6 @@
     "img_print_speed": 45,
     "text_print_speed": 35,
     "img_mtu": 0,
-    "new_compress": false,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 0,
@@ -5072,7 +5625,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_raw"
   },
   {
     "model_no": "XW002",
@@ -5087,7 +5644,6 @@
     "img_print_speed": 45,
     "text_print_speed": 35,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 0,
@@ -5101,7 +5657,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW003",
@@ -5116,7 +5676,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -5130,7 +5689,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW004",
@@ -5145,7 +5708,6 @@
     "img_print_speed": 18,
     "text_print_speed": 18,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 12000,
@@ -5159,7 +5721,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW005",
@@ -5174,7 +5740,6 @@
     "img_print_speed": 30,
     "text_print_speed": 22,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 3000,
@@ -5188,7 +5753,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW006",
@@ -5203,7 +5772,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 27000,
@@ -5217,7 +5785,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW007",
@@ -5232,7 +5804,6 @@
     "img_print_speed": 65,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 8000,
@@ -5246,7 +5817,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW008",
@@ -5261,7 +5836,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 6,
     "thin_energy": 5500,
@@ -5275,7 +5849,11 @@
     "label_value": "0",
     "back_paper_num": 80,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "XW009",
@@ -5290,7 +5868,6 @@
     "img_print_speed": 45,
     "text_print_speed": 25,
     "img_mtu": 0,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 5,
     "thin_energy": 0,
@@ -5304,7 +5881,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "M08F",
@@ -5319,7 +5900,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -5333,7 +5913,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "TP81",
@@ -5348,7 +5932,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 15000,
@@ -5362,7 +5945,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "M832",
@@ -5377,7 +5964,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 10000,
@@ -5391,7 +5977,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "Q302",
@@ -5406,7 +5996,6 @@
     "img_print_speed": 40,
     "text_print_speed": 30,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 2,
     "thin_energy": 10000,
@@ -5420,7 +6009,11 @@
     "label_value": "0",
     "back_paper_num": 0,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "T02",
@@ -5435,7 +6028,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 180,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9500,
@@ -5449,7 +6041,11 @@
     "label_value": "1",
     "back_paper_num": 40,
     "a4xii": false,
-    "add_mor_pix": null
+    "add_mor_pix": null,
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P100",
@@ -5464,7 +6060,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 12000,
@@ -5480,7 +6075,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental 2-inch family proxy. Width and dpi are known, but exact P100 runtime parameters are not fully confirmed."
+    "testing_note": "Experimental 2-inch family proxy. Width and dpi are known, but exact P100 runtime parameters are not fully confirmed.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "MP100",
@@ -5495,7 +6094,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9000,
@@ -5511,7 +6109,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental 2-inch family proxy for the label-capable MP100 variant."
+    "testing_note": "Experimental 2-inch family proxy for the label-capable MP100 variant.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P100S",
@@ -5526,7 +6128,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 280,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -5542,7 +6143,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental high-dpi 2-inch family proxy. Width and dpi are known, but exact P100S runtime parameters are not fully confirmed."
+    "testing_note": "Experimental high-dpi 2-inch family proxy. Width and dpi are known, but exact P100S runtime parameters are not fully confirmed.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "MP100S",
@@ -5557,7 +6162,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 280,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 5000,
@@ -5573,7 +6177,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental high-dpi 2-inch family proxy for the label-capable MP100S variant."
+    "testing_note": "Experimental high-dpi 2-inch family proxy for the label-capable MP100S variant.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "LP100S",
@@ -5588,7 +6196,6 @@
     "img_print_speed": 26,
     "text_print_speed": 25,
     "img_mtu": 183,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 100,
@@ -5604,7 +6211,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental high-dpi family proxy based on the LP100 family."
+    "testing_note": "Experimental high-dpi family proxy based on the LP100 family.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P3",
@@ -5619,7 +6230,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7000,
@@ -5635,7 +6245,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental wide-format family proxy. TiMini Print uses a fixed 832 px profile here as a best-effort fallback."
+    "testing_note": "Experimental wide-format family proxy. TiMini Print uses a fixed 832 px profile here as a best-effort fallback.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "P3S",
@@ -5650,7 +6264,6 @@
     "img_print_speed": 10,
     "text_print_speed": 10,
     "img_mtu": 512,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 7000,
@@ -5666,7 +6279,11 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental high-dpi wide-format family proxy. TiMini Print uses a fixed 1280 px profile here as a best-effort fallback."
+    "testing_note": "Experimental high-dpi wide-format family proxy. TiMini Print uses a fixed 1280 px profile here as a best-effort fallback.",
+    "image_pipeline_formats": [
+      "bw1"
+    ],
+    "image_pipeline_encoding": "legacy_rle"
   },
   {
     "model_no": "V5X",
@@ -5681,7 +6298,6 @@
     "img_print_speed": 30,
     "text_print_speed": 25,
     "img_mtu": 123,
-    "new_compress": true,
     "paper_num": 2,
     "interval_ms": 4,
     "thin_energy": 9000,
@@ -5697,6 +6313,12 @@
     "a4xii": false,
     "add_mor_pix": null,
     "testing": true,
-    "testing_note": "Experimental V5X family profile. Width and protocol family are known; remaining runtime values follow current 2-inch defaults."
+    "testing_note": "Experimental V5X family profile. Width and protocol family are known; remaining runtime values follow current 2-inch defaults.",
+    "image_pipeline_formats": [
+      "bw1",
+      "gray4",
+      "gray8"
+    ],
+    "image_pipeline_encoding": "v5x_dot"
   }
 ]

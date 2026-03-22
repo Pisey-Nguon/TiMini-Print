@@ -11,7 +11,7 @@ from .commands import (
 from .encoding import build_line_packets
 from .families import PrintJobRequest, get_protocol_behavior
 from .family import ProtocolFamily
-from .types import Raster
+from .types import ImagePipelineConfig, PixelFormat, RasterBuffer, RasterSet
 
 
 def _build_family_job(request: PrintJobRequest) -> bytes | None:
@@ -21,76 +21,164 @@ def _build_family_job(request: PrintJobRequest) -> bytes | None:
     return behavior.job_builder(request)
 
 
+def _resolve_image_pipeline(
+    protocol_family: ProtocolFamily | str,
+    image_pipeline: ImagePipelineConfig | None,
+) -> ImagePipelineConfig:
+    family = ProtocolFamily.from_value(protocol_family)
+    if image_pipeline is not None:
+        return image_pipeline
+    return get_protocol_behavior(family).default_image_pipeline
+
+
+def _validate_request(request: PrintJobRequest) -> None:
+    request.raster_set.validate()
+    behavior = get_protocol_behavior(request.protocol_family)
+    supported_by_encoding = behavior.image_encoding_support.get(request.image_pipeline.encoding)
+    if supported_by_encoding is None:
+        raise ValueError(
+            f"{request.protocol_family.value} does not support image encoding "
+            f"{request.image_pipeline.encoding.value}"
+        )
+    supported_formats = {
+        pixel_format
+        for formats in behavior.image_encoding_support.values()
+        for pixel_format in formats
+    }
+    for pixel_format in request.image_pipeline.formats:
+        if pixel_format not in supported_formats:
+            raise ValueError(
+                f"{request.protocol_family.value} does not support raster format "
+                f"{pixel_format.value}"
+            )
+    if request.image_pipeline.default_format not in supported_by_encoding:
+        raise ValueError(
+            f"{request.protocol_family.value} image encoding "
+            f"{request.image_pipeline.encoding.value} does not support "
+            f"{request.image_pipeline.default_format.value}"
+        )
+    request.require_raster(request.image_pipeline.default_format)
+
+
+def _build_request(
+    raster_set: RasterSet,
+    is_text: bool,
+    speed: int,
+    energy: int,
+    blackening: int,
+    lsb_first: bool,
+    protocol_family: ProtocolFamily | str,
+    feed_padding: int,
+    dev_dpi: int,
+    can_print_label: bool,
+    image_pipeline: ImagePipelineConfig | None,
+) -> PrintJobRequest:
+    family = ProtocolFamily.from_value(protocol_family)
+    request = PrintJobRequest(
+        raster_set=raster_set,
+        image_pipeline=_resolve_image_pipeline(family, image_pipeline),
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        blackening=blackening,
+        lsb_first=lsb_first,
+        protocol_family=family,
+        feed_padding=feed_padding,
+        dev_dpi=dev_dpi,
+        can_print_label=can_print_label,
+    )
+    _validate_request(request)
+    return request
+
+
 def build_print_payload(
     pixels: list[int],
     width: int,
     is_text: bool,
     speed: int,
     energy: int,
-    compress: bool,
     lsb_first: bool,
     protocol_family: ProtocolFamily | str,
     can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
 ) -> bytes:
-    """Build the main payload for a print job (no final feed/state)."""
-    family = ProtocolFamily.from_value(protocol_family)
-    request = PrintJobRequest(
-        pixels=pixels,
-        width=width,
+    raster = RasterBuffer(pixels=pixels, width=width, pixel_format=PixelFormat.BW1)
+    return build_print_payload_from_raster(
+        raster=raster,
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        lsb_first=lsb_first,
+        protocol_family=protocol_family,
+        can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
+    )
+
+
+def build_print_payload_from_raster(
+    raster: RasterBuffer,
+    is_text: bool,
+    speed: int,
+    energy: int,
+    lsb_first: bool,
+    protocol_family: ProtocolFamily | str,
+    can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
+) -> bytes:
+    return build_print_payload_from_raster_set(
+        raster_set=RasterSet.from_single(raster),
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        lsb_first=lsb_first,
+        protocol_family=protocol_family,
+        can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
+    )
+
+
+def build_print_payload_from_raster_set(
+    raster_set: RasterSet,
+    is_text: bool,
+    speed: int,
+    energy: int,
+    lsb_first: bool,
+    protocol_family: ProtocolFamily | str,
+    can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
+) -> bytes:
+    request = _build_request(
+        raster_set=raster_set,
         is_text=is_text,
         speed=speed,
         energy=energy,
         blackening=3,
-        compress=compress,
         lsb_first=lsb_first,
-        protocol_family=family,
+        protocol_family=protocol_family,
         feed_padding=0,
         dev_dpi=203,
         can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
     )
     family_payload = _build_family_job(request)
     if family_payload is not None:
         return family_payload
 
+    raster = request.require_raster(PixelFormat.BW1)
     payload = bytearray()
-    payload += energy_cmd(energy, family)
-    payload += print_mode_cmd(is_text, family)
-    payload += feed_paper_cmd(speed, family)
+    payload += energy_cmd(energy, request.protocol_family)
+    payload += print_mode_cmd(is_text, request.protocol_family)
+    payload += feed_paper_cmd(speed, request.protocol_family)
     payload += build_line_packets(
-        pixels,
-        width,
+        list(raster.pixels),
+        raster.width,
         speed,
-        compress,
+        request.image_pipeline.encoding,
         lsb_first,
-        family,
+        request.protocol_family,
         line_feed_every=200,
     )
     return bytes(payload)
-
-
-def build_print_payload_from_raster(
-    raster: Raster,
-    is_text: bool,
-    speed: int,
-    energy: int,
-    compress: bool,
-    lsb_first: bool,
-    protocol_family: ProtocolFamily | str,
-    can_print_label: bool = False,
-) -> bytes:
-    """Build the main payload from a Raster helper object."""
-    raster.validate()
-    return build_print_payload(
-        raster.pixels,
-        raster.width,
-        is_text,
-        speed,
-        energy,
-        compress,
-        lsb_first,
-        protocol_family,
-        can_print_label=can_print_label,
-    )
 
 
 def build_job(
@@ -100,80 +188,102 @@ def build_job(
     speed: int,
     energy: int,
     blackening: int,
-    compress: bool,
     lsb_first: bool,
     protocol_family: ProtocolFamily | str,
     feed_padding: int,
     dev_dpi: int,
     can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
 ) -> bytes:
-    """Build a full job payload ready to send to the printer."""
-    family = ProtocolFamily.from_value(protocol_family)
-    request = PrintJobRequest(
-        pixels=pixels,
-        width=width,
+    raster = RasterBuffer(pixels=pixels, width=width, pixel_format=PixelFormat.BW1)
+    return build_job_from_raster(
+        raster=raster,
         is_text=is_text,
         speed=speed,
         energy=energy,
         blackening=blackening,
-        compress=compress,
         lsb_first=lsb_first,
-        protocol_family=family,
+        protocol_family=protocol_family,
         feed_padding=feed_padding,
         dev_dpi=dev_dpi,
         can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
+    )
+
+
+def build_job_from_raster(
+    raster: RasterBuffer,
+    is_text: bool,
+    speed: int,
+    energy: int,
+    blackening: int,
+    lsb_first: bool,
+    protocol_family: ProtocolFamily | str,
+    feed_padding: int,
+    dev_dpi: int,
+    can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
+) -> bytes:
+    return build_job_from_raster_set(
+        raster_set=RasterSet.from_single(raster),
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        blackening=blackening,
+        lsb_first=lsb_first,
+        protocol_family=protocol_family,
+        feed_padding=feed_padding,
+        dev_dpi=dev_dpi,
+        can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
+    )
+
+
+def build_job_from_raster_set(
+    raster_set: RasterSet,
+    is_text: bool,
+    speed: int,
+    energy: int,
+    blackening: int,
+    lsb_first: bool,
+    protocol_family: ProtocolFamily | str,
+    feed_padding: int,
+    dev_dpi: int,
+    can_print_label: bool = False,
+    image_pipeline: ImagePipelineConfig | None = None,
+) -> bytes:
+    request = _build_request(
+        raster_set=raster_set,
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        blackening=blackening,
+        lsb_first=lsb_first,
+        protocol_family=protocol_family,
+        feed_padding=feed_padding,
+        dev_dpi=dev_dpi,
+        can_print_label=can_print_label,
+        image_pipeline=image_pipeline,
     )
     family_job = _build_family_job(request)
     if family_job is not None:
         return family_job
 
     job = bytearray()
-    job += blackening_cmd(blackening, family)
-    job += build_print_payload(
-        pixels,
-        width,
-        is_text,
-        speed,
-        energy,
-        compress,
-        lsb_first,
-        family,
+    job += blackening_cmd(blackening, request.protocol_family)
+    job += build_print_payload_from_raster_set(
+        raster_set=raster_set,
+        is_text=is_text,
+        speed=speed,
+        energy=energy,
+        lsb_first=lsb_first,
+        protocol_family=request.protocol_family,
         can_print_label=can_print_label,
+        image_pipeline=request.image_pipeline,
     )
-    job += feed_paper_cmd(feed_padding, family)
-    job += paper_cmd(dev_dpi, family)
-    job += paper_cmd(dev_dpi, family)
-    job += feed_paper_cmd(feed_padding, family)
-    job += dev_state_cmd(family)
+    job += feed_paper_cmd(feed_padding, request.protocol_family)
+    job += paper_cmd(dev_dpi, request.protocol_family)
+    job += paper_cmd(dev_dpi, request.protocol_family)
+    job += feed_paper_cmd(feed_padding, request.protocol_family)
+    job += dev_state_cmd(request.protocol_family)
     return bytes(job)
-
-
-def build_job_from_raster(
-    raster: Raster,
-    is_text: bool,
-    speed: int,
-    energy: int,
-    blackening: int,
-    compress: bool,
-    lsb_first: bool,
-    protocol_family: ProtocolFamily | str,
-    feed_padding: int,
-    dev_dpi: int,
-    can_print_label: bool = False,
-) -> bytes:
-    """Build a full job payload from a Raster helper object."""
-    raster.validate()
-    return build_job(
-        raster.pixels,
-        raster.width,
-        is_text,
-        speed,
-        energy,
-        blackening,
-        compress,
-        lsb_first,
-        protocol_family,
-        feed_padding,
-        dev_dpi,
-        can_print_label=can_print_label,
-    )

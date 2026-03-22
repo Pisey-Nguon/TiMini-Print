@@ -13,6 +13,7 @@ from timiniprint.devices.models import (
     PrinterModelRegistry,
 )
 from timiniprint.protocol.family import ProtocolFamily
+from timiniprint.protocol.types import ImageEncoding, ImagePipelineConfig, PixelFormat
 
 
 def _model(model_no: str, head_name: str) -> PrinterModel:
@@ -29,7 +30,10 @@ def _model(model_no: str, head_name: str) -> PrinterModel:
         img_print_speed=10,
         text_print_speed=8,
         img_mtu=180,
-        new_compress=False,
+        image_pipeline=ImagePipelineConfig(
+            formats=(PixelFormat.BW1,),
+            encoding=ImageEncoding.LEGACY_RAW,
+        ),
         paper_num=1,
         interval_ms=4,
         thin_energy=0,
@@ -161,7 +165,6 @@ class DevicesModelsTests(unittest.TestCase):
             "AC695X_PRINT-ABCD": "V5X",
             "C21-ABCD": "D1",
             "MXW-A4-ABCD": "M08F",
-            "YTB01-ABCD": "GT01",
         }
 
         for name, expected_model_no in cases.items():
@@ -178,14 +181,22 @@ class DevicesModelsTests(unittest.TestCase):
         jk01 = reg.detect_with_origin("JK01-ABCD")
         self.assertIsNotNone(jk01)
         self.assertEqual(jk01.protocol_family, ProtocolFamily.V5X)
+        self.assertEqual(jk01.image_pipeline.encoding, ImageEncoding.V5X_DOT)
+        self.assertEqual(jk01.image_pipeline.formats[0], PixelFormat.BW1)
 
         dck = reg.detect_with_origin("C21-ABCD")
         self.assertIsNotNone(dck)
         self.assertEqual(dck.protocol_family, ProtocolFamily.DCK)
+        self.assertEqual(dck.image_pipeline.encoding, ImageEncoding.DCK_DEFAULT)
 
         v5c = reg.detect_with_origin("YTB01-ABCD")
         self.assertIsNotNone(v5c)
+        self.assertEqual(v5c.model.model_no, "YTB01")
+        self.assertEqual(v5c.source, PrinterModelMatchSource.HEAD_NAME)
+        self.assertFalse(v5c.testing)
         self.assertEqual(v5c.protocol_family, ProtocolFamily.V5C)
+        self.assertEqual(v5c.image_pipeline.encoding, ImageEncoding.V5C_A4)
+        self.assertEqual(v5c.image_pipeline.formats[0], PixelFormat.BW1)
 
     def test_direct_gt02_keeps_legacy_protocol_family(self) -> None:
         reg = PrinterModelRegistry.load()
@@ -194,6 +205,7 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertIsNotNone(match)
         self.assertEqual(match.model.model_no, "GT02")
         self.assertEqual(match.protocol_family, ProtocolFamily.LEGACY)
+        self.assertIn(match.image_pipeline.encoding, (ImageEncoding.LEGACY_RAW, ImageEncoding.LEGACY_RLE))
 
     def test_testing_flag_reaches_match_for_direct_and_alias_detection(self) -> None:
         reg = PrinterModelRegistry.load()

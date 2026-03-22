@@ -10,6 +10,8 @@ from PIL import Image
 
 from tests.helpers import install_crc8_stub, reset_registry_cache
 from timiniprint.devices.models import PrinterModelRegistry
+from timiniprint.protocol.family import ProtocolFamily
+from timiniprint.protocol.types import ImageEncoding, PixelFormat, RasterBuffer, RasterSet
 from timiniprint.rendering.converters.base import Page
 
 
@@ -52,17 +54,20 @@ class PrintingJobTests(unittest.TestCase):
         pages = [Page(img, dither=False, is_text=False), Page(img, dither=True, is_text=True)]
         loader = _FakeLoader(pages)
         builder = self.job_mod.PrintJobBuilder(self.model, page_loader=loader)
+        raster_set = RasterSet(
+            rasters={PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1)}
+        )
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "a.txt"
             path.write_text("x", encoding="utf-8")
-            with patch("timiniprint.printing.job.image_to_bw_pixels", return_value=[1] * 8), patch(
-                "timiniprint.printing.job.build_job", side_effect=[b"A", b"B"]
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set), patch(
+                "timiniprint.printing.job.build_job_from_raster_set", side_effect=[b"A", b"B"]
             ):
                 out = builder.build_from_file(str(path))
         self.assertEqual(out, b"AB")
 
     def test_mode_energy_speed_selection(self) -> None:
-        settings = self.job_mod.PrintSettings(text_mode=None, compress=None, lsb_first=None)
+        settings = self.job_mod.PrintSettings(text_mode=None, lsb_first=None)
         builder = self.job_mod.PrintJobBuilder(self.model, settings=settings, page_loader=_FakeLoader([]))
         p_text = Page(Image.new("1", (8, 1), 1), dither=False, is_text=True)
         p_img = Page(Image.new("1", (8, 1), 1), dither=True, is_text=False)
@@ -70,6 +75,305 @@ class PrintingJobTests(unittest.TestCase):
         self.assertFalse(builder._select_text_mode(p_img))
         self.assertGreater(builder._select_energy(True), 0)
         self.assertGreater(builder._select_energy(False), 0)
+
+    def test_build_from_file_uses_v5c_default_bw1_pipeline(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5C,
+            settings=self.job_mod.PrintSettings(),
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+                PixelFormat.GRAY8: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY8),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ) as build_job_mock:
+                out = builder.build_from_file(str(path))
+
+        self.assertEqual(out, b"A")
+        self.assertEqual(
+            render_mock.call_args.args[1],
+            (PixelFormat.BW1,),
+        )
+        self.assertFalse(render_mock.call_args.kwargs["gamma_handle"])
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].encoding,
+            ImageEncoding.V5C_A4,
+        )
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].default_format,
+            PixelFormat.BW1,
+        )
+
+    def test_build_from_file_can_override_v5c_compressed_pixel_format_to_gray8(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(
+            image_encoding_override=ImageEncoding.V5C_A5,
+            pixel_format_override=PixelFormat.GRAY8,
+        )
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5C,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+                PixelFormat.GRAY8: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY8),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ) as build_job_mock:
+                out = builder.build_from_file(str(path))
+
+        self.assertEqual(out, b"A")
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY8,))
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].encoding,
+            ImageEncoding.V5C_A5,
+        )
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].default_format,
+            PixelFormat.GRAY8,
+        )
+
+    def test_build_from_file_passes_explicit_v5c_gamma_value_for_a5(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(
+            image_encoding_override=ImageEncoding.V5C_A5,
+            pixel_format_override=PixelFormat.GRAY8,
+            v5c_gamma_value=1.2,
+        )
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5C,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+                PixelFormat.GRAY8: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY8),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ):
+                builder.build_from_file(str(path))
+
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY8,))
+        self.assertEqual(render_mock.call_args.kwargs["gamma_value"], 1.2)
+
+    def test_build_from_file_can_disable_v5c_gamma_processing_for_a5(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(
+            image_encoding_override=ImageEncoding.V5C_A5,
+            v5c_gamma_handle=False,
+        )
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5C,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+                PixelFormat.GRAY8: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY8),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ):
+                builder.build_from_file(str(path))
+
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY4,))
+        self.assertFalse(render_mock.call_args.kwargs["gamma_handle"])
+
+    def test_build_from_file_auto_selects_v5c_gray4_for_a5_override(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.V5C_A5)
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5C,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ) as build_job_mock:
+                out = builder.build_from_file(str(path))
+
+        self.assertEqual(out, b"A")
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY4,))
+        self.assertEqual(build_job_mock.call_args.kwargs["image_pipeline"].encoding, ImageEncoding.V5C_A5)
+        self.assertEqual(build_job_mock.call_args.kwargs["image_pipeline"].default_format, PixelFormat.GRAY4)
+
+    def test_build_from_file_can_override_image_encoding(self) -> None:
+        img = Image.new("1", (8, 1), 1)
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.LEGACY_RLE)
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.LEGACY,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1)}
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set), patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ) as build_job_mock:
+                builder.build_from_file(str(path))
+
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].encoding,
+            ImageEncoding.LEGACY_RLE,
+        )
+
+    def test_build_from_file_uses_v5x_default_bw1_pipeline(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5X,
+            settings=self.job_mod.PrintSettings(),
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ) as build_job_mock:
+                out = builder.build_from_file(str(path))
+
+        self.assertEqual(out, b"A")
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.BW1,))
+        self.assertFalse(render_mock.call_args.kwargs["gamma_handle"])
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].encoding,
+            ImageEncoding.V5X_DOT,
+        )
+        self.assertEqual(
+            build_job_mock.call_args.kwargs["image_pipeline"].default_format,
+            PixelFormat.BW1,
+        )
+
+    def test_build_from_file_uses_v5x_gray_without_gamma_by_default(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.V5X_GRAY)
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5X,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ):
+                builder.build_from_file(str(path))
+
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY4,))
+        self.assertFalse(render_mock.call_args.kwargs["gamma_handle"])
+        self.assertIsNone(render_mock.call_args.kwargs["gamma_value"])
+
+    def test_build_from_file_passes_explicit_v5x_gray_gamma_value(self) -> None:
+        img = Image.new("L", (8, 1))
+        loader = _FakeLoader([Page(img, dither=False, is_text=False)])
+        settings = self.job_mod.PrintSettings(
+            image_encoding_override=ImageEncoding.V5X_GRAY,
+            pixel_format_override=PixelFormat.GRAY8,
+            v5x_gamma_handle=True,
+            v5x_gamma_value=1.1,
+        )
+        builder = self.job_mod.PrintJobBuilder(
+            self.model,
+            protocol_family=ProtocolFamily.V5X,
+            settings=settings,
+            page_loader=loader,
+        )
+        raster_set = RasterSet(
+            rasters={
+                PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1),
+                PixelFormat.GRAY4: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY4),
+                PixelFormat.GRAY8: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.GRAY8),
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "a.png"
+            path.write_bytes(b"x")
+            with patch("timiniprint.printing.job.image_to_raster_set", return_value=raster_set) as render_mock, patch(
+                "timiniprint.printing.job.build_job_from_raster_set",
+                return_value=b"A",
+            ):
+                builder.build_from_file(str(path))
+
+        self.assertEqual(render_mock.call_args.args[1], (PixelFormat.GRAY8,))
+        self.assertTrue(render_mock.call_args.kwargs["gamma_handle"])
+        self.assertEqual(render_mock.call_args.kwargs["gamma_value"], 1.1)
 
 
 if __name__ == "__main__":

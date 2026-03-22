@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from ..encoding import pack_line
-from ..packet import make_packet
+from ..packet import crc8_value, make_packet
 from ..family import ProtocolFamily
+from ..types import ImageEncoding, ImagePipelineConfig, PixelFormat
 from .base import BleTransportProfile, FlowControlProfile, PrintJobRequest, ProtocolBehavior
 
 def _hex_bytes(value: str) -> bytes:
@@ -76,6 +77,14 @@ def _raw_lsb_payload(pixels: list[int] | tuple[int, ...], width: int) -> bytes:
     return bytes(payload)
 
 
+def _gray_payload(raster) -> bytes:
+    if raster.pixel_format == PixelFormat.GRAY8:
+        return bytes(raster.pixels)
+    if raster.pixel_format == PixelFormat.GRAY4:
+        return raster.packed_bytes()
+    raise ValueError("V5X gray jobs require GRAY4 or GRAY8 raster data")
+
+
 def advance_paper_cmd(_dpi: int, protocol_family: ProtocolFamily) -> bytes:
     return make_packet(0xA3, _MANUAL_MOTION_PAYLOAD, protocol_family)
 
@@ -86,12 +95,16 @@ def retract_paper_cmd(_dpi: int, protocol_family: ProtocolFamily) -> bytes:
 
 def _density_payload(request: PrintJobRequest) -> bytes:
     level = max(1, min(5, request.blackening))
-    table = _GRAY_DENSITY_BY_LEVEL if request.compress else _DOT_DENSITY_BY_LEVEL
+    table = (
+        _GRAY_DENSITY_BY_LEVEL
+        if request.image_pipeline.encoding == ImageEncoding.V5X_GRAY
+        else _DOT_DENSITY_BY_LEVEL
+    )
     return bytes([table[level - 1]])
 
 
 def _start_print_mode_suffix(request: PrintJobRequest) -> bytes:
-    if request.compress:
+    if request.image_pipeline.encoding == ImageEncoding.V5X_GRAY:
         return V5X_GRAY_MODE_SUFFIX
     if request.can_print_label:
         return V5X_LABEL_MODE_SUFFIX
@@ -102,22 +115,44 @@ def _start_print_payload(height: int, request: PrintJobRequest) -> bytes:
     return height.to_bytes(2, "little") + _start_print_mode_suffix(request)
 
 
-def build_job(request: PrintJobRequest) -> bytes:
-    if request.width <= 0 or len(request.pixels) % request.width != 0:
-        raise ValueError("Pixel count must be a multiple of width")
+def _gray_start_packet(height: int, protocol_family: ProtocolFamily) -> bytes:
+    family = ProtocolFamily.from_value(protocol_family)
+    height_bytes = height.to_bytes(2, "little")
+    header = family.packet_prefix + bytes([0xA9, 0x00, 0x02, 0x00])
+    return header + height_bytes + bytes([crc8_value(height_bytes), 0xFF])
 
-    height = len(request.pixels) // request.width
+
+def build_job(request: PrintJobRequest) -> bytes:
+    is_gray = request.image_pipeline.encoding == ImageEncoding.V5X_GRAY
+    raster = (
+        request.default_raster
+        if is_gray
+        else request.require_raster(PixelFormat.BW1)
+    )
+    height = raster.height
     job = bytearray()
     job += V5X_GET_SERIAL_PACKET
     job += make_packet(0xA2, _density_payload(request), request.protocol_family)
-    job += make_packet(0xA9, _start_print_payload(height, request), request.protocol_family)
-    job += _raw_lsb_payload(list(request.pixels), request.width)
+    if is_gray:
+        job += _gray_start_packet(height, request.protocol_family)
+        job += _gray_payload(raster)
+    else:
+        job += make_packet(0xA9, _start_print_payload(height, request), request.protocol_family)
+        job += _raw_lsb_payload(list(raster.pixels), raster.width)
     job += V5X_FINALIZE_PACKET
     return bytes(job)
 
 
 BEHAVIOR = ProtocolBehavior(
     transport=TRANSPORT,
+    default_image_pipeline=ImagePipelineConfig(
+        formats=(PixelFormat.BW1, PixelFormat.GRAY4, PixelFormat.GRAY8),
+        encoding=ImageEncoding.V5X_DOT,
+    ),
+    image_encoding_support={
+        ImageEncoding.V5X_DOT: (PixelFormat.BW1,),
+        ImageEncoding.V5X_GRAY: (PixelFormat.GRAY4, PixelFormat.GRAY8),
+    },
     advance_paper_builder=advance_paper_cmd,
     retract_paper_builder=retract_paper_cmd,
     job_builder=build_job,

@@ -12,16 +12,25 @@ from .commands import (
 )
 from .encoding import build_line_packets, encode_run, pack_line, rle_encode_line
 from .family import ProtocolCommandSet, ProtocolFamily, ProtocolTransportStyle
-from .job import build_job, build_job_from_raster, build_print_payload, build_print_payload_from_raster
-from .types import Raster
+from .job import (
+    build_job,
+    build_job_from_raster,
+    build_job_from_raster_set,
+    build_print_payload,
+    build_print_payload_from_raster,
+    build_print_payload_from_raster_set,
+)
+from .types import ImageEncoding, ImagePipelineConfig, PixelFormat, RasterBuffer, RasterSet
 
 __all__ = [
     "blackening_cmd",
     "build_job",
     "build_job_from_raster",
+    "build_job_from_raster_set",
     "build_line_packets",
     "build_print_payload",
     "build_print_payload_from_raster",
+    "build_print_payload_from_raster_set",
     "advance_paper_cmd",
     "crc8_value",
     "dev_state_cmd",
@@ -35,7 +44,11 @@ __all__ = [
     "ProtocolCommandSet",
     "ProtocolFamily",
     "ProtocolTransportStyle",
-    "Raster",
+    "ImageEncoding",
+    "ImagePipelineConfig",
+    "PixelFormat",
+    "RasterBuffer",
+    "RasterSet",
     "retract_paper_cmd",
     "rle_encode_line",
 ]

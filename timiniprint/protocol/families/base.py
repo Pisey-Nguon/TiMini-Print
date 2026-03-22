@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Sequence
+from typing import Callable, Mapping
 
 from ..family import ProtocolFamily
 from ..packet import prefixed_packet_length
+from ..types import ImageEncoding, ImagePipelineConfig, PixelFormat, RasterSet
 
 ManualMotionBuilder = Callable[[int, ProtocolFamily], bytes]
 FamilyJobBuilder = Callable[["PrintJobRequest"], bytes]
@@ -35,6 +36,15 @@ class BleTransportProfile:
 @dataclass(frozen=True)
 class ProtocolBehavior:
     transport: BleTransportProfile = field(default_factory=BleTransportProfile)
+    default_image_pipeline: ImagePipelineConfig = field(
+        default_factory=lambda: ImagePipelineConfig(
+            formats=(PixelFormat.BW1,),
+            encoding=ImageEncoding.LEGACY_RAW,
+        )
+    )
+    image_encoding_support: Mapping[ImageEncoding, tuple[PixelFormat, ...]] = field(
+        default_factory=dict
+    )
     advance_paper_builder: ManualMotionBuilder | None = None
     retract_paper_builder: ManualMotionBuilder | None = None
     job_builder: FamilyJobBuilder | None = None
@@ -42,18 +52,32 @@ class ProtocolBehavior:
 
 @dataclass(frozen=True)
 class PrintJobRequest:
-    pixels: Sequence[int]
-    width: int
+    raster_set: RasterSet
+    image_pipeline: ImagePipelineConfig
     is_text: bool
     speed: int
     energy: int
     blackening: int
-    compress: bool
     lsb_first: bool
     protocol_family: ProtocolFamily
     feed_padding: int
     dev_dpi: int
     can_print_label: bool = False
+
+    def require_raster(self, pixel_format: PixelFormat) -> "RasterBuffer":
+        return self.raster_set.require(pixel_format)
+
+    @property
+    def default_raster(self) -> "RasterBuffer":
+        return self.require_raster(self.image_pipeline.default_format)
+
+    @property
+    def width(self) -> int:
+        return self.default_raster.width
+
+    @property
+    def height(self) -> int:
+        return self.default_raster.height
 
 
 @dataclass(frozen=True)

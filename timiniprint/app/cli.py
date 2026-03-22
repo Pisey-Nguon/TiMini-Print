@@ -7,7 +7,7 @@ import tempfile
 from typing import Optional, Sequence
 
 from ..devices import DeviceResolver, PrinterModel, PrinterModelRegistry
-from ..protocol import ProtocolFamily
+from ..protocol import ImagePipelineConfig, ProtocolFamily
 from ..transport.bluetooth import SppBackend
 from ..transport.bluetooth.types import DeviceTransport
 from ..transport.serial import SerialTransport
@@ -96,6 +96,7 @@ def build_print_data(
     model: PrinterModel,
     path: Optional[str],
     protocol_family: Optional[ProtocolFamily] = None,
+    image_pipeline: Optional[ImagePipelineConfig] = None,
     text_mode: Optional[bool] = None,
     blackening: Optional[int] = None,
     text_input: Optional[str] = None,
@@ -121,7 +122,12 @@ def build_print_data(
     )
     if blackening is not None:
         settings.blackening = blackening
-    builder = PrintJobBuilder(model, protocol_family=protocol_family, settings=settings)
+    builder = PrintJobBuilder(
+        model,
+        protocol_family=protocol_family,
+        image_pipeline=image_pipeline,
+        settings=settings,
+    )
     if text_input is None:
         if not path:
             raise RuntimeError("Missing file path")
@@ -249,6 +255,7 @@ def print_bluetooth(
         _warn_alias_usage(match, resolved, reporter)
         model = match.model
         protocol_family = match.protocol_family
+        image_pipeline = match.image_pipeline
         attempts = resolver.build_connection_attempts(resolved, protocol_family)
         reporter.debug(
             short="Bluetooth",
@@ -265,6 +272,7 @@ def print_bluetooth(
             model,
             args.path,
             protocol_family,
+            image_pipeline,
             _resolve_text_mode(args),
             _resolve_blackening(args),
             _resolve_text_input(args),
@@ -301,6 +309,7 @@ def print_serial(args: argparse.Namespace) -> int:
         model,
         args.path,
         model.protocol_family,
+        model.image_pipeline,
         _resolve_text_mode(args),
         _resolve_blackening(args),
         _resolve_text_input(args),

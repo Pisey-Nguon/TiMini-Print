@@ -170,6 +170,7 @@ class DeviceResolver:
                 model=model,
                 source=PrinterModelMatchSource.MODEL_NO,
                 protocol_family=model.protocol_family,
+                image_pipeline=model.image_pipeline,
                 testing=model.testing,
                 testing_note=model.testing_note,
             )

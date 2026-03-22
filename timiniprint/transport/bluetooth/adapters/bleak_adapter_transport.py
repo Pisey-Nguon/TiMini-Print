@@ -7,13 +7,14 @@ once the BLE connection itself is established.
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .... import reporting
 from ....protocol.families import BleTransportProfile, split_prefixed_bulk_stream
 from ....protocol.family import ProtocolFamily
 from ....protocol.packet import make_packet
+from ....protocol.families.v5c import V5C_QUERY_STATUS_PACKET
 from ....protocol.families.v5x import (
     V5X_GET_SERIAL_PACKET,
     V5X_GRAY_MODE_SUFFIX,
@@ -41,9 +42,11 @@ class _BleakBindings:
 class _V5XSessionState:
     """Session-scoped state derived from V5X command and notify traffic."""
 
+    task_state_name: str = "normal"
     last_density_payload: Optional[bytes] = None
     print_head_type: str = "gaoya"
     firmware_version: str = ""
+    connect_info_received: bool = False
     device_serial: str = ""
     serial_valid: Optional[bool] = None
     last_a7_payload: bytes = b""
@@ -53,6 +56,53 @@ class _V5XSessionState:
     temperature_c: Optional[int] = None
     error_group: Optional[int] = None
     error_code: Optional[int] = None
+    last_error_signature: Optional[tuple[int, int]] = None
+    status_poll_ack_seen: bool = False
+    last_ab_status: Optional[int] = None
+    mxw_sign_requested: bool = False
+    compatibility: "_V5XCompatibilityState" = field(default_factory=lambda: _V5XCompatibilityState())
+
+
+@dataclass
+class _V5XCompatibilityState:
+    """Non-blocking compatibility state kept for future auth integration."""
+
+    mode: str = "unknown"
+    checked: bool = False
+    confirmed: Optional[bool] = None
+    last_result_code: Optional[int] = None
+    backend_write_cmd: bytes = b""
+
+
+@dataclass
+class _V5CCompatibilityState:
+    """Non-blocking compatibility state kept for future auth integration."""
+
+    mode: str = "unknown"
+    request_pending: bool = False
+    checked: bool = False
+    confirmed: Optional[bool] = None
+    last_result_code: Optional[int] = None
+    backend_write_cmd: bytes = b""
+    last_trigger_opcode: Optional[int] = None
+    last_trigger_packet: bytes = b""
+
+
+@dataclass
+class _V5CSessionState:
+    """Session-scoped state derived from V5C command and notify traffic."""
+
+    status_code: Optional[int] = None
+    status_name: str = "unknown"
+    is_charging: bool = False
+    query_status_in_flight: bool = False
+    print_complete_seen: bool = False
+    max_print_height: Optional[int] = None
+    device_serial: str = ""
+    serial_valid: Optional[bool] = None
+    last_auth_payload: bytes = b""
+    last_error_status: Optional[int] = None
+    compatibility: "_V5CCompatibilityState" = field(default_factory=lambda: _V5CCompatibilityState())
 
 
 @dataclass(frozen=True)
@@ -82,10 +132,12 @@ class _BleakTransportSession:
         self.flow_can_write = True
         self._command_ack_events: Dict[int, asyncio.Event] = {}
         self._start_ready_event: Optional[asyncio.Event] = None
+        self._connect_info_event: Optional[asyncio.Event] = None
         self._client: Any = None
         self._pending_get_serial: Optional[asyncio.Task[None]] = None
         self._pending_status_poll: Optional[asyncio.Task[None]] = None
         self._v5x_state = _V5XSessionState()
+        self._v5c_state = _V5CSessionState()
 
     def apply_write_selection(self, selection: _WriteSelection) -> None:
         self.bindings.write_char = selection.char
@@ -180,6 +232,8 @@ class _BleakTransportSession:
         write_delay_ms: int,
     ) -> None:
         self._client = client
+        if self._protocol_family is ProtocolFamily.V5X:
+            self._connect_info_event = asyncio.Event()
         if not self._transport_profile.connect_packets:
             return
         if not self.bindings.write_char:
@@ -201,6 +255,8 @@ class _BleakTransportSession:
                 delay_seconds=write_delay_ms / 1000.0,
                 timeout=timeout,
             )
+        if self._protocol_family is ProtocolFamily.V5X and self.notify_started:
+            await self._wait_for_connect_info(min(timeout, 0.4))
 
     async def send(
         self,
@@ -252,6 +308,7 @@ class _BleakTransportSession:
             f"write mode response={response} strategy={self.bindings.write_selection_strategy} "
             f"char={self.bindings.write_char_uuid}"
         )
+        self._track_v5c_outgoing_query_status(data)
         await self._write_chunks(
             client,
             self.bindings.write_char,
@@ -262,6 +319,14 @@ class _BleakTransportSession:
             timeout=timeout,
             wait_for_flow=self._transport_profile.wait_for_flow_on_standard_write,
         )
+
+    def _track_v5c_outgoing_query_status(self, data: bytes) -> None:
+        if self._protocol_family is not ProtocolFamily.V5C:
+            return
+        query_seen = V5C_QUERY_STATUS_PACKET in data
+        self._v5c_state.query_status_in_flight = query_seen
+        if query_seen:
+            self._report_debug("V5C query status armed")
 
     async def _send_split(
         self,
@@ -391,6 +456,7 @@ class _BleakTransportSession:
     ) -> None:
         try:
             await asyncio.wait_for(event.wait(), timeout=timeout)
+            self._validate_command_ack(opcode)
         finally:
             if opcode is not None and self._command_ack_events.get(opcode) is event:
                 self._command_ack_events.pop(opcode, None)
@@ -406,6 +472,18 @@ class _BleakTransportSession:
         finally:
             if self._start_ready_event is event:
                 self._start_ready_event = None
+
+    async def _wait_for_connect_info(self, timeout: float) -> None:
+        if self._connect_info_event is None:
+            return
+        event = self._connect_info_event
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout)
+        except TimeoutError:
+            self._report_debug("V5X connect info was not received during the initial settle window")
+        finally:
+            if self._connect_info_event is event:
+                self._connect_info_event = None
 
     def handle_notification(self, payload: bytes) -> None:
         flow_control = self._transport_profile.flow_control
@@ -428,6 +506,8 @@ class _BleakTransportSession:
                 self._release_command_ack(0xA7)
             elif opcode == 0xA1:
                 self._update_v5x_status(payload)
+            elif opcode == 0xA3:
+                self._mark_v5x_status_poll_ack()
             elif opcode == 0xA6:
                 self._schedule_get_serial()
             elif opcode == 0xAA:
@@ -435,14 +515,26 @@ class _BleakTransportSession:
             elif opcode == 0xA9:
                 status = self._extract_v5x_status_byte(payload)
                 self._v5x_state.last_a9_status = status
-                if status == 0x00:
-                    self._release_command_ack(0xA9)
+                self._release_command_ack(0xA9)
+            elif opcode == 0xAB:
+                self._update_v5x_ab_status(payload)
             elif opcode == 0xB0:
                 self._update_v5x_head_type_from_b0(payload)
             elif opcode == 0xB1:
                 self._update_v5x_info_from_b1(payload)
+                self._release_connect_info()
             elif opcode == 0xB2:
                 self._schedule_status_poll()
+            elif opcode == 0xB3:
+                self._mark_v5x_sign_request()
+        elif self._protocol_family is ProtocolFamily.V5C:
+            opcode = self._extract_prefixed_opcode(payload)
+            if opcode == 0xA1:
+                self._update_v5c_status(payload)
+            elif opcode == 0xAA:
+                self._update_v5c_max_print_height(payload)
+            elif opcode in (0xA8, 0xA9):
+                self._update_v5c_compatibility(payload, opcode)
 
         self._report_debug(f"BLE notify: {payload.hex()}")
 
@@ -476,6 +568,12 @@ class _BleakTransportSession:
             return
         self._start_ready_event.set()
         self._report_debug("start ready: 0xaa")
+
+    def _release_connect_info(self) -> None:
+        if self._connect_info_event is None or self._connect_info_event.is_set():
+            return
+        self._connect_info_event.set()
+        self._report_debug("connect info ready: 0xb1")
 
     def _schedule_status_poll(self) -> None:
         if self._pending_status_poll is not None and not self._pending_status_poll.done():
@@ -540,6 +638,15 @@ class _BleakTransportSession:
         self._pending_status_poll.cancel()
         self._pending_status_poll = None
 
+    def _validate_command_ack(self, opcode: Optional[int]) -> None:
+        if self._protocol_family is not ProtocolFamily.V5X or opcode != 0xA9:
+            return
+        status = self._v5x_state.last_a9_status
+        if status is None:
+            raise RuntimeError("V5X start print response did not include a status byte")
+        if status != 0x00:
+            raise RuntimeError(f"V5X start print was rejected (status=0x{status:02x})")
+
     def _prepare_command_packet(
         self,
         packet: bytes,
@@ -577,12 +684,15 @@ class _BleakTransportSession:
             if self._extract_prefixed_opcode(packet) != 0xA9:
                 continue
             payload = self._extract_prefixed_payload(packet)
-            if payload is None or len(payload) < 6:
+            if payload is None:
                 continue
-            is_gray = payload[2:6] == V5X_GRAY_MODE_SUFFIX
+            if len(payload) == 2:
+                is_gray = True
+            elif len(payload) >= 6:
+                is_gray = payload[2:6] == V5X_GRAY_MODE_SUFFIX
             break
         coverage_ratio = 0.0
-        if split.bulk_payload:
+        if split.bulk_payload and not is_gray:
             total_bits = len(split.bulk_payload) * 8
             if total_bits > 0:
                 black_bits = sum(chunk.bit_count() for chunk in split.bulk_payload)
@@ -714,11 +824,74 @@ class _BleakTransportSession:
             self._v5x_state.serial_valid = serial_hex not in {"000000000000", "ffffffffffff"}
         else:
             self._v5x_state.serial_valid = False
+        self._refresh_v5x_compatibility_mode()
         self._report_debug(
             "V5X serial "
             f"serial={self._v5x_state.device_serial or '<empty>'} "
             f"valid={self._v5x_state.serial_valid}"
         )
+
+    def _refresh_v5x_compatibility_mode(self) -> None:
+        compat = self._v5x_state.compatibility
+        compat.checked = False
+        compat.confirmed = None
+        compat.last_result_code = None
+        compat.backend_write_cmd = b""
+        if self._v5x_state.serial_valid is False:
+            compat.mode = "get_sn"
+        elif self._v5x_state.serial_valid is True:
+            compat.mode = "auth"
+        else:
+            compat.mode = "unknown"
+        self._report_debug(f"V5X compatibility mode: {compat.mode}")
+
+    def build_v5x_compat_request(
+        self,
+        *,
+        ble_name: str,
+        ble_address: str,
+        ble_model: str = "V5X",
+    ) -> Optional[Dict[str, str]]:
+        if self._protocol_family is not ProtocolFamily.V5X:
+            return None
+        mode = self._v5x_state.compatibility.mode
+        if mode not in {"get_sn", "auth"}:
+            return None
+        serial = self._v5x_state.device_serial or "0"
+        return {
+            "mode": mode,
+            "ble_name": ble_name,
+            "ble_address": ble_address,
+            "ble_sn": serial,
+            "ble_model": ble_model,
+        }
+
+    def apply_v5x_compat_result(
+        self,
+        *,
+        mode: str,
+        result_code: Optional[int],
+        write_cmd: bytes | None = None,
+    ) -> None:
+        if self._protocol_family is not ProtocolFamily.V5X:
+            return
+        compat = self._v5x_state.compatibility
+        compat.mode = mode
+        compat.checked = True
+        compat.last_result_code = result_code
+        compat.backend_write_cmd = write_cmd or b""
+        compat.confirmed = None if result_code is None else result_code != -2
+        if result_code == -2:
+            self._reporter.warning(
+                short="V5X compatibility check failed",
+                detail="Continuing without server confirmation for this device session.",
+            )
+            return
+        if write_cmd:
+            self._report_debug(
+                "V5X compatibility write command captured "
+                f"length={len(write_cmd)} mode={mode}"
+            )
 
     def _extract_prefixed_opcode(self, payload: bytes) -> Optional[int]:
         prefix = self._protocol_family.packet_prefix
@@ -753,14 +926,67 @@ class _BleakTransportSession:
         if raw is None or len(raw) < 8:
             return
         self._v5x_state.task_state = raw[0]
+        self._v5x_state.task_state_name = self._v5x_task_state_name(raw[0])
         self._v5x_state.battery_level = raw[3]
         self._v5x_state.temperature_c = raw[4]
         self._v5x_state.error_group = raw[6]
         self._v5x_state.error_code = raw[7]
+        self._handle_v5x_error_state(raw[6], raw[7])
         self._report_debug(
             "V5X status "
-            f"task=0x{raw[0]:02x} battery={raw[3]} temp={raw[4]} "
+            f"task=0x{raw[0]:02x} ({self._v5x_state.task_state_name}) "
+            f"battery={raw[3]} temp={raw[4]} "
             f"error_group=0x{raw[6]:02x} error_code=0x{raw[7]:02x}"
+        )
+
+    @staticmethod
+    def _v5x_task_state_name(task_state: int) -> str:
+        if task_state == 0x00:
+            return "normal"
+        if task_state == 0x01:
+            return "printing"
+        if task_state == 0x02:
+            return "feeding"
+        if task_state == 0x03:
+            return "retracting"
+        return f"0x{task_state:02x}"
+
+    def _handle_v5x_error_state(self, error_group: int, error_code: int) -> None:
+        signature = (error_group, error_code)
+        if signature == (0x00, 0x00):
+            if self._v5x_state.last_error_signature not in (None, (0x00, 0x00)):
+                self._report_debug("V5X printer error state cleared")
+            self._v5x_state.last_error_signature = signature
+            return
+        if self._v5x_state.last_error_signature == signature:
+            return
+        self._v5x_state.last_error_signature = signature
+        self._reporter.warning(
+            short="V5X printer reported an error status",
+            detail=(
+                f"Task={self._v5x_state.task_state_name}, "
+                f"error_group=0x{error_group:02x}, error_code=0x{error_code:02x}."
+            ),
+        )
+
+    def _mark_v5x_status_poll_ack(self) -> None:
+        self._v5x_state.status_poll_ack_seen = True
+        self._report_debug("V5X status poll acknowledged: 0xa3")
+
+    def _update_v5x_ab_status(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if not raw:
+            return
+        self._v5x_state.last_ab_status = raw[-1]
+        self._report_debug(f"V5X auxiliary status: 0x{raw[-1]:02x}")
+
+    def _mark_v5x_sign_request(self) -> None:
+        if self._v5x_state.mxw_sign_requested:
+            return
+        self._v5x_state.mxw_sign_requested = True
+        self._reporter.warning(
+            short="V5X printer requested an additional signing step",
+            detail="Continuing without the optional signing command for this session.",
         )
 
     def _update_v5x_head_type_from_b0(self, payload: bytes) -> None:
@@ -781,6 +1007,7 @@ class _BleakTransportSession:
         raw = self._extract_prefixed_payload(payload)
         if not raw:
             return
+        self._v5x_state.connect_info_received = True
         firmware = raw.decode("ascii", errors="ignore").rstrip("\x00")
         if firmware:
             self._v5x_state.firmware_version = firmware
@@ -794,6 +1021,188 @@ class _BleakTransportSession:
             self._report_debug(
                 f"V5X firmware={self._v5x_state.firmware_version} "
                 f"head_type={self._v5x_state.print_head_type}"
+            )
+
+    def _update_v5c_status(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if not raw:
+            return
+        previous_status = self._v5c_state.status_code
+        status = raw[0]
+        self._v5c_state.status_code = status
+        self._v5c_state.status_name = self._v5c_status_name(status)
+        self._v5c_state.is_charging = status in (0x10, 0x11)
+        if status == 0x80:
+            self._v5c_state.print_complete_seen = False
+        elif status == 0x00:
+            if self._v5c_state.query_status_in_flight:
+                self._v5c_state.query_status_in_flight = False
+                self._report_debug("V5C query status acknowledged")
+            elif previous_status == 0x80:
+                self._v5c_state.print_complete_seen = True
+                self._report_debug("V5C print complete")
+        self._handle_v5c_status(status)
+        self._report_debug(
+            f"V5C status status=0x{status:02x} ({self._v5c_state.status_name})"
+        )
+
+    @staticmethod
+    def _v5c_status_name(status: int) -> str:
+        if status == 0x00:
+            return "normal"
+        if status == 0x80:
+            return "printing"
+        if status in (0x10, 0x11):
+            return "charging"
+        if status in (0x01, 0x02, 0x03):
+            return "attention"
+        if status == 0x04:
+            return "overheat"
+        if status == 0x08:
+            return "low_power"
+        return f"0x{status:02x}"
+
+    def _handle_v5c_status(self, status: int) -> None:
+        if status in (0x00, 0x80, 0x10, 0x11):
+            if self._v5c_state.last_error_status is not None:
+                self._report_debug("V5C printer error state cleared")
+            self._v5c_state.last_error_status = None
+            return
+        if self._v5c_state.last_error_status == status:
+            return
+        self._v5c_state.last_error_status = status
+        if status in (0x01, 0x02, 0x03):
+            short = "V5C printer reported an attention state"
+        elif status == 0x04:
+            short = "V5C printer reported an overheat state"
+        elif status == 0x08:
+            short = "V5C printer reported a low-power state"
+        else:
+            short = "V5C printer reported an error status"
+        self._reporter.warning(
+            short=short,
+            detail=f"status=0x{status:02x} ({self._v5c_state.status_name}).",
+        )
+
+    def _update_v5c_max_print_height(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if raw is None or len(raw) < 2:
+            return
+        height = int.from_bytes(raw[:2], "little")
+        self._v5c_state.max_print_height = height
+        self._report_debug(f"V5C max print height: {height}")
+
+    def _update_v5c_compatibility(self, payload: bytes, opcode: int) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if raw is None:
+            return
+        self._v5c_state.last_auth_payload = raw
+        compat = self._v5c_state.compatibility
+        compat.last_trigger_opcode = opcode
+        compat.last_trigger_packet = payload
+        if opcode == 0xA8:
+            self._v5c_state.device_serial = ""
+            self._v5c_state.serial_valid = None
+            self._set_v5c_compatibility_mode("to_auth")
+            compat.request_pending = True
+            self._report_debug("V5C compatibility trigger opcode=0xa8 mode=to_auth")
+            return
+
+        serial_hex = raw[:8].hex()
+        self._v5c_state.device_serial = serial_hex
+        if serial_hex:
+            self._v5c_state.serial_valid = int(serial_hex, 16) != 0
+        else:
+            self._v5c_state.serial_valid = False
+        self._refresh_v5c_compatibility_mode()
+        compat.request_pending = True
+        self._report_debug(
+            "V5C compatibility trigger "
+            f"opcode=0x{opcode:02x} serial={serial_hex or '<empty>'} "
+            f"valid={self._v5c_state.serial_valid}"
+        )
+
+    def _refresh_v5c_compatibility_mode(self) -> None:
+        compat = self._v5c_state.compatibility
+        if self._v5c_state.serial_valid is False:
+            mode = "get_sn"
+        elif self._v5c_state.serial_valid is True:
+            mode = "auth"
+        else:
+            mode = "unknown"
+        self._set_v5c_compatibility_mode(mode)
+
+    def _set_v5c_compatibility_mode(self, mode: str) -> None:
+        compat = self._v5c_state.compatibility
+        compat.mode = mode
+        compat.request_pending = False
+        compat.checked = False
+        compat.confirmed = None
+        compat.last_result_code = None
+        compat.backend_write_cmd = b""
+        self._report_debug(f"V5C compatibility mode: {compat.mode}")
+
+    def build_v5c_compat_request(
+        self,
+        *,
+        ble_name: str,
+        ble_address: str,
+        ble_model: str = "V5C",
+    ) -> Optional[Dict[str, str]]:
+        if self._protocol_family is not ProtocolFamily.V5C:
+            return None
+        compat = self._v5c_state.compatibility
+        if not compat.request_pending:
+            return None
+        mode = compat.mode
+        if mode == "to_auth":
+            packet = compat.last_trigger_packet
+            if not packet:
+                return None
+            return {
+                "mode": mode,
+                "ble_name": ble_name,
+                "ble_address": ble_address,
+                "ble_sn": packet.hex(),
+                "ble_model": ble_model,
+            }
+        if mode in {"get_sn", "auth"}:
+            serial = self._v5c_state.device_serial or "0"
+            return {
+                "mode": mode,
+                "ble_name": ble_name,
+                "ble_address": ble_address,
+                "ble_sn": serial,
+                "ble_model": ble_model,
+            }
+        return None
+
+    def apply_v5c_compat_result(
+        self,
+        *,
+        mode: str,
+        result_code: Optional[int],
+        write_cmd: bytes | None = None,
+    ) -> None:
+        if self._protocol_family is not ProtocolFamily.V5C:
+            return
+        compat = self._v5c_state.compatibility
+        compat.mode = mode
+        compat.request_pending = False
+        compat.checked = True
+        compat.last_result_code = result_code
+        compat.backend_write_cmd = write_cmd or b""
+        compat.confirmed = None if result_code is None else result_code != -2
+        if result_code == -2:
+            self._reporter.warning(
+                short="V5C compatibility check failed",
+                detail="Continuing without server confirmation for this device session.",
+            )
+            return
+        if write_cmd:
+            self._report_debug(
+                "V5C compatibility write command captured "
+                f"length={len(write_cmd)} mode={mode}"
             )
 
     @staticmethod
