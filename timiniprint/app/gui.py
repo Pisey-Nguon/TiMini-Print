@@ -31,12 +31,25 @@ class BleLoop:
     def _run(self) -> None:
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
+        pending = [task for task in asyncio.all_tasks(self._loop) if not task.done()]
+        for task in pending:
+            task.cancel()
+        if pending:
+            self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+        self._loop.run_until_complete(self._loop.shutdown_asyncgens())
+        self._loop.close()
 
     def submit(self, coro, callback=None):
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
         if callback:
             future.add_done_callback(callback)
         return future
+
+    def shutdown(self, timeout: float = 2.0) -> None:
+        if self._loop.is_closed():
+            return
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._thread.join(timeout)
 
 
 class TiMiniPrintGUI(tk.Tk):
@@ -84,7 +97,9 @@ class TiMiniPrintGUI(tk.Tk):
         self._paper_motion_job = None
         self._paper_motion_busy = False
         self._layout_ready = False
+        self._closing = False
         self.file_var.trace_add("write", self._on_file_path_change)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self._build_ui()
         self.update_idletasks()
@@ -662,6 +677,21 @@ class TiMiniPrintGUI(tk.Tk):
     def _set_device_combo_state(self, enabled: bool) -> None:
         state = "readonly" if enabled else "disabled"
         self.device_combo.configure(state=state)
+
+    def _on_close(self) -> None:
+        if self._closing:
+            return
+        self._closing = True
+        self._stop_paper_motion()
+        try:
+            if self.backend.is_connected():
+                future = self.ble_loop.submit(self.backend.disconnect())
+                future.result(timeout=2.0)
+        except Exception:
+            pass
+        finally:
+            self.ble_loop.shutdown()
+            self.destroy()
 
 
 def main() -> int:
