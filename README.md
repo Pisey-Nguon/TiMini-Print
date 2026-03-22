@@ -1,13 +1,13 @@
 # TiMini Print Bluetooth Printer Tool
 Alternative [desktop software for Chinese Bluetooth thermal printers](https://github.com/Dejniel/TiMini-Print/releases) that use proprietary protocols (not ESC/POS), as a replacement for apps like “Tiny Print”, “Fun Print”, “Phomemo”, or “iBleem”.
 It supports almost all mini printers! Check the huge list of [supported Bluetooth printer models](#supported-printer-models), or report missing ones.
-It lets you print images, PDFs, or plain text from your computer. It supports both a GUI and a “fire-and-forget” CLI mode.
+It lets you print images, PDFs, or plain text from your computer. It supports both a GUI and a “fire-and-forget” CLI mode
 
 These printers are often sold on AliExpress and under generic names such as “thermal printer”, “mini printer”, or “cat printer”.
 TiMini Print works on Windows, Linux, and macOS as a standalone tool without a system printer driver (it does not emulate a driver or print spooler)
 
 ## Motivation
-I bought a Chinese mini printer and could not find any decent desktop software that met my expectations, so I wrote my own. This is also the kind of work I do professionally. If you need help with a similar problem, you can [contact me](https://inajiffy.eu/) — I can also help with [broader support or custom implementation](#looking-for-broader-support-or-implementation).
+I bought a Chinese mini printer and could not find any decent desktop software that met my expectations, so I wrote my own. This is also the kind of work I do professionally. If you need help with a similar problem, you can [contact me](https://inajiffy.eu/) — I can also help with [broader support or custom implementation](#looking-for-broader-support-or-implementation)
 
 ![TiMini Print LOGO EMX-040256 Printer Psi Patrol](EMX_040256.jpg)
 
@@ -16,10 +16,10 @@ I bought a Chinese mini printer and could not find any decent desktop software t
 - If you're a developer, contributions and bug reports are always welcome—please jump in. Especially if you use or build on non-Linux systems, please consider contributing fixes or improvements
 
 ## Looking for broader support or implementation?
-- If you need reverse (I mean security...) engineering, broader commercial support, or a custom implementation, feel free to [reach out](https://inajiffy.eu/). I work on broken systems, neglected integrations, and projects that are already end-of-life, unsupported — or simply unsupportable. I also take on implementations that other teams are unwilling to touch.
+- If you need security/reverse engineering, broader commercial support, or a custom implementation, feel free to [reach out](https://inajiffy.eu/). I work on broken systems, neglected integrations, and projects that are already end-of-life, unsupported — or simply unsupportable. I also handle custom implementation work that sits outside the usual support model
 
 # Requirements
-You can find the latest standalone executable files on the [releases page](https://github.com/Dejniel/TiMini-Print/releases) and choose the asset that starts with `TiMini-Print-GUI-...` or `TiMini-Print-Command-Line-...` for your platform, or you can build the project yourself.
+You can find the latest standalone executable files on the [releases page](https://github.com/Dejniel/TiMini-Print/releases) and choose the asset that starts with `TiMini-Print-GUI-...` or `TiMini-Print-Command-Line-...` for your platform, or you can build the project yourself
 
 Theoretically, I support Windows, macOS, and Linux, but I test builds only on Ubuntu-like systems—if you need to run this elsewhere, please report issues or submit a fix :P
 
@@ -37,7 +37,7 @@ If you build or run from source instead, use `python3 timiniprint_gui.py` or `py
 ## Graphical user interface
 You can scan, connect or disconnect with one button, choose a file, and print.
 Start the graphical app by running the [downloaded executable file](#requirements).
-On Linux and macOS, make sure it has execute permission first.
+On Linux, make sure it has execute permission first.
 
 ```bash
 # Replace the filename below with the matching asset for your platform
@@ -127,7 +127,7 @@ Alias-based Bluetooth name prefixes:
   INSTANTPRINTPLUS, REKA, HDMDT-00, KERUI, BH03
 
 ## Experimental support
-These entries are available, but they still need more real-device reports and tuning. In Bluetooth device lists they appear as `[experimental]`.
+These entries are available, but they still need more real-device reports and tuning. In Bluetooth device lists they appear as `[experimental]`
 
 Experimental printer models:
 P100, MP100, P100S, MP100S, LP100S, P3, P3S
