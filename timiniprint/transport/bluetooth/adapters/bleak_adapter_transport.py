@@ -7,13 +7,28 @@ once the BLE connection itself is established.
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .... import reporting
+from ....protocol.dynamic_helpers import (
+    DensityLevels,
+    V5GDynamicRuntimeContext,
+    V5GContinuousPlan,
+    mx06_continuous_plan,
+    mx06_single_density_value,
+    mx10_continuous_plan,
+    mx10_continuous_series,
+    mx10_single_density_value,
+    pd01_continuous_plan,
+    pd01_continuous_series,
+    pd01_single_density_value,
+    v5g_continuous_series,
+)
 from ....protocol.families import BleTransportProfile, split_prefixed_bulk_stream
 from ....protocol.family import ProtocolFamily
-from ....protocol.packet import make_packet
+from ....protocol.packet import make_packet, prefixed_packet_length
 from ....protocol.families.v5c import V5C_QUERY_STATUS_PACKET
 from ....protocol.families.v5x import (
     V5X_GET_SERIAL_PACKET,
@@ -105,6 +120,24 @@ class _V5CSessionState:
     compatibility: "_V5CCompatibilityState" = field(default_factory=lambda: _V5CCompatibilityState())
 
 
+@dataclass
+class _V5GSessionState:
+    """Session-scoped state used by V5G density packet rewriting."""
+
+    temperature_c: int = -1
+    d2_status: bool = False
+    didian_status: bool = False
+    printing: bool = False
+    helper_kind: Optional[str] = None
+    density_profile_key: Optional[str] = None
+    last_complete_time: float = 0.0
+    last_density_value: Optional[int] = None
+    last_single_density_value: int = 0
+    last_print_record_copies: int = 0
+    last_print_record_density: Optional[int] = None
+    last_print_mode_is_text: bool = False
+
+
 @dataclass(frozen=True)
 class _V5XJobContext:
     """Derived print-job metadata used to tune V5X session behavior."""
@@ -136,8 +169,10 @@ class _BleakTransportSession:
         self._client: Any = None
         self._pending_get_serial: Optional[asyncio.Task[None]] = None
         self._pending_status_poll: Optional[asyncio.Task[None]] = None
+        self._pending_v5g_reset: Optional[asyncio.Task[None]] = None
         self._v5x_state = _V5XSessionState()
         self._v5c_state = _V5CSessionState()
+        self._v5g_state = _V5GSessionState()
 
     def apply_write_selection(self, selection: _WriteSelection) -> None:
         self.bindings.write_char = selection.char
@@ -212,6 +247,7 @@ class _BleakTransportSession:
     async def stop_notify_if_started(self, client: Any) -> None:
         self._cancel_pending_get_serial()
         self._cancel_pending_status_poll()
+        self._cancel_pending_v5g_reset()
         if not self.notify_started or not self.bindings.notify_char_uuid:
             return
         stop_notify = getattr(client, "stop_notify", None)
@@ -229,9 +265,10 @@ class _BleakTransportSession:
         *,
         mtu_size: int,
         timeout: float,
-        write_delay_ms: int,
     ) -> None:
         self._client = client
+        if self._protocol_family is ProtocolFamily.V5G:
+            self._v5g_state = _V5GSessionState()
         if self._protocol_family is ProtocolFamily.V5X:
             self._connect_info_event = asyncio.Event()
         if not self._transport_profile.connect_packets:
@@ -251,8 +288,8 @@ class _BleakTransportSession:
                 self.bindings.write_char,
                 packet,
                 response=response,
-                chunk_size=min(mtu_size, 20),
-                delay_seconds=write_delay_ms / 1000.0,
+                chunk_size=min(mtu_size, self._transport_profile.standard_chunk_cap),
+                delay_seconds=self._transport_profile.standard_write_delay_ms / 1000.0,
                 timeout=timeout,
             )
         if self._protocol_family is ProtocolFamily.V5X and self.notify_started:
@@ -265,8 +302,7 @@ class _BleakTransportSession:
         *,
         mtu_size: int,
         timeout: float,
-        write_delay_ms: int,
-        bulk_write_delay_ms: int,
+        runtime_context: V5GDynamicRuntimeContext | None = None,
     ) -> None:
         self._client = client
         if not self.bindings.write_char:
@@ -278,8 +314,6 @@ class _BleakTransportSession:
                 data,
                 mtu_size=mtu_size,
                 timeout=timeout,
-                write_delay_ms=write_delay_ms,
-                bulk_write_delay_ms=bulk_write_delay_ms,
             )
             return
         await self._send_standard(
@@ -287,7 +321,7 @@ class _BleakTransportSession:
             data,
             mtu_size=mtu_size,
             timeout=timeout,
-            write_delay_ms=write_delay_ms,
+            runtime_context=runtime_context,
         )
 
     async def _send_standard(
@@ -297,28 +331,268 @@ class _BleakTransportSession:
         *,
         mtu_size: int,
         timeout: float,
-        write_delay_ms: int,
+        runtime_context: V5GDynamicRuntimeContext | None = None,
     ) -> None:
-        response = self._resolve_response_mode(
-            self.bindings.write_char,
-            self.bindings.write_selection_strategy,
-            self.bindings.write_response_preference,
-        )
+        if self._protocol_family is ProtocolFamily.V5G:
+            self._v5g_state.printing = True
+            if runtime_context is not None:
+                self._v5g_state.helper_kind = runtime_context.helper_kind
+                self._v5g_state.density_profile_key = runtime_context.density_profile_key
+        try:
+            if runtime_context is not None:
+                data = self._prepare_v5g_standard_payload(data, runtime_context)
+            response = self._resolve_response_mode(
+                self.bindings.write_char,
+                self.bindings.write_selection_strategy,
+                self.bindings.write_response_preference,
+            )
+            self._report_debug(
+                f"write mode response={response} strategy={self.bindings.write_selection_strategy} "
+                f"char={self.bindings.write_char_uuid}"
+            )
+            self._track_v5c_outgoing_query_status(data)
+            await self._write_chunks(
+                client,
+                self.bindings.write_char,
+                data,
+                response=response,
+                chunk_size=min(mtu_size, self._transport_profile.standard_chunk_cap),
+                delay_seconds=self._transport_profile.standard_write_delay_ms / 1000.0,
+                timeout=timeout,
+                wait_for_flow=self._transport_profile.wait_for_flow_on_standard_write,
+            )
+        finally:
+            if self._protocol_family is ProtocolFamily.V5G:
+                self._v5g_state.printing = False
+                self._v5g_state.last_complete_time = time.time()
+
+    def _prepare_v5g_standard_payload(
+        self,
+        data: bytes,
+        runtime_context: V5GDynamicRuntimeContext,
+    ) -> bytes:
+        if self._protocol_family is not ProtocolFamily.V5G or len(data) <= 50:
+            return data
+        packets = self._split_prefixed_packets(data)
+        if packets is None:
+            return data
+        density_indexes = [
+            index for index, packet in enumerate(packets)
+            if self._extract_prefixed_opcode(packet) == 0xF2
+        ]
+        if not density_indexes:
+            return data
+
+        if self._should_use_v5g_continuous_helper(packets, density_indexes, runtime_context):
+            rewrite_map = self._build_v5g_continuous_density_map(
+                packets,
+                density_indexes,
+                runtime_context,
+            )
+        else:
+            rewrite_map = self._build_v5g_single_density_map(
+                packets,
+                density_indexes,
+                runtime_context,
+            )
+
+        updated = bytearray()
+        current_mode_is_text = self._v5g_state.last_print_mode_is_text
+        last_density_value = self._v5g_state.last_density_value
+        for index, packet in enumerate(packets):
+            opcode = self._extract_prefixed_opcode(packet)
+            if opcode == 0xBE:
+                current_mode_is_text = self._extract_v5g_print_mode(packet)
+            if index in rewrite_map:
+                packet = make_packet(
+                    0xF2,
+                    int(rewrite_map[index]).to_bytes(2, "little", signed=False),
+                    ProtocolFamily.V5G,
+                )
+                last_density_value = rewrite_map[index]
+            elif opcode == 0xF2:
+                current_value = self._extract_v5g_density_value(packet)
+                if current_value is not None:
+                    last_density_value = current_value
+            updated += packet
+        self._v5g_state.last_density_value = last_density_value
+        self._v5g_state.last_print_mode_is_text = current_mode_is_text
+        if not rewrite_map:
+            return data
+        return bytes(updated)
+
+    def _should_use_v5g_continuous_helper(
+        self,
+        packets: list[bytes],
+        density_indexes: list[int],
+        runtime_context: V5GDynamicRuntimeContext,
+    ) -> bool:
+        if len(density_indexes) <= 4:
+            return False
+        first_index = density_indexes[0]
+        current_mode_is_text = self._mode_before_packet_index(packets, first_index)
+        levels = self._select_v5g_levels(runtime_context, current_mode_is_text)
+        first_value = self._extract_v5g_density_value(packets[first_index])
+        if levels is None or first_value is None:
+            return False
+        helper_kind = runtime_context.helper_kind
+        qualifies = helper_kind in {"mx06", "mx10", "pd01"} or first_value >= levels.middle
+        if not qualifies:
+            return False
+        return runtime_context.applies_d2_status or helper_kind in {"mx10", "pd01"}
+
+    def _build_v5g_single_density_map(
+        self,
+        packets: list[bytes],
+        density_indexes: list[int],
+        runtime_context: V5GDynamicRuntimeContext,
+    ) -> Dict[int, int]:
+        first_index = density_indexes[0]
+        current_mode_is_text = self._mode_before_packet_index(packets, first_index)
+        levels = self._select_v5g_levels(runtime_context, current_mode_is_text)
+        current_value = self._extract_v5g_density_value(packets[first_index])
+        if current_value is None or levels is None:
+            return {}
+
+        adjusted = current_value
+        helper_kind = runtime_context.helper_kind
+        recent_completion = (time.time() - self._v5g_state.last_complete_time) < 50
+        temperature_c = self._v5g_temperature_for_helper()
+        if helper_kind == "mx06" and self._v5g_state.d2_status and recent_completion:
+            adjusted = mx06_single_density_value(
+                current_value,
+                self._v5g_state.last_single_density_value,
+            )
+        elif helper_kind == "pd01" and temperature_c >= 50:
+            adjusted = pd01_single_density_value(temperature_c, levels, current_value)
+        elif helper_kind == "mx10" and temperature_c >= 50:
+            adjusted = mx10_single_density_value(temperature_c, levels, current_value)
+
+        self._v5g_state.last_single_density_value = adjusted
+        if adjusted == current_value:
+            return {}
+
         self._report_debug(
-            f"write mode response={response} strategy={self.bindings.write_selection_strategy} "
-            f"char={self.bindings.write_char_uuid}"
+            f"V5G single density adjusted mode={'text' if current_mode_is_text else 'image'} "
+            f"user={current_value} target={adjusted} temp={self._v5g_state.temperature_c}"
         )
-        self._track_v5c_outgoing_query_status(data)
-        await self._write_chunks(
-            client,
-            self.bindings.write_char,
-            data,
-            response=response,
-            chunk_size=min(mtu_size, 20),
-            delay_seconds=write_delay_ms / 1000.0,
-            timeout=timeout,
-            wait_for_flow=self._transport_profile.wait_for_flow_on_standard_write,
+        return {density_index: adjusted for density_index in density_indexes}
+
+    def _build_v5g_continuous_density_map(
+        self,
+        packets: list[bytes],
+        density_indexes: list[int],
+        runtime_context: V5GDynamicRuntimeContext,
+    ) -> Dict[int, int]:
+        first_index = density_indexes[0]
+        current_mode_is_text = self._mode_before_packet_index(packets, first_index)
+        levels = self._select_v5g_levels(runtime_context, current_mode_is_text)
+        first_value = self._extract_v5g_density_value(packets[first_index])
+        if levels is None or first_value is None:
+            return {}
+        helper_kind = runtime_context.helper_kind
+        temperature_c = self._v5g_temperature_for_helper()
+        if helper_kind == "mx06":
+            plan = mx06_continuous_plan(
+                levels,
+                first_value,
+                last_record_density=self._v5g_state.last_print_record_density,
+                recent_completion=(time.time() - self._v5g_state.last_complete_time) < 50,
+            )
+        elif helper_kind == "pd01":
+            plan = pd01_continuous_plan(temperature_c, levels, first_value)
+        elif helper_kind == "mx10":
+            plan = mx10_continuous_plan(temperature_c, levels, first_value)
+        else:
+            plan = V5GContinuousPlan(
+                begin_density_value=min(levels.middle, first_value),
+                unchanged_packet_count=4,
+                minimum_density_value=95,
+                update_first_packet=min(levels.middle, first_value) != first_value,
+            )
+
+        rewrite_map: Dict[int, int] = {}
+        leading_value = plan.begin_density_value if plan.update_first_packet else first_value
+        leading_count = min(len(density_indexes), plan.unchanged_packet_count)
+        for density_index in density_indexes[:leading_count]:
+            current_value = self._extract_v5g_density_value(packets[density_index])
+            if current_value != leading_value:
+                rewrite_map[density_index] = leading_value
+
+        remaining = max(0, len(density_indexes) - plan.unchanged_packet_count)
+        sequence: list[int] = []
+        if remaining > 0:
+            if helper_kind == "pd01":
+                sequence = pd01_continuous_series(leading_value, remaining)
+            elif helper_kind == "mx10":
+                sequence = mx10_continuous_series(
+                    leading_value,
+                    remaining,
+                    minimum_value=plan.minimum_density_value,
+                )
+            else:
+                sequence = v5g_continuous_series(
+                    leading_value,
+                    remaining,
+                    clamp_low_70=plan.clamp_low_70,
+                )
+
+        for offset, density_index in enumerate(density_indexes[plan.unchanged_packet_count:]):
+            if offset >= len(sequence):
+                break
+            current_value = self._extract_v5g_density_value(packets[density_index])
+            if current_value != sequence[offset]:
+                rewrite_map[density_index] = sequence[offset]
+
+        final_density = sequence[-1] if sequence else leading_value
+        self._v5g_state.last_print_record_copies = len(density_indexes)
+        self._v5g_state.last_print_record_density = final_density
+        self._report_debug(
+            f"V5G continuous density helper kind={runtime_context.helper_kind} "
+            f"count={len(density_indexes)} first={leading_value} "
+            f"temp={self._v5g_state.temperature_c}"
         )
+        return rewrite_map
+
+    def _v5g_temperature_for_helper(self) -> int:
+        return self._v5g_state.temperature_c
+
+    @staticmethod
+    def _select_v5g_levels(
+        runtime_context: V5GDynamicRuntimeContext,
+        is_text: bool,
+    ) -> DensityLevels | None:
+        return runtime_context.text_levels if is_text else runtime_context.image_levels
+
+    def _mode_before_packet_index(self, packets: list[bytes], packet_index: int) -> bool:
+        is_text = self._v5g_state.last_print_mode_is_text
+        for packet in packets[:packet_index]:
+            if self._extract_prefixed_opcode(packet) == 0xBE:
+                is_text = self._extract_v5g_print_mode(packet)
+        return is_text
+
+    def _split_prefixed_packets(self, data: bytes) -> list[bytes] | None:
+        packets: list[bytes] = []
+        offset = 0
+        while offset < len(data):
+            packet_len = prefixed_packet_length(data, offset, self._protocol_family)
+            if packet_len is None:
+                return None
+            packets.append(data[offset : offset + packet_len])
+            offset += packet_len
+        return packets
+
+    def _extract_v5g_density_value(self, packet: bytes) -> int | None:
+        payload = self._extract_prefixed_payload(packet)
+        if payload is None or len(payload) != 2:
+            return None
+        return payload[0] | (payload[1] << 8)
+
+    def _extract_v5g_print_mode(self, packet: bytes) -> bool:
+        payload = self._extract_prefixed_payload(packet)
+        if not payload:
+            return False
+        return payload[0] == 0x01
 
     def _track_v5c_outgoing_query_status(self, data: bytes) -> None:
         if self._protocol_family is not ProtocolFamily.V5C:
@@ -335,8 +609,6 @@ class _BleakTransportSession:
         *,
         mtu_size: int,
         timeout: float,
-        write_delay_ms: int,
-        bulk_write_delay_ms: int,
     ) -> None:
         if not self.bindings.bulk_write_char:
             raise RuntimeError("Bulk write characteristic not found")
@@ -383,8 +655,8 @@ class _BleakTransportSession:
                     self.bindings.write_char,
                     packet,
                     response=cmd_response,
-                    chunk_size=min(mtu_size, 20),
-                    delay_seconds=write_delay_ms / 1000.0,
+                    chunk_size=min(mtu_size, self._transport_profile.standard_chunk_cap),
+                    delay_seconds=self._transport_profile.standard_write_delay_ms / 1000.0,
                     timeout=timeout,
                 )
                 if ack_event is not None:
@@ -404,8 +676,8 @@ class _BleakTransportSession:
                 self.bindings.bulk_write_char,
                 split.bulk_payload,
                 response=bulk_response,
-                chunk_size=min(mtu_size, self._transport_profile.bulk_chunk_size),
-                delay_seconds=bulk_write_delay_ms / 1000.0,
+                chunk_size=min(mtu_size, self._transport_profile.bulk_chunk_cap),
+                delay_seconds=self._transport_profile.bulk_write_delay_ms / 1000.0,
                 timeout=timeout,
                 wait_for_flow=self._transport_profile.flow_control is not None,
             )
@@ -416,8 +688,8 @@ class _BleakTransportSession:
                 self.bindings.write_char,
                 packet,
                 response=cmd_response,
-                chunk_size=min(mtu_size, 20),
-                delay_seconds=write_delay_ms / 1000.0,
+                chunk_size=min(mtu_size, self._transport_profile.standard_chunk_cap),
+                delay_seconds=self._transport_profile.standard_write_delay_ms / 1000.0,
                 timeout=timeout,
             )
 
@@ -535,6 +807,14 @@ class _BleakTransportSession:
                 self._update_v5c_max_print_height(payload)
             elif opcode in (0xA8, 0xA9):
                 self._update_v5c_compatibility(payload, opcode)
+        elif self._protocol_family is ProtocolFamily.V5G:
+            opcode = self._extract_prefixed_opcode(payload)
+            if opcode == 0xA3:
+                self._update_v5g_status(payload)
+            elif opcode == 0xD2:
+                self._update_v5g_d2_status(payload)
+            elif opcode == 0xD3:
+                self._update_v5g_temperature(payload)
 
         self._report_debug(f"BLE notify: {payload.hex()}")
 
@@ -587,6 +867,20 @@ class _BleakTransportSession:
         self._pending_status_poll = loop.create_task(self._send_v5x_status_poll())
         self._pending_status_poll.add_done_callback(lambda _task: setattr(self, "_pending_status_poll", None))
 
+    def _schedule_v5g_reset_density(self, value: int) -> None:
+        if self._pending_v5g_reset is not None and not self._pending_v5g_reset.done():
+            return
+        if not self._client or not self.bindings.write_char:
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._pending_v5g_reset = loop.create_task(self._send_v5g_density_reset(value))
+        self._pending_v5g_reset.add_done_callback(
+            lambda _task: setattr(self, "_pending_v5g_reset", None)
+        )
+
     def _schedule_get_serial(self) -> None:
         if self._pending_get_serial is not None and not self._pending_get_serial.done():
             return
@@ -637,6 +931,36 @@ class _BleakTransportSession:
             return
         self._pending_status_poll.cancel()
         self._pending_status_poll = None
+
+    def _cancel_pending_v5g_reset(self) -> None:
+        if self._pending_v5g_reset is None:
+            return
+        self._pending_v5g_reset.cancel()
+        self._pending_v5g_reset = None
+
+    async def _send_v5g_density_reset(self, value: int) -> None:
+        if not self._client or not self.bindings.write_char:
+            return
+        response = self._resolve_response_mode(
+            self.bindings.write_char,
+            self.bindings.write_selection_strategy,
+            self.bindings.write_response_preference,
+        )
+        packet = make_packet(
+            0xF2,
+            int(value).to_bytes(2, "little", signed=False),
+            ProtocolFamily.V5G,
+        )
+        await self._write_chunks(
+            self._client,
+            self.bindings.write_char,
+            packet,
+            response=response,
+            chunk_size=min(180, self._transport_profile.standard_chunk_cap),
+            delay_seconds=self._transport_profile.standard_write_delay_ms / 1000.0,
+            timeout=0.2,
+        )
+        self._v5g_state.last_density_value = value
 
     def _validate_command_ack(self, opcode: Optional[int]) -> None:
         if self._protocol_family is not ProtocolFamily.V5X or opcode != 0xA9:
@@ -892,6 +1216,50 @@ class _BleakTransportSession:
                 "V5X compatibility write command captured "
                 f"length={len(write_cmd)} mode={mode}"
             )
+
+    def _update_v5g_status(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if not raw:
+            return
+        status = raw[0]
+        if status == 0x00:
+            self._v5g_state.didian_status = False
+        elif status == 0x08:
+            self._v5g_state.didian_status = True
+        elif status == 0x04:
+            self._v5g_state.d2_status = True
+        self._report_debug(
+            f"V5G status status=0x{status:02x} didian={self._v5g_state.didian_status} "
+            f"d2={self._v5g_state.d2_status}"
+        )
+
+    def _update_v5g_d2_status(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if raw is None:
+            return
+        self._v5g_state.d2_status = True
+        self._report_debug("V5G D2 status received")
+
+    def _update_v5g_temperature(self, payload: bytes) -> None:
+        raw = self._extract_prefixed_payload(payload)
+        if not raw:
+            return
+        previous = self._v5g_state.temperature_c
+        self._v5g_state.temperature_c = -1 if raw[0] == 0xFF else raw[0]
+        if (
+            self._v5g_state.helper_kind == "pd01"
+            and not self._v5g_state.printing
+            and (
+                self._v5g_state.temperature_c == -1
+                or (
+                    previous >= 0
+                    and self._v5g_state.temperature_c < previous
+                    and self._v5g_state.temperature_c <= 60
+                )
+            )
+        ):
+            self._schedule_v5g_reset_density(120)
+        self._report_debug(f"V5G temperature={self._v5g_state.temperature_c}")
 
     def _extract_prefixed_opcode(self, payload: bytes) -> Optional[int]:
         prefix = self._protocol_family.packet_prefix

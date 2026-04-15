@@ -41,7 +41,7 @@ class TransportSerialTests(unittest.TestCase):
         try:
             t = SerialTransport("/dev/ttyS0")
             with patch("time.sleep") as sleep_mock:
-                t._write_blocking(b"abcdef", chunk_size=2, interval_ms=5)
+                t._write_blocking(b"abcdef", chunk_size=2, delay_ms=5)
             self.assertEqual(handle.writes, [b"ab", b"cd", b"ef"])
             self.assertTrue(handle.flushed)
             self.assertGreaterEqual(sleep_mock.call_count, 1)
@@ -59,7 +59,7 @@ class TransportSerialTests(unittest.TestCase):
         t = SerialTransport("/dev/ttyS0")
         with patch("builtins.__import__", side_effect=_import):
             with self.assertRaisesRegex(RuntimeError, "pyserial is required"):
-                t._write_blocking(b"x", chunk_size=1, interval_ms=0)
+                t._write_blocking(b"x", chunk_size=1, delay_ms=0)
 
     def test_write_blocking_wraps_write_error(self) -> None:
         class _Broken:

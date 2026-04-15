@@ -3,267 +3,380 @@ from __future__ import annotations
 import unittest
 
 from tests.helpers import reset_registry_cache
-from timiniprint.devices.models import (
-    PrinterModel,
-    PrinterModelAliasKind,
-    PrinterModelAliasRegistry,
-    PrinterModelHeadAlias,
-    PrinterModelMacAlias,
-    PrinterModelMatchSource,
-    PrinterModelRegistry,
-)
+from timiniprint.devices import PrinterCatalog
+from timiniprint.devices.profiles import DetectionRule
 from timiniprint.protocol.family import ProtocolFamily
-from timiniprint.protocol.types import ImageEncoding, ImagePipelineConfig, PixelFormat
+from timiniprint.protocol.types import ImageEncoding, PixelFormat
 
 
-def _model(model_no: str, head_name: str) -> PrinterModel:
-    return PrinterModel(
-        model_no=model_no,
-        model=1,
-        size=1,
-        paper_size=1,
-        print_size=384,
-        one_length=1,
-        head_name=head_name,
-        can_change_mtu=False,
-        dev_dpi=203,
-        img_print_speed=10,
-        text_print_speed=8,
-        img_mtu=180,
-        image_pipeline=ImagePipelineConfig(
-            formats=(PixelFormat.BW1,),
-            encoding=ImageEncoding.LEGACY_RAW,
-        ),
-        paper_num=1,
-        interval_ms=4,
-        thin_energy=0,
-        moderation_energy=5000,
-        deepen_energy=0,
-        text_energy=8000,
-        has_id=False,
-        use_spp=False,
-        protocol_family=ProtocolFamily.LEGACY,
-        can_print_label=False,
-        label_value="",
-        back_paper_num=0,
-    )
+def _profile_payload(profile_key: str = "demo") -> dict:
+    return {
+        "profile_key": profile_key,
+        "size": 1,
+        "paper_size": 1,
+        "print_size": 384,
+        "one_length": 8,
+        "dev_dpi": 203,
+        "can_change_mtu": False,
+        "has_id": False,
+        "use_spp": False,
+        "can_print_label": False,
+        "label_value": "",
+        "back_paper_num": 0,
+        "default_protocol_family": "legacy",
+        "default_image_pipeline": {
+            "formats": ["bw1"],
+            "encoding": "legacy_raw",
+        },
+        "stream": {
+            "chunk_size": 180,
+            "delay_ms": 4,
+        },
+        "post_print_feed_count": 2,
+        "tuning": {
+            "speed": {"image": 10, "text": 8},
+            "energy": {
+                "image": {"low": 5000, "middle": 5000, "high": 5000},
+                "text": {"low": 8000, "middle": 8000, "high": 8000},
+            },
+        },
+    }
 
 
 class DevicesModelsTests(unittest.TestCase):
     def setUp(self) -> None:
         reset_registry_cache()
+        self.catalog = PrinterCatalog.load()
 
-    def test_registry_load_get_and_detect(self) -> None:
-        reg = PrinterModelRegistry.load()
-        self.assertGreater(len(reg.models), 0)
-        self.assertIsNotNone(reg.get("X6H"))
-        match = reg.detect_with_origin("X6H-123")
-        self.assertIsNotNone(match)
+    def test_catalog_loads_profiles_and_rules(self) -> None:
+        self.assertGreater(len(self.catalog.profiles), 0)
+        self.assertGreater(len(self.catalog.rules), 0)
+        profile = self.catalog.require_profile("x6h")
+        self.assertEqual(profile.stream.chunk_size, 180)
+        self.assertEqual(profile.stream.delay_ms, 4)
 
-    def test_longest_prefix_priority(self) -> None:
-        m1 = _model("A", "X")
-        m2 = _model("B", "X6")
-        reg = PrinterModelRegistry([m1, m2], PrinterModelAliasRegistry([], []))
-        match = reg.detect_with_origin("X6H-AB")
-        self.assertEqual(match.model.model_no, "B")
-        self.assertEqual(match.source, PrinterModelMatchSource.HEAD_NAME)
+    def test_parse_profile_rejects_non_positive_stream_chunk_size(self) -> None:
+        payload = _profile_payload()
+        payload["stream"]["chunk_size"] = 0
+        with self.assertRaisesRegex(ValueError, "stream.chunk_size"):
+            PrinterCatalog._parse_profile(payload)
 
-    def test_case_sensitive_match_beats_case_insensitive_fallback(self) -> None:
-        upper = _model("UPPER", "X6H-")
-        lower = _model("LOWER", "X6h-")
-        reg = PrinterModelRegistry([upper, lower], PrinterModelAliasRegistry([], []))
+    def test_first_match_wins_for_mac_suffix_rules(self) -> None:
+        shared_profile = PrinterCatalog._parse_profile(_profile_payload("shared"))
+        rules = [
+            DetectionRule(
+                rule_key="mac59",
+                prefixes=("MX05",),
+                exact_names=(),
+                profile_key="shared",
+                protocol_family=ProtocolFamily.V5X,
+                mac_suffixes=("59",),
+            ),
+            DetectionRule(
+                rule_key="default",
+                prefixes=("MX05",),
+                exact_names=(),
+                profile_key="shared",
+                protocol_family=ProtocolFamily.V5G,
+            ),
+        ]
+        catalog = PrinterCatalog([shared_profile], rules)
 
-        match_upper = reg.detect_with_origin("X6H-AB")
-        self.assertIsNotNone(match_upper)
-        self.assertEqual(match_upper.model.model_no, "UPPER")
+        resolved = catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:59")
 
-        match_lower = reg.detect_with_origin("X6h-AB")
-        self.assertIsNotNone(match_lower)
-        self.assertEqual(match_lower.model.model_no, "LOWER")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.profile_key, "shared")
+        self.assertEqual(resolved.protocol_family, ProtocolFamily.V5X)
+        self.assertEqual(resolved.matched_rule_key, "mac59")
 
-    def test_case_insensitive_fallback_still_detects_model(self) -> None:
-        upper = _model("UPPER", "X6H-")
-        reg = PrinterModelRegistry([upper], PrinterModelAliasRegistry([], []))
+    def test_direct_profiles_resolve_without_alias_semantics(self) -> None:
+        resolved = self.catalog.resolve("X6H-1234")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.profile_key, "x6h")
+        self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
+        self.assertEqual(resolved.image_pipeline.encoding, ImageEncoding.LEGACY_RLE)
 
-        match = reg.detect_with_origin("x6h-AB")
-        self.assertIsNotNone(match)
-        self.assertEqual(match.model.model_no, "UPPER")
-        self.assertEqual(match.source, PrinterModelMatchSource.HEAD_NAME)
+    def test_old_small_bucket_uses_v5g_and_mac59_switches_family_only(self) -> None:
+        normal = self.catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:58")
+        mac59 = self.catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:59")
 
-    def test_alias_parse_validation_and_mac_alias(self) -> None:
-        with self.assertRaises(ValueError):
-            PrinterModelAliasRegistry._parse([{"bad": 1}])
+        self.assertIsNotNone(normal)
+        self.assertIsNotNone(mac59)
+        self.assertEqual(normal.profile_key, "mx05")
+        self.assertEqual(mac59.profile_key, "mx05")
+        self.assertEqual(normal.protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(mac59.protocol_family, ProtocolFamily.V5X)
 
-        alias = PrinterModelMacAlias(suffixes=["59"], map_model_head_name="X6H")
-        self.assertFalse(alias.matches("F4B3C8E3-C284-9C3A-C549-D786345CB553"))
-        self.assertTrue(alias.matches("AA:BB:CC:DD:EE:59"))
+    def test_old_small_bucket_shared_names_resolve_to_shared_profile(self) -> None:
+        normal = self.catalog.resolve("XOPOPPY", "AA:BB:CC:DD:EE:58")
+        mac59 = self.catalog.resolve("XOPOPPY", "AA:BB:CC:DD:EE:59")
 
-    def test_alias_resolution_kind(self) -> None:
-        reg = PrinterModelAliasRegistry(
-            [PrinterModelHeadAlias(prefixes=["MX01"], map_model_head_name="X6H")],
-            [PrinterModelMacAlias(suffixes=["59"], map_model_head_name="X7H")],
-        )
-        out = reg.resolve("MX01-AB", "AA:BB:CC:DD:EE:59")
-        self.assertIsNotNone(out)
-        self.assertEqual(out.kind, PrinterModelAliasKind.MAC)
+        self.assertIsNotNone(normal)
+        self.assertIsNotNone(mac59)
+        self.assertEqual(normal.profile_key, "xopoppy")
+        self.assertEqual(mac59.profile_key, "xopoppy")
+        self.assertEqual(normal.protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(mac59.protocol_family, ProtocolFamily.V5X)
 
-    def test_phomemo_derived_aliases_map_to_new_base_models(self) -> None:
-        reg = PrinterModelRegistry.load()
+    def test_dynamic_v5g_rules_expose_helper_metadata(self) -> None:
+        mx06 = self.catalog.resolve("MX06-ABCD", "AA:BB:CC:DD:EE:58")
+        mx08 = self.catalog.resolve("MX08-ABCD", "AA:BB:CC:DD:EE:58")
+        mx09 = self.catalog.resolve("MX09-ABCD", "AA:BB:CC:DD:EE:58")
+        mx10 = self.catalog.resolve("MX10-ABCD", "AA:BB:CC:DD:EE:58")
+        pd01 = self.catalog.resolve("PD01-ABCD", "AA:BB:CC:DD:EE:58")
+        xopoppy = self.catalog.resolve("XOPOPPY-ABCD", "AA:BB:CC:DD:EE:58")
+        mx13 = self.catalog.resolve("MX13-ABCD", "AA:BB:CC:DD:EE:58")
+        mxw010 = self.catalog.resolve("MXW010-ABCD", "AA:BB:CC:DD:EE:58")
 
-        tp84 = reg.detect_with_origin("TP84-ABCD")
-        self.assertIsNotNone(tp84)
-        self.assertEqual(tp84.model.model_no, "TP81")
-        self.assertEqual(tp84.source, PrinterModelMatchSource.ALIAS)
+        self.assertIsNotNone(mx06)
+        self.assertEqual(mx06.v5g_dynamic_helper.helper_kind, "mx06")
+        self.assertEqual(mx06.v5g_dynamic_helper.density_profile_key, "mx06")
 
-        m836 = reg.detect_with_origin("M836-ABCD")
-        self.assertIsNotNone(m836)
-        self.assertEqual(m836.model.model_no, "M832")
-        self.assertEqual(m836.source, PrinterModelMatchSource.ALIAS)
+        self.assertIsNotNone(mx08)
+        self.assertEqual(mx08.v5g_dynamic_helper.helper_kind, "d2")
+        self.assertEqual(mx08.v5g_dynamic_helper.density_profile_key, "mx08")
 
-        q580 = reg.detect_with_origin("Q580-ABCD")
-        self.assertIsNotNone(q580)
-        self.assertEqual(q580.model.model_no, "Q302")
-        self.assertEqual(q580.source, PrinterModelMatchSource.ALIAS)
+        self.assertIsNotNone(mx09)
+        self.assertEqual(mx09.v5g_dynamic_helper.helper_kind, "d2")
+        self.assertEqual(mx09.v5g_dynamic_helper.density_profile_key, "mx09")
 
-        for derived in ("T02E-ABCD", "Q02E-ABCD", "C02E-ABCD"):
-            mapped = reg.detect_with_origin(derived)
-            self.assertIsNotNone(mapped)
-            self.assertEqual(mapped.model.model_no, "T02")
-            self.assertIn(
-                mapped.source,
-                (PrinterModelMatchSource.ALIAS, PrinterModelMatchSource.MODEL_NO),
-            )
+        self.assertIsNotNone(mx10)
+        self.assertEqual(mx10.v5g_dynamic_helper.helper_kind, "mx10")
+        self.assertEqual(mx10.v5g_dynamic_helper.density_profile_key, "mx06")
 
-    def test_experimental_models_are_marked_testing(self) -> None:
-        reg = PrinterModelRegistry.load()
+        self.assertIsNotNone(pd01)
+        self.assertEqual(pd01.v5g_dynamic_helper.helper_kind, "pd01")
+        self.assertEqual(pd01.v5g_dynamic_helper.density_profile_key, "mx11")
 
-        for model_no in ("P100", "MP100", "P100S", "MP100S", "LP100S", "P3", "P3S", "V5X"):
-            model = reg.get(model_no)
-            self.assertIsNotNone(model)
-            self.assertTrue(model.testing)
-            self.assertTrue(model.testing_note)
+        self.assertIsNotNone(xopoppy)
+        self.assertEqual(xopoppy.v5g_dynamic_helper.helper_kind, "mx10")
+        self.assertEqual(xopoppy.v5g_dynamic_helper.density_profile_key, "xopoppy")
 
-    def test_experimental_aliases_resolve(self) -> None:
-        reg = PrinterModelRegistry.load()
+        self.assertIsNotNone(mx13)
+        self.assertEqual(mx13.v5g_dynamic_helper.helper_kind, "mx10")
+        self.assertEqual(mx13.v5g_dynamic_helper.density_profile_key, "xopoppy")
 
-        cases = {
-            "YINTIBAO-V5-ABCD": "P100",
-            "MP200-ABCD": "P100",
-            "YINTIBAO-V5PRO-ABCD": "P100S",
-            "LP220-ABCD": "LP100",
-            "LP220S-ABCD": "LP100S",
-            "MP300-ABCD": "P3",
-            "MP300S-ABCD": "P3S",
-            "JK01-ABCD": "V5X",
-            "KERUI-ABCD": "V5X",
-            "BH03-ABCD": "V5X",
-            "MXW01-ABCD": "V5X",
-            "MXW01-1-ABCD": "V5X",
-            "X2-ABCD": "V5X",
-            "C17-ABCD": "V5X",
-            "MXW-W5-ABCD": "V5X",
-            "AC695X_PRINT-ABCD": "V5X",
-            "C21-ABCD": "D1",
-            "MXW-A4-ABCD": "M08F",
+        self.assertIsNotNone(mxw010)
+        self.assertEqual(mxw010.v5g_dynamic_helper.helper_kind, "mx10")
+        self.assertIsNone(mxw010.v5g_dynamic_helper.density_profile_key)
+
+    def test_exact_name_rules_cover_x6_without_shadowing_x6h(self) -> None:
+        x6 = self.catalog.resolve("X6", "AA:BB:CC:DD:EE:58")
+        x6_mac59 = self.catalog.resolve("X6", "AA:BB:CC:DD:EE:59")
+        x6h = self.catalog.resolve("X6H-1234", "AA:BB:CC:DD:EE:59")
+
+        self.assertIsNotNone(x6)
+        self.assertIsNotNone(x6_mac59)
+        self.assertIsNotNone(x6h)
+        self.assertEqual(x6.profile_key, "v5g_small_203")
+        self.assertEqual(x6.protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(x6_mac59.profile_key, "v5g_small_203")
+        self.assertEqual(x6_mac59.protocol_family, ProtocolFamily.V5X)
+        self.assertEqual(x6h.profile_key, "x6h")
+        self.assertEqual(x6h.protocol_family, ProtocolFamily.LEGACY)
+
+    def test_v5x_exact_name_rules_do_not_shadow_other_x_series_profiles(self) -> None:
+        x1 = self.catalog.resolve("X1")
+        x2 = self.catalog.resolve("X2")
+        x103h = self.catalog.resolve("X103H")
+        x2h = self.catalog.resolve("X2H")
+
+        self.assertIsNotNone(x1)
+        self.assertIsNotNone(x2)
+        self.assertIsNotNone(x103h)
+        self.assertIsNotNone(x2h)
+        self.assertEqual(x1.profile_key, "v5x")
+        self.assertEqual(x1.protocol_family, ProtocolFamily.V5X)
+        self.assertEqual(x2.profile_key, "v5x")
+        self.assertEqual(x2.protocol_family, ProtocolFamily.V5X)
+        self.assertEqual(x103h.profile_key, "x6h")
+        self.assertEqual(x103h.protocol_family, ProtocolFamily.LEGACY)
+        self.assertEqual(x2h.profile_key, "x6h")
+        self.assertEqual(x2h.protocol_family, ProtocolFamily.LEGACY)
+
+    def test_case_sensitive_direct_rules_keep_mixed_case_profiles_distinct(self) -> None:
+        expected = {
+            "SC03H-ABCD": "fc02",
+            "SC03h-ABCD": "d1",
+            "X103H-ABCD": "x6h",
+            "X103h-ABCD": "d1",
+            "X2H-ABCD": "x6h",
+            "X2h-ABCD": "d1",
+            "X5H-ABCD": "x6h",
+            "X5h-ABCD": "d1",
+            "X6H-ABCD": "x6h",
+            "X6h-ABCD": "d1",
+            "X7H-ABCD": "x6h",
+            "X7h-ABCD": "d1",
         }
 
-        for name, expected_model_no in cases.items():
+        for name, profile_key in expected.items():
             with self.subTest(name=name):
-                match = reg.detect_with_origin(name)
-                self.assertIsNotNone(match)
-                self.assertEqual(match.model.model_no, expected_model_no)
-                self.assertEqual(match.source, PrinterModelMatchSource.ALIAS)
-                self.assertTrue(match.testing)
+                resolved = self.catalog.resolve(name)
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.profile_key, profile_key)
+                self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
 
-    def test_experimental_aliases_override_protocol_family(self) -> None:
-        reg = PrinterModelRegistry.load()
+    def test_tinyprint_spacing_and_alias_corner_cases_still_resolve(self) -> None:
+        expected = {
+            " X101H-ABCD": ("x101h", ProtocolFamily.LEGACY),
+            "X101H-ABCD": ("x101h", ProtocolFamily.LEGACY),
+            "K06-ABCD": ("v5g_small_203", ProtocolFamily.V5G),
+            "X2-ABCD": ("v5x", ProtocolFamily.V5X),
+        }
 
-        jk01 = reg.detect_with_origin("JK01-ABCD")
+        for name, (profile_key, family) in expected.items():
+            with self.subTest(name=name):
+                resolved = self.catalog.resolve(name, "AA:BB:CC:DD:EE:58")
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.profile_key, profile_key)
+                self.assertEqual(resolved.protocol_family, family)
+
+    def test_case_insensitive_fallback_still_detects_lowercase_names(self) -> None:
+        resolved = self.catalog.resolve("sc03h-abcd")
+
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.profile_key, "fc02")
+        self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
+
+    def test_ai01_resolves_to_v5x_family(self) -> None:
+        ai01 = self.catalog.resolve("AI01-ABCD")
+
+        self.assertIsNotNone(ai01)
+        self.assertEqual(ai01.profile_key, "ai01")
+        self.assertEqual(ai01.protocol_family, ProtocolFamily.V5X)
+
+    def test_specific_experimental_and_bucket_rules_are_not_shadowed(self) -> None:
+        expected = {
+            ("YINTIBAO-V5PRO", None): ("p100s", ProtocolFamily.LEGACY),
+            ("LP220S", None): ("lp100s", ProtocolFamily.LEGACY_PREFIXED),
+            ("MP300S", None): ("p3s", ProtocolFamily.LEGACY),
+            ("BQ95B", "AA:BB:CC:DD:EE:00"): ("v5g_small_203", ProtocolFamily.V5G),
+            ("BQ95B", "AA:BB:CC:DD:EE:59"): ("v5g_small_203", ProtocolFamily.V5X),
+            ("BQ95C", "AA:BB:CC:DD:EE:00"): ("v5g_small_203", ProtocolFamily.V5G),
+            ("BQ95C", "AA:BB:CC:DD:EE:59"): ("v5g_small_203", ProtocolFamily.V5X),
+            ("BQ06B", "AA:BB:CC:DD:EE:00"): ("v5g_small_203", ProtocolFamily.V5G),
+            ("BQ06B", "AA:BB:CC:DD:EE:59"): ("v5g_small_203", ProtocolFamily.V5X),
+        }
+
+        for (name, address), (profile_key, family) in expected.items():
+            with self.subTest(name=name, address=address):
+                resolved = self.catalog.resolve(name, address)
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.profile_key, profile_key)
+                self.assertEqual(resolved.protocol_family, family)
+
+    def test_v5g_profiles_keep_source_backed_pipeline_and_density_cases(self) -> None:
+        mx05 = self.catalog.require_profile("mx05")
+        mx07 = self.catalog.require_profile("mx07")
+        mx10 = self.catalog.require_profile("v5g_small_203")
+        xopoppy = self.catalog.require_profile("xopoppy")
+        bq02 = self.catalog.require_profile("bq02")
+        gt02 = self.catalog.require_profile("gt02_v5g")
+        shared = self.catalog.require_profile("v5g_small_203")
+
+        self.assertEqual(mx05.default_protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(mx05.default_image_pipeline.encoding, ImageEncoding.V5G_DOT)
+        self.assertEqual(mx05.default_image_pipeline.formats[0], PixelFormat.BW1)
+        self.assertIsNotNone(mx05.density)
+        self.assertEqual(mx05.energy.text.high, 20000)
+
+        self.assertIsNotNone(mx07.density)
+        self.assertEqual(mx07.density.image.high, 100)
+
+        self.assertEqual(mx10.default_protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(mx10.speed.image, 30)
+        self.assertEqual(mx10.energy.image.middle, 10000)
+        self.assertEqual(mx10.energy.text.high, 20000)
+
+        self.assertIsNotNone(xopoppy.density)
+        self.assertEqual(xopoppy.density.text.middle, 80)
+
+        self.assertIsNotNone(bq02.density)
+        self.assertEqual(bq02.density.text.high, 180)
+
+        self.assertIsNotNone(gt02.density)
+        self.assertEqual(gt02.density.image.middle, 110)
+        self.assertEqual(gt02.density.text.high, 150)
+
+        self.assertEqual(shared.default_protocol_family, ProtocolFamily.V5G)
+        self.assertEqual(shared.speed.image, 30)
+        self.assertEqual(shared.energy.image.middle, 10000)
+        self.assertEqual(shared.energy.text.high, 20000)
+
+    def test_experimental_rules_resolve_to_profiles_not_alias_donors(self) -> None:
+        jk01 = self.catalog.resolve("JK01-ABCD")
+        c21 = self.catalog.resolve("C21-ABCD")
+        mxwa4 = self.catalog.resolve("MXW-A4-ABCD")
+        ytb01 = self.catalog.resolve("YTB01-ABCD")
+
         self.assertIsNotNone(jk01)
+        self.assertEqual(jk01.profile_key, "v5x")
         self.assertEqual(jk01.protocol_family, ProtocolFamily.V5X)
-        self.assertEqual(jk01.image_pipeline.encoding, ImageEncoding.V5X_DOT)
-        self.assertEqual(jk01.image_pipeline.formats[0], PixelFormat.BW1)
+        self.assertTrue(jk01.testing)
 
-        dck = reg.detect_with_origin("C21-ABCD")
-        self.assertIsNotNone(dck)
-        self.assertEqual(dck.protocol_family, ProtocolFamily.DCK)
-        self.assertEqual(dck.image_pipeline.encoding, ImageEncoding.DCK_DEFAULT)
+        self.assertIsNotNone(c21)
+        self.assertEqual(c21.profile_key, "d1")
+        self.assertEqual(c21.protocol_family, ProtocolFamily.DCK)
+        self.assertTrue(c21.testing)
 
-        v5c = reg.detect_with_origin("YTB01-ABCD")
-        self.assertIsNotNone(v5c)
-        self.assertEqual(v5c.model.model_no, "YTB01")
-        self.assertEqual(v5c.source, PrinterModelMatchSource.HEAD_NAME)
-        self.assertFalse(v5c.testing)
-        self.assertEqual(v5c.protocol_family, ProtocolFamily.V5C)
-        self.assertEqual(v5c.image_pipeline.encoding, ImageEncoding.V5C_A4)
-        self.assertEqual(v5c.image_pipeline.formats[0], PixelFormat.BW1)
+        self.assertIsNotNone(mxwa4)
+        self.assertEqual(mxwa4.profile_key, "m08f")
+        self.assertEqual(mxwa4.protocol_family, ProtocolFamily.LEGACY)
+        self.assertTrue(mxwa4.testing)
 
-    def test_direct_gt02_keeps_legacy_protocol_family(self) -> None:
-        reg = PrinterModelRegistry.load()
+        self.assertIsNotNone(ytb01)
+        self.assertEqual(ytb01.profile_key, "ytb01")
+        self.assertEqual(ytb01.protocol_family, ProtocolFamily.V5C)
+        self.assertFalse(ytb01.testing)
 
-        match = reg.detect_with_origin("GT02-ABCD")
-        self.assertIsNotNone(match)
-        self.assertEqual(match.model.model_no, "GT02")
-        self.assertEqual(match.protocol_family, ProtocolFamily.LEGACY)
-        self.assertIn(match.image_pipeline.encoding, (ImageEncoding.LEGACY_RAW, ImageEncoding.LEGACY_RLE))
-
-    def test_testing_flag_reaches_match_for_direct_and_alias_detection(self) -> None:
-        reg = PrinterModelRegistry.load()
-
-        direct = reg.detect_with_origin("P100-ABCD")
-        self.assertIsNotNone(direct)
-        self.assertTrue(direct.testing)
-        self.assertFalse(direct.used_alias)
-
-        alias = reg.detect_with_origin("JK01-ABCD")
-        self.assertIsNotNone(alias)
-        self.assertTrue(alias.testing)
-        self.assertTrue(alias.used_alias)
-
-    def test_direct_x1_model_still_beats_experimental_x1_alias(self) -> None:
-        reg = PrinterModelRegistry.load()
-
-        match = reg.detect_with_origin("X1-ABCD")
-        self.assertIsNotNone(match)
-        self.assertEqual(match.model.model_no, "X1")
-        self.assertEqual(match.source, PrinterModelMatchSource.HEAD_NAME)
-        self.assertFalse(match.used_alias)
-        self.assertTrue(match.has_brand_conflict)
-        self.assertEqual(match.conflict_models, ("V5X",))
-
-    def test_non_conflicting_model_has_no_brand_conflict(self) -> None:
-        reg = PrinterModelRegistry.load()
-
-        match = reg.detect_with_origin("X6H-ABCD")
-        self.assertIsNotNone(match)
-        self.assertFalse(match.has_brand_conflict)
-        self.assertEqual(match.conflict_models, ())
-
-    def test_mac_suffix_59_promotes_gt_bucket_to_gt02(self) -> None:
-        reg = PrinterModelRegistry.load()
-
-        match = reg.detect_with_origin("MX01-ABCD", "AA:BB:CC:DD:EE:59")
-        self.assertIsNotNone(match)
-        self.assertEqual(match.model.model_no, "V5X")
-        self.assertEqual(match.source, PrinterModelMatchSource.ALIAS)
-        self.assertEqual(match.alias_kind, PrinterModelAliasKind.MAC)
-        self.assertEqual(match.protocol_family, ProtocolFamily.V5X)
-
-    def test_mac_suffix_59_does_not_override_unrelated_alias_families(self) -> None:
-        reg = PrinterModelRegistry.load()
-
-        cases = {
-            "TP84-ABCD": "TP81",
-            "M836-ABCD": "M832",
-            "Q580-ABCD": "Q302",
-            "C02E-ABCD": "T02",
+    def test_derived_names_map_to_final_profiles(self) -> None:
+        expected = {
+            "TP84-ABCD": "m08f",
+            "M836-ABCD": "m832",
+            "Q580-ABCD": "q302",
+            "T02E-ABCD": "t02",
+            "MXTP-100-ABCD": "mx06",
+            "MXPC-100-ABCD": "v5g_small_203",
+            "LP100-ABCD": "lp100",
+            "LY10-ABCD": "ly10",
+            "PD01-ABCD": "v5g_small_203",
+            "AZ-P2108X-ABCD": "v5g_small_203",
+            "MX12-ABCD": "v5g_small_203",
+            "MX13-ABCD": "v5g_small_203",
+            "MX07-ABCD": "mx07",
+            "XOPOPPY-ABCD": "xopoppy",
+            "PR20-ABCD": "xw001",
+            "XW001-ABCD": "xw001",
+            "PR25-ABCD": "m01",
+            "XW003-ABCD": "m01",
+            "PR30-ABCD": "pr30",
+            "XW002-ABCD": "xw002",
+            "XW004-ABCD": "pr35",
+            "XW005-ABCD": "gt08",
+            "XW006-ABCD": "pr89",
+            "XW007-ABCD": "pr893",
+            "XW008-ABCD": "pr02",
+            "XW009-ABCD": "m01",
+            "BQ02-ABCD": "bq02",
+            "BQ03-ABCD": "bq02",
+            "BQ17-ABCD": "bq02",
+            "MINIPRINTER": "gt02_v5g",
+            "JL-BR22": "gt02_v5g",
+            "CYLOBTPrinter": "mx06",
+            "EWTTO ET-Z0499": "mx06",
+            "GV-MA211-ABCD": "v5g_small_203",
+            "X6": "v5g_small_203",
+            "K06-ABCD": "v5g_small_203",
+            "K06": "v5g_small_203",
+            "X2-ABCD": "v5x",
         }
-        for name, expected_model_no in cases.items():
+
+        for name, profile_key in expected.items():
             with self.subTest(name=name):
-                match = reg.detect_with_origin(name, "AA:BB:CC:DD:EE:59")
-                self.assertIsNotNone(match)
-                self.assertEqual(match.model.model_no, expected_model_no)
-                self.assertNotEqual(match.alias_kind, PrinterModelAliasKind.MAC)
+                resolved = self.catalog.resolve(name, "AA:BB:CC:DD:EE:58")
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.profile_key, profile_key)
 
 
 if __name__ == "__main__":

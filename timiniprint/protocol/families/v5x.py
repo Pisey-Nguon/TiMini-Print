@@ -59,7 +59,7 @@ TRANSPORT = BleTransportProfile(
     bulk_char_uuid=V5X_BULK_DATA_UUID,
     notify_char_uuid=V5X_NOTIFY_UUID,
     flow_control=_FLOW_CONTROL,
-    bulk_chunk_size=180,
+    bulk_chunk_cap=180,
     split_tail_packets=(V5X_FINALIZE_PACKET,),
 )
 

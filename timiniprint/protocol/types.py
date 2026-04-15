@@ -14,6 +14,8 @@ class PixelFormat(str, Enum):
 class ImageEncoding(str, Enum):
     LEGACY_RAW = "legacy_raw"
     LEGACY_RLE = "legacy_rle"
+    V5G_DOT = "v5g_dot"
+    V5G_GRAY = "v5g_gray"
     V5X_DOT = "v5x_dot"
     V5X_GRAY = "v5x_gray"
     V5C_A4 = "v5c_a4"

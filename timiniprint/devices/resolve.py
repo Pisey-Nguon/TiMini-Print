@@ -7,13 +7,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from ..protocol.family import ProtocolFamily
 from ..transport.bluetooth import DeviceInfo, SppBackend
 from ..transport.bluetooth.types import DeviceTransport, ScanFailure
-from .models import (
-    PrinterModel,
-    PrinterModelAliasNormalizer,
-    PrinterModelMatch,
-    PrinterModelMatchSource,
-    PrinterModelRegistry,
-)
+from .profiles import DetectionNormalizer, PrinterCatalog, PrinterProfile, ResolvedPrinter
 
 _ADDRESS_RE = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$")
 _UUID_RE = re.compile(r"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$")
@@ -22,7 +16,7 @@ _UUID_RE = re.compile(r"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f
 @dataclass(frozen=True)
 class ResolvedBluetoothDevice:
     name: str
-    model_match: PrinterModelMatch
+    resolved_printer: ResolvedPrinter
     classic_endpoint: Optional[DeviceInfo]
     ble_endpoint: Optional[DeviceInfo]
     display_address: str
@@ -46,33 +40,37 @@ class ResolvedBluetoothDevice:
         return None
 
     @property
-    def model(self) -> PrinterModel:
-        return self.model_match.model
+    def profile(self) -> PrinterProfile:
+        return self.resolved_printer.profile
+
+    @property
+    def profile_key(self) -> str:
+        return self.resolved_printer.profile_key
+
+    @property
+    def protocol_family(self) -> ProtocolFamily:
+        return self.resolved_printer.protocol_family
 
     @property
     def experimental_label(self) -> str:
-        return " [experimental]" if self.model_match.testing else ""
-
-    @property
-    def brand_conflict_label(self) -> str:
-        return " [brand conflict]" if self.model_match.has_brand_conflict else ""
+        return self.resolved_printer.experimental_label
 
 
 @dataclass(frozen=True)
 class _EndpointCandidate:
     device: DeviceInfo
-    model_match: PrinterModelMatch
+    resolved_printer: ResolvedPrinter
     normalized_name: str
 
 
 class DeviceResolver:
-    def __init__(self, registry: PrinterModelRegistry) -> None:
-        self._registry = registry
+    def __init__(self, catalog: PrinterCatalog) -> None:
+        self._catalog = catalog
 
     def filter_printer_devices(self, devices: Iterable[DeviceInfo]) -> List[DeviceInfo]:
         filtered = []
         for device in devices:
-            if self._registry.detect_from_device_name(device.name or "", device.address):
+            if self._catalog.resolve(device.name or "", device.address):
                 filtered.append(device)
         return filtered
 
@@ -153,49 +151,47 @@ class DeviceResolver:
             return device
         return devices[0]
 
-    def resolve_model(
-        self, device_name: str, model_no: Optional[str] = None, address: Optional[str] = None
-    ) -> PrinterModel:
-        match = self.resolve_model_with_origin(device_name, model_no, address)
-        return match.model
+    def resolve_profile(
+        self,
+        device_name: str,
+        profile_key: Optional[str] = None,
+        address: Optional[str] = None,
+    ) -> PrinterProfile:
+        return self.resolve_printer(device_name, profile_key, address).profile
 
-    def resolve_model_with_origin(
-        self, device_name: str, model_no: Optional[str] = None, address: Optional[str] = None
-    ) -> PrinterModelMatch:
-        if model_no:
-            model = self._registry.get(model_no)
-            if not model:
-                raise RuntimeError(f"Unknown printer model '{model_no}'")
-            return PrinterModelMatch(
-                model=model,
-                source=PrinterModelMatchSource.MODEL_NO,
-                protocol_family=model.protocol_family,
-                image_pipeline=model.image_pipeline,
-                testing=model.testing,
-                testing_note=model.testing_note,
-            )
-        match = self._registry.detect_with_origin(device_name, address)
-        if match:
-            return match
-        raise RuntimeError("Printer model not detected from Bluetooth name")
+    def resolve_printer(
+        self,
+        device_name: str,
+        profile_key: Optional[str] = None,
+        address: Optional[str] = None,
+    ) -> ResolvedPrinter:
+        if profile_key:
+            return self._catalog.resolve_manual_profile(device_name, profile_key, address)
+        resolved = self._catalog.resolve(device_name, address)
+        if resolved is not None:
+            return resolved
+        raise RuntimeError("Printer profile not detected from Bluetooth name")
 
-    def require_model(self, model_no: Optional[str]) -> PrinterModel:
-        if not model_no:
-            raise RuntimeError("Serial printing requires --model (see --list-models)")
-        model = self._registry.get(model_no)
-        if not model:
-            raise RuntimeError(f"Unknown printer model '{model_no}'")
-        return model
+    def require_profile(self, profile_key: Optional[str]) -> PrinterProfile:
+        if not profile_key:
+            raise RuntimeError("Serial printing requires --profile (see --list-profiles)")
+        return self._catalog.require_profile(profile_key)
 
     def build_connection_attempts(
         self,
         resolved: ResolvedBluetoothDevice,
         protocol_family: Optional[ProtocolFamily] = None,
+        profile: Optional[PrinterProfile] = None,
     ) -> List[DeviceInfo]:
         attempts: List[DeviceInfo] = []
-        prefer_spp = resolved.model.use_spp
-        family = protocol_family or resolved.model_match.protocol_family
-        ordered = [DeviceTransport.CLASSIC, DeviceTransport.BLE] if prefer_spp else [DeviceTransport.BLE, DeviceTransport.CLASSIC]
+        selected_profile = profile or resolved.profile
+        prefer_spp = selected_profile.use_spp
+        family = protocol_family or resolved.protocol_family
+        ordered = (
+            [DeviceTransport.CLASSIC, DeviceTransport.BLE]
+            if prefer_spp
+            else [DeviceTransport.BLE, DeviceTransport.CLASSIC]
+        )
         for transport in ordered:
             endpoint = self._endpoint_for_transport(resolved, transport)
             if endpoint is not None:
@@ -223,14 +219,14 @@ class DeviceResolver:
         candidates: List[_EndpointCandidate] = []
         for device in devices:
             try:
-                match = self.resolve_model_with_origin(device.name or "", address=device.address)
+                resolved_printer = self.resolve_printer(device.name or "", address=device.address)
             except Exception:
                 continue
-            normalized_name = PrinterModelAliasNormalizer.normalize_alias_name(device.name or "")
+            normalized_name = DetectionNormalizer.fold_name(device.name or "")
             candidates.append(
                 _EndpointCandidate(
                     device=device,
-                    model_match=match,
+                    resolved_printer=resolved_printer,
                     normalized_name=normalized_name,
                 )
             )
@@ -242,7 +238,7 @@ class DeviceResolver:
     ) -> Dict[Tuple[str, str], Dict[DeviceTransport, List[_EndpointCandidate]]]:
         grouped: Dict[Tuple[str, str], Dict[DeviceTransport, List[_EndpointCandidate]]] = {}
         for candidate in candidates:
-            key = (candidate.model_match.model.model_no, candidate.normalized_name)
+            key = (candidate.resolved_printer.profile_key, candidate.normalized_name)
             bucket = grouped.setdefault(
                 key,
                 {DeviceTransport.CLASSIC: [], DeviceTransport.BLE: []},
@@ -268,7 +264,7 @@ class DeviceResolver:
         transport_label = "[classic]" if classic_endpoint else "[ble]"
         return ResolvedBluetoothDevice(
             name=candidate.device.name or "",
-            model_match=candidate.model_match,
+            resolved_printer=candidate.resolved_printer,
             classic_endpoint=classic_endpoint,
             ble_endpoint=ble_endpoint,
             display_address=display_address,
@@ -283,7 +279,7 @@ class DeviceResolver:
         name = self._choose_name(classic_candidate.device.name or "", ble_candidate.device.name or "")
         return ResolvedBluetoothDevice(
             name=name,
-            model_match=classic_candidate.model_match,
+            resolved_printer=classic_candidate.resolved_printer,
             classic_endpoint=classic_candidate.device,
             ble_endpoint=ble_candidate.device,
             display_address=classic_candidate.device.address,
@@ -297,10 +293,7 @@ class DeviceResolver:
 
     @staticmethod
     def _sort_resolved_devices(devices: Iterable[ResolvedBluetoothDevice]) -> List[ResolvedBluetoothDevice]:
-        return sorted(
-            list(devices),
-            key=lambda item: (item.name or "", item.display_address),
-        )
+        return sorted(list(devices), key=lambda item: (item.name or "", item.display_address))
 
     def _select_device(
         self,

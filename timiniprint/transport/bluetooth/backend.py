@@ -66,9 +66,15 @@ class SppBackend:
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self._disconnect_blocking)
 
-    async def write(self, data: bytes, chunk_size: int, interval_ms: int) -> None:
+    async def write(
+        self,
+        data: bytes,
+        chunk_size: int,
+        delay_ms: int,
+        runtime_context=None,
+    ) -> None:
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._write_blocking, data, chunk_size, interval_ms)
+        await loop.run_in_executor(None, self._write_blocking, data, chunk_size, delay_ms, runtime_context)
 
     def _connect_attempts_blocking(
         self,
@@ -260,18 +266,22 @@ class SppBackend:
             self._channel = None
             self._transport = None
 
-    def _write_blocking(self, data: bytes, chunk_size: int, interval_ms: int) -> None:
+    def _write_blocking(self, data: bytes, chunk_size: int, delay_ms: int, runtime_context=None) -> None:
         if not self._sock or not self._connected:
             raise RuntimeError("Not connected to a Bluetooth device")
-        interval = max(0.0, interval_ms / 1000.0)
+        if self._transport == DeviceTransport.BLE:
+            with self._lock:
+                _send_all(self._sock, data, runtime_context=runtime_context)
+            return
+        delay = max(0.0, delay_ms / 1000.0)
         offset = 0
         while offset < len(data):
             chunk = data[offset : offset + chunk_size]
             with self._lock:
                 _send_all(self._sock, chunk)
             offset += len(chunk)
-            if interval:
-                time.sleep(interval)
+            if delay:
+                time.sleep(delay)
 
 
 def _scan_blocking(
@@ -349,7 +359,11 @@ def _safe_close(sock: Optional[SocketLike]) -> None:
         pass
 
 
-def _send_all(sock: SocketLike, data: bytes) -> None:
+def _send_all(sock: SocketLike, data: bytes, runtime_context=None) -> None:
+    send_payload = getattr(sock, "send_payload", None)
+    if callable(send_payload):
+        send_payload(data, runtime_context=runtime_context)
+        return
     sendall = getattr(sock, "sendall", None)
     if callable(sendall):
         sendall(data)

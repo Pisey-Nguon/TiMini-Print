@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import unittest
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from tests.helpers import build_capture_reporter
+from timiniprint.protocol.dynamic_helpers import DensityLevels, V5GDynamicRuntimeContext
 from timiniprint.protocol.families import get_protocol_behavior, split_prefixed_bulk_stream
 from timiniprint.protocol.family import ProtocolFamily
+from timiniprint.protocol.families.v5g import V5G_CONNECT_QUERY_PACKET
 from timiniprint.protocol.families.v5x import (
     V5X_CONNECT_INIT_PACKET,
     V5X_FINALIZE_PACKET,
@@ -62,7 +66,10 @@ class BleakTransportSessionTests(unittest.TestCase):
     def _make_session(self, family: ProtocolFamily) -> tuple[_BleakTransportSession, _Client]:
         reporter, _ = build_capture_reporter()
         resolver = _BleWriteEndpointResolver(reporter=reporter)
-        transport = get_protocol_behavior(family).transport
+        transport = replace(
+            get_protocol_behavior(family).transport,
+            standard_write_delay_ms=0,
+        )
         session = _BleakTransportSession(family, transport, resolver, reporter)
         client = _Client([])
         return session, client
@@ -70,7 +77,10 @@ class BleakTransportSessionTests(unittest.TestCase):
     def _make_session_with_sink(self, family: ProtocolFamily):
         reporter, sink = build_capture_reporter()
         resolver = _BleWriteEndpointResolver(reporter=reporter)
-        transport = get_protocol_behavior(family).transport
+        transport = replace(
+            get_protocol_behavior(family).transport,
+            standard_write_delay_ms=0,
+        )
         session = _BleakTransportSession(family, transport, resolver, reporter)
         client = _Client([])
         return session, client, sink
@@ -119,7 +129,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 client,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
             )
 
         asyncio.run(run())
@@ -147,7 +156,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                     client,
                     mtu_size=180,
                     timeout=0.2,
-                    write_delay_ms=0,
                 )
                 write_chunks.assert_awaited_once()
 
@@ -168,12 +176,30 @@ class BleakTransportSessionTests(unittest.TestCase):
                 client,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
             )
 
         asyncio.run(run())
 
         self.assertEqual(client.calls, [(cmd.uuid, V5C_CONNECT_INIT_PACKET, False)])
+
+    def test_initialize_connection_sends_v5g_query_packet(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+
+        async def run() -> None:
+            await session.initialize_connection(
+                client,
+                mtu_size=180,
+                timeout=0.2,
+            )
+
+        asyncio.run(run())
+
+        self.assertEqual(client.calls, [(cmd.uuid, V5G_CONNECT_QUERY_PACKET, False)])
 
     def test_initialize_connection_waits_for_v5c_settle_delay(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5C)
@@ -196,13 +222,326 @@ class BleakTransportSessionTests(unittest.TestCase):
                     client,
                     mtu_size=180,
                     timeout=0.2,
-                    write_delay_ms=0,
                 )
                 write_chunks.assert_awaited_once()
 
         asyncio.run(run())
 
         self.assertIn(0.6, sleep_calls)
+
+    def test_send_standard_uses_transport_profile_chunk_cap(self) -> None:
+        reporter, _ = build_capture_reporter()
+        resolver = _BleWriteEndpointResolver(reporter=reporter)
+        transport = replace(
+            get_protocol_behavior(ProtocolFamily.V5C).transport,
+            standard_chunk_cap=7,
+            standard_write_delay_ms=0,
+            bulk_write_delay_ms=0,
+        )
+        session = _BleakTransportSession(ProtocolFamily.V5C, transport, resolver, reporter)
+        client = _Client([])
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+
+        async def run() -> None:
+            await session.send(
+                client,
+                b"X" * 20,
+                mtu_size=180,
+                timeout=0.2,
+            )
+
+        asyncio.run(run())
+
+        self.assertEqual([len(call[1]) for call in client.calls], [7, 7, 6])
+
+    def test_v5g_notifications_update_session_state(self) -> None:
+        session, _ = self._make_session(ProtocolFamily.V5G)
+
+        session.handle_notification(make_packet(0xA3, bytes([0x08]), ProtocolFamily.V5G))
+        session.handle_notification(make_packet(0xD3, bytes([60]), ProtocolFamily.V5G))
+        session.handle_notification(make_packet(0xD2, bytes([0x01]), ProtocolFamily.V5G))
+        session.handle_notification(make_packet(0xA3, bytes([0x00]), ProtocolFamily.V5G))
+
+        self.assertFalse(session._v5g_state.didian_status)
+        self.assertTrue(session._v5g_state.d2_status)
+        self.assertEqual(session._v5g_state.temperature_c, 60)
+
+    def test_v5g_mx10_helper_rewrites_single_density_packet(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._v5g_state.temperature_c = 60
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="mx10",
+            density_profile_key="mx06",
+            image_levels=DensityLevels(low=150, middle=180, high=200),
+            text_levels=DensityLevels(low=100, middle=130, high=150),
+            applies_d2_status=True,
+            applies_didian_status=False,
+        )
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + make_packet(0xF2, (180).to_bytes(2, "little"), ProtocolFamily.V5G)
+            + make_packet(0xA2, b"\x55" * 40, ProtocolFamily.V5G)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                self.assertIn(
+                    make_packet(0xF2, (120).to_bytes(2, "little"), ProtocolFamily.V5G),
+                    sent,
+                )
+
+        asyncio.run(run())
+
+    def test_v5g_mx10_helper_rewrites_continuous_density_packets(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._v5g_state.temperature_c = 50
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="mx10",
+            density_profile_key="mx06",
+            image_levels=DensityLevels(low=150, middle=180, high=200),
+            text_levels=DensityLevels(low=100, middle=130, high=150),
+            applies_d2_status=True,
+            applies_didian_status=False,
+        )
+        density_packet = make_packet(0xF2, (180).to_bytes(2, "little"), ProtocolFamily.V5G)
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + (density_packet * 5)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                expected_values = [160, 145, 130, 115, 100]
+                for value in expected_values:
+                    self.assertIn(
+                        make_packet(0xF2, value.to_bytes(2, "little"), ProtocolFamily.V5G),
+                        sent,
+                    )
+
+        asyncio.run(run())
+
+    def test_v5g_pd01_helper_uses_pd01_curve(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._v5g_state.temperature_c = 60
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="pd01",
+            density_profile_key="mx11",
+            image_levels=DensityLevels(low=100, middle=130, high=150),
+            text_levels=DensityLevels(low=100, middle=130, high=150),
+            applies_d2_status=False,
+            applies_didian_status=False,
+        )
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + make_packet(0xF2, (130).to_bytes(2, "little"), ProtocolFamily.V5G)
+            + make_packet(0xA2, b"\x55" * 40, ProtocolFamily.V5G)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                self.assertIn(
+                    make_packet(0xF2, (100).to_bytes(2, "little"), ProtocolFamily.V5G),
+                    sent,
+                )
+
+        asyncio.run(run())
+
+    def test_v5g_mx06_helper_rewrites_single_density_packet_from_last_value(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._v5g_state.d2_status = True
+        session._v5g_state.last_complete_time = time.time()
+        session._v5g_state.last_single_density_value = 150
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="mx06",
+            density_profile_key="mx06",
+            image_levels=DensityLevels(low=150, middle=180, high=200),
+            text_levels=DensityLevels(low=100, middle=130, high=150),
+            applies_d2_status=True,
+            applies_didian_status=False,
+        )
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + make_packet(0xF2, (180).to_bytes(2, "little"), ProtocolFamily.V5G)
+            + make_packet(0xA2, b"\x55" * 40, ProtocolFamily.V5G)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                self.assertIn(
+                    make_packet(0xF2, (130).to_bytes(2, "little"), ProtocolFamily.V5G),
+                    sent,
+                )
+
+        asyncio.run(run())
+
+    def test_v5g_mx06_helper_rewrites_continuous_density_packets(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._v5g_state.d2_status = True
+        session._v5g_state.last_complete_time = time.time()
+        session._v5g_state.last_print_record_density = 150
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="mx06",
+            density_profile_key="mx06",
+            image_levels=DensityLevels(low=150, middle=180, high=200),
+            text_levels=DensityLevels(low=100, middle=130, high=150),
+            applies_d2_status=True,
+            applies_didian_status=False,
+        )
+        density_packet = make_packet(0xF2, (180).to_bytes(2, "little"), ProtocolFamily.V5G)
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + (density_packet * 6)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                expected_values = [140, 140, 140, 140, 135, 130]
+                for value in expected_values:
+                    self.assertIn(
+                        make_packet(0xF2, value.to_bytes(2, "little"), ProtocolFamily.V5G),
+                        sent,
+                    )
+
+        asyncio.run(run())
+
+    def test_v5g_d2_helper_rewrites_generic_continuous_branch(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        runtime_context = V5GDynamicRuntimeContext(
+            helper_kind="d2",
+            density_profile_key="mx08",
+            image_levels=DensityLevels(low=60, middle=90, high=110),
+            text_levels=DensityLevels(low=50, middle=70, high=100),
+            applies_d2_status=True,
+            applies_didian_status=False,
+        )
+        density_packet = make_packet(0xF2, (110).to_bytes(2, "little"), ProtocolFamily.V5G)
+        data = (
+            make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G)
+            + make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G)
+            + (density_packet * 5)
+        )
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                await session.send(
+                    client,
+                    data,
+                    mtu_size=180,
+                    timeout=0.2,
+                    runtime_context=runtime_context,
+                )
+                sent = write_chunks.await_args.args[2]
+                expected_values = [90, 90, 90, 90, 80]
+                for value in expected_values:
+                    self.assertIn(
+                        make_packet(0xF2, value.to_bytes(2, "little"), ProtocolFamily.V5G),
+                        sent,
+                    )
+
+        asyncio.run(run())
+
+    def test_v5g_pd01_temperature_drop_resets_density_when_idle(self) -> None:
+        session, client = self._make_session(ProtocolFamily.V5G)
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session._client = client
+        session._v5g_state.helper_kind = "pd01"
+        session._v5g_state.temperature_c = 80
+
+        async def run() -> None:
+            with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
+                session.handle_notification(make_packet(0xD3, bytes([60]), ProtocolFamily.V5G))
+                await asyncio.sleep(0)
+                write_chunks.assert_awaited_once()
+                packet = write_chunks.await_args.args[2]
+                self.assertEqual(
+                    packet,
+                    make_packet(0xF2, (120).to_bytes(2, "little"), ProtocolFamily.V5G),
+                )
+
+        asyncio.run(run())
 
     def test_send_split_routes_commands_bulk_and_trailing_packets(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5X)
@@ -239,8 +578,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 data,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
-                bulk_write_delay_ms=0,
             )
             await task
 
@@ -251,6 +588,42 @@ class BleakTransportSessionTests(unittest.TestCase):
         self.assertEqual(client.calls[2][0], cmd.uuid)
         self.assertEqual(client.calls[3][0], bulk.uuid)
         self.assertEqual(client.calls[4][0], cmd.uuid)
+
+    def test_send_split_uses_bulk_chunk_cap_from_transport_profile(self) -> None:
+        reporter, _ = build_capture_reporter()
+        resolver = _BleWriteEndpointResolver(reporter=reporter)
+        transport = replace(
+            get_protocol_behavior(ProtocolFamily.V5X).transport,
+            standard_write_delay_ms=0,
+            bulk_write_delay_ms=0,
+            bulk_chunk_cap=5,
+        )
+        session = _BleakTransportSession(ProtocolFamily.V5X, transport, resolver, reporter)
+        client = _Client([])
+        cmd = _Char("0000ae01-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        bulk = _Char("0000ae03-0000-1000-8000-00805f9b34fb", ["write-without-response"])
+        session.bindings.write_char = cmd
+        session.bindings.bulk_write_char = bulk
+        session.bindings.write_selection_strategy = "preferred_uuid"
+        session.bindings.write_response_preference = False
+        session.bindings.write_char_uuid = cmd.uuid
+        session.bindings.bulk_write_char_uuid = bulk.uuid
+
+        async def run() -> None:
+            await session.send(
+                client,
+                make_packet(0xA2, bytes([0x01]), ProtocolFamily.V5X) + (b"\xAA" * 12),
+                mtu_size=180,
+                timeout=0.2,
+            )
+
+        asyncio.run(run())
+
+        self.assertEqual(client.calls[0][0], cmd.uuid)
+        self.assertEqual(client.calls[1][0], bulk.uuid)
+        self.assertEqual(client.calls[2][0], bulk.uuid)
+        self.assertEqual(client.calls[3][0], bulk.uuid)
+        self.assertEqual([len(call[1]) for call in client.calls[1:]], [5, 5, 2])
 
     def test_v5x_skips_redundant_density_command_on_same_connection(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5X)
@@ -289,8 +662,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 data,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
-                bulk_write_delay_ms=0,
             )
             await task
 
@@ -619,8 +990,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.01,
-                    write_delay_ms=0,
-                    bulk_write_delay_ms=0,
                 )
 
         asyncio.run(run())
@@ -663,8 +1032,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    write_delay_ms=0,
-                    bulk_write_delay_ms=0,
                 )
             await task
 
@@ -690,8 +1057,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 b"ABC",
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
-                bulk_write_delay_ms=0,
             )
             await task
 
@@ -714,8 +1079,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 b"AB" + V5C_QUERY_STATUS_PACKET,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
-                bulk_write_delay_ms=0,
             )
 
         asyncio.run(run())
@@ -918,8 +1281,6 @@ class BleakTransportSessionTests(unittest.TestCase):
                 V5C_QUERY_STATUS_PACKET,
                 mtu_size=180,
                 timeout=0.2,
-                write_delay_ms=0,
-                bulk_write_delay_ms=0,
             )
 
         asyncio.run(run())

@@ -17,7 +17,6 @@ STATUS_PRINT_SENT = "print_sent"
 STATUS_PAPER_FEED = "paper_feed"
 STATUS_PAPER_RETRACT = "paper_retract"
 
-WARNING_MODEL_ALIAS = "model_alias"
 WARNING_DEPENDENCY = "dependency_missing"
 WARNING_SCAN_CLASSIC_FAILED = "scan_classic_failed"
 WARNING_SCAN_BLE_FAILED = "scan_ble_failed"
@@ -29,7 +28,7 @@ ERROR_PRINT_FAILED = "print_failed"
 ERROR_PAPER_MOTION_FAILED = "paper_motion_failed"
 ERROR_NO_DEVICE = "no_device"
 ERROR_NO_FILE = "no_file"
-ERROR_MODEL_NOT_DETECTED = "model_not_detected"
+ERROR_PROFILE_NOT_DETECTED = "profile_not_detected"
 
 
 class MessageCatalog:
@@ -48,7 +47,6 @@ class MessageCatalog:
         STATUS_PAPER_RETRACT: "Retracting paper...",
     }
     WARNING = {
-        WARNING_MODEL_ALIAS: "Model detected via alias",
         WARNING_DEPENDENCY: "Missing dependency",
         WARNING_SCAN_CLASSIC_FAILED: "Classic scan failed",
         WARNING_SCAN_BLE_FAILED: "BLE scan failed",
@@ -61,7 +59,7 @@ class MessageCatalog:
         ERROR_PAPER_MOTION_FAILED: "Paper motion failed",
         ERROR_NO_DEVICE: "Select a Bluetooth device",
         ERROR_NO_FILE: "Select a file to print",
-        ERROR_MODEL_NOT_DETECTED: "Printer model not detected",
+        ERROR_PROFILE_NOT_DETECTED: "Printer profile not detected",
     }
 
     @classmethod

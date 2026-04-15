@@ -185,7 +185,8 @@ class BleakSocketTests(unittest.TestCase):
     def test_resolve_client_target_uses_cached_ble_device(self) -> None:
         cached = object()
         s = _BleakSocket(device_cache={"AA:BB:CC:DD:EE:FF": cached})
-        target = asyncio.run(s._resolve_client_target("aa:bb:cc:dd:ee:ff"))
+        with patch("timiniprint.transport.bluetooth.adapters.bleak_adapter.IS_MACOS", False):
+            target = asyncio.run(s._resolve_client_target("aa:bb:cc:dd:ee:ff"))
         self.assertIs(target, cached)
 
     def test_resolve_client_target_bypasses_cache_for_uuid_addresses(self) -> None:

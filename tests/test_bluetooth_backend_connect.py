@@ -17,6 +17,7 @@ class _Socket:
         self.fail = fail
         self.closed = False
         self.target = None
+        self.sent = []
 
     def settimeout(self, _t):
         return None
@@ -28,6 +29,9 @@ class _Socket:
 
     def close(self):
         self.closed = True
+
+    def sendall(self, data):
+        self.sent.append(bytes(data))
 
 
 class _Adapter:
@@ -127,6 +131,32 @@ class BluetoothBackendConnectTests(unittest.TestCase):
 
         self.assertEqual(getattr(backend, "_transport"), DeviceTransport.BLE)
         self.assertEqual(getattr(backend, "_sock").target, ("NEW-UUID", 1))
+
+    def test_write_blocking_ble_skips_outer_chunking(self) -> None:
+        backend = SppBackend(reporter=reporting.DUMMY_REPORTER)
+        sock = _Socket()
+        backend._sock = sock
+        backend._connected = True
+        backend._transport = DeviceTransport.BLE
+
+        with patch("timiniprint.transport.bluetooth.backend.time.sleep") as sleep_mock:
+            backend._write_blocking(b"abcdef", chunk_size=2, delay_ms=5)
+
+        self.assertEqual(sock.sent, [b"abcdef"])
+        sleep_mock.assert_not_called()
+
+    def test_write_blocking_classic_keeps_outer_chunking(self) -> None:
+        backend = SppBackend(reporter=reporting.DUMMY_REPORTER)
+        sock = _Socket()
+        backend._sock = sock
+        backend._connected = True
+        backend._transport = DeviceTransport.CLASSIC
+
+        with patch("timiniprint.transport.bluetooth.backend.time.sleep") as sleep_mock:
+            backend._write_blocking(b"abcdef", chunk_size=2, delay_ms=5)
+
+        self.assertEqual(sock.sent, [b"ab", b"cd", b"ef"])
+        self.assertGreaterEqual(sleep_mock.call_count, 1)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List
 
 from timiniprint import reporting
-from timiniprint.devices.models import PrinterModelRegistry
+from timiniprint.devices.profiles import PrinterCatalog
 
 
 class CaptureSink(reporting.ReportSink):
@@ -25,7 +25,7 @@ def build_capture_reporter() -> tuple[reporting.Reporter, CaptureSink]:
 
 
 def reset_registry_cache() -> None:
-    PrinterModelRegistry._cache = {}
+    PrinterCatalog._cache = {}
 
 
 def reset_adapter_cache() -> None:

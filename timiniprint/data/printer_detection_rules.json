@@ -1,0 +1,2678 @@
+[
+  {
+    "rule_key": "rule_yt01_mac59",
+    "prefixes": [
+      "YT01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_yt02_mac59",
+    "prefixes": [
+      "YT02"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx01_mac59",
+    "prefixes": [
+      "MX01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx02_mac59",
+    "prefixes": [
+      "MX02"
+    ],
+    "profile_key": "mx02",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx03_mac59",
+    "prefixes": [
+      "MX03"
+    ],
+    "profile_key": "mx03",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx05_mac59",
+    "prefixes": [
+      "MX05"
+    ],
+    "profile_key": "mx05",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx06_mac59",
+    "prefixes": [
+      "MX06"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx07_mac59",
+    "prefixes": [
+      "MX07"
+    ],
+    "profile_key": "mx07",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx08_mac59",
+    "prefixes": [
+      "MX08"
+    ],
+    "profile_key": "mx08",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx09_mac59",
+    "prefixes": [
+      "MX09"
+    ],
+    "profile_key": "mx09",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx10_mac59",
+    "prefixes": [
+      "MX10"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx11_mac59",
+    "prefixes": [
+      "MX11"
+    ],
+    "profile_key": "mx11",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx12_mac59",
+    "prefixes": [
+      "MX12"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mx13_mac59",
+    "prefixes": [
+      "MX13"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mxtp_100_mac59",
+    "prefixes": [
+      "MXTP-100"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mxpc_100_mac59",
+    "prefixes": [
+      "MXPC-100"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_az_p2108x_mac59",
+    "prefixes": [
+      "AZ-P2108X"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_pd01_mac59",
+    "prefixes": [
+      "PD01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_miniprinter_mac59",
+    "prefixes": [
+      "MINIPRINTER"
+    ],
+    "profile_key": "gt02_v5g",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_jl_br22_mac59",
+    "prefixes": [
+      "JL-BR22"
+    ],
+    "profile_key": "gt02_v5g",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_urbanworxkidscamera_mac59",
+    "prefixes": [
+      "URBANWORXKIDSCAMERA"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_cylobtprinter_mac59",
+    "prefixes": [
+      "CYLOBTPRINTER"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_xopoppy_mac59",
+    "prefixes": [
+      "XOPOPPY"
+    ],
+    "profile_key": "xopoppy",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq01_mac59",
+    "prefixes": [
+      "BQ01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq02_mac59",
+    "prefixes": [
+      "BQ02"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_ewttoet_z0499_mac59",
+    "prefixes": [
+      "EWTTOET-Z0499"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq05_mac59",
+    "prefixes": [
+      "BQ05"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq95b_mac59",
+    "prefixes": [
+      "BQ95B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq95c_mac59",
+    "prefixes": [
+      "BQ95C"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq95_mac59",
+    "prefixes": [
+      "BQ95"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq06b_mac59",
+    "prefixes": [
+      "BQ06B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq06_mac59",
+    "prefixes": [
+      "BQ06"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq07_mac59",
+    "prefixes": [
+      "BQ07"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq7a_mac59",
+    "prefixes": [
+      "BQ7A"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq7b_mac59",
+    "prefixes": [
+      "BQ7B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq08_mac59",
+    "prefixes": [
+      "BQ08"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq96_mac59",
+    "prefixes": [
+      "BQ96"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mxw009_mac59",
+    "prefixes": [
+      "MXW009"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_mxw010_mac59",
+    "prefixes": [
+      "MXW010"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_ewttoet_n3689_mac59",
+    "prefixes": [
+      "EWTTOET-N3689"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_ewttoet_n3687_mac59",
+    "prefixes": [
+      "EWTTOET-N3687"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_kp_im606_mac59",
+    "prefixes": [
+      "KP-IM606"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_gv_ma211_mac59",
+    "prefixes": [
+      "GV-MA211"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq03_mac59",
+    "prefixes": [
+      "BQ03"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_bq17_mac59",
+    "prefixes": [
+      "BQ17"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_x6_exact_mac59",
+    "exact_names": [
+      "X6"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "rule_k06_exact_mac59",
+    "prefixes": [
+      "K06-"
+    ],
+    "exact_names": [
+      "K06"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5x",
+    "mac_suffixes": [
+      "59"
+    ]
+  },
+  {
+    "rule_key": "profile_iprintit",
+    "prefixes": [
+      "IprintIt Printer-"
+    ],
+    "profile_key": "x5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pocket_printer",
+    "prefixes": [
+      "Pocket Printer-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ewtto_et_z0504",
+    "prefixes": [
+      "ewtto ET-Z0504-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_luxorp_px10",
+    "prefixes": [
+      "Luxorp.PX10-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_emx_040256",
+    "prefixes": [
+      "EMX-040256-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_seznikecho",
+    "prefixes": [
+      "SeznikEcho-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_seznikneo",
+    "prefixes": [
+      "SeznikNeo-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_tcm690464",
+    "prefixes": [
+      "TCM690464-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_uxportmip",
+    "prefixes": [
+      "UXPORTMIP-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_cmt_0510",
+    "prefixes": [
+      "CMT-0510-"
+    ],
+    "profile_key": "gb03",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dl_ge225",
+    "prefixes": [
+      "DL_GE225-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dl_x2pro",
+    "prefixes": [
+      "DL_X2Pro-"
+    ],
+    "profile_key": "p5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dl_x7pro",
+    "prefixes": [
+      "DL_X7Pro-"
+    ],
+    "profile_key": "p3s",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jxm800",
+    "prefixes": [
+      "GG-D2100-"
+    ],
+    "profile_key": "jxm800",
+    "protocol_family": "legacy_prefixed"
+  },
+  {
+    "rule_key": "profile_ml_mp_01",
+    "prefixes": [
+      "ML-MP-01-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_rossmann",
+    "prefixes": [
+      "ROSSMANN-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_0019b_c",
+    "prefixes": [
+      "0019B-C-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_0019b_d",
+    "prefixes": [
+      "0019B-D-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_professional_printer",
+    "prefixes": [
+      "CTP100LG"
+    ],
+    "profile_key": "professional_printer",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_shipping_printer",
+    "prefixes": [
+      "CTP750BY"
+    ],
+    "profile_key": "shipping_printer",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_shipping_printer_2",
+    "prefixes": [
+      "CTP800BD"
+    ],
+    "profile_key": "shipping_printer",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_mv_b530",
+    "prefixes": [
+      "MV-B530-"
+    ],
+    "profile_key": "x9",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a41iii",
+    "prefixes": [
+      "A41III-"
+    ],
+    "profile_key": "a41iii",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dtr_r0",
+    "prefixes": [
+      "DTR-R0-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb02sh",
+    "prefixes": [
+      "GB02SH-"
+    ],
+    "profile_key": "gb02sh",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb03ph",
+    "prefixes": [
+      "GB03PH-"
+    ],
+    "profile_key": "gb03ph",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb03pl",
+    "prefixes": [
+      "GB03PL-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb03sh",
+    "prefixes": [
+      "GB03SH-"
+    ],
+    "profile_key": "gb03ph",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb03sl",
+    "prefixes": [
+      "GB03SL-"
+    ],
+    "profile_key": "gb03sl",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gl_vs9",
+    "prefixes": [
+      "GL-VS9-"
+    ],
+    "profile_key": "x9",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ht0125",
+    "prefixes": [
+      "HT0125-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_lp100s",
+    "prefixes": [
+      "LP100S-"
+    ],
+    "profile_key": "lp100s",
+    "protocol_family": "legacy_prefixed",
+    "testing": true,
+    "testing_note": "Experimental high-dpi family proxy based on the LP100 family."
+  },
+  {
+    "rule_key": "profile_mp100s",
+    "prefixes": [
+      "MP100S-"
+    ],
+    "profile_key": "mp100s",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental high-dpi 2-inch family proxy for the label-capable MP100S variant."
+  },
+  {
+    "rule_key": "profile_rs9000",
+    "prefixes": [
+      "RS9000-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_rt034h",
+    "prefixes": [
+      "RT034h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xiaowa",
+    "prefixes": [
+      "XiaoWa-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_zpa4z1",
+    "prefixes": [
+      "ZPA4Z1-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a41ii",
+    "prefixes": [
+      "A41II-"
+    ],
+    "profile_key": "a200",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a42ii",
+    "prefixes": [
+      "A42II-"
+    ],
+    "profile_key": "a200",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a4300",
+    "prefixes": [
+      "A4300-"
+    ],
+    "profile_key": "a4300",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_label_printer",
+    "prefixes": [
+      "CPLM10"
+    ],
+    "profile_key": "label_printer",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_mini_printer",
+    "prefixes": [
+      "CTP500"
+    ],
+    "profile_key": "mini_printer",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dl_x2",
+    "prefixes": [
+      "DL_X2-"
+    ],
+    "profile_key": "dl_x2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dl_x7",
+    "prefixes": [
+      "DL_X7-"
+    ],
+    "profile_key": "dl_x7",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dt1_0",
+    "prefixes": [
+      "DT1-0-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_im_04",
+    "prefixes": [
+      "IM.04-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jrx01",
+    "prefixes": [
+      "JRX01-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_lgm01",
+    "prefixes": [
+      "LGM01-"
+    ],
+    "profile_key": "x7hp",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_mp100",
+    "prefixes": [
+      "MP100-"
+    ],
+    "profile_key": "mp100",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental 2-inch family proxy for the label-capable MP100 variant."
+  },
+  {
+    "rule_key": "profile_mpa81",
+    "prefixes": [
+      "MPA81-"
+    ],
+    "profile_key": "mpa81",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p100s",
+    "prefixes": [
+      "P100S-"
+    ],
+    "profile_key": "p100s",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental high-dpi 2-inch family proxy. Width and dpi are known, but exact P100S runtime parameters are not fully confirmed."
+  },
+  {
+    "rule_key": "profile_pr893",
+    "prefixes": [
+      "PR893-"
+    ],
+    "profile_key": "pr893",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pt001",
+    "prefixes": [
+      "PT001-"
+    ],
+    "profile_key": "pt001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_qdx01",
+    "prefixes": [
+      "QDX01-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc03h",
+    "prefixes": [
+      "SC03H-"
+    ],
+    "profile_key": "fc02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc03h_2",
+    "prefixes": [
+      "SC03h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc04h",
+    "prefixes": [
+      "SC04h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x101h_2",
+    "prefixes": [
+      "X101H-"
+    ],
+    "exact_names": [
+      "X101H"
+    ],
+    "profile_key": "x101h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x103h",
+    "prefixes": [
+      "X103H-"
+    ],
+    "exact_names": [
+      "X103H"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x103h_2",
+    "prefixes": [
+      "X103h-"
+    ],
+    "exact_names": [
+      "X103h"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ytb01",
+    "prefixes": [
+      "YTB01-"
+    ],
+    "profile_key": "ytb01",
+    "protocol_family": "v5c"
+  },
+  {
+    "rule_key": "profile_zp801",
+    "prefixes": [
+      "ZP801-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_zp802",
+    "prefixes": [
+      "ZP802-"
+    ],
+    "profile_key": "zp802",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_wts07",
+    "prefixes": [
+      "wts07-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_15p3",
+    "prefixes": [
+      "15P3-"
+    ],
+    "profile_key": "15p3",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_58p5",
+    "prefixes": [
+      "58P5-"
+    ],
+    "profile_key": "58p5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a200",
+    "prefixes": [
+      "A200-"
+    ],
+    "profile_key": "a200",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ai01",
+    "prefixes": [
+      "AI01-"
+    ],
+    "exact_names": [
+      "AI01"
+    ],
+    "profile_key": "ai01",
+    "protocol_family": "v5x"
+  },
+  {
+    "rule_key": "profile_an01",
+    "prefixes": [
+      "AN01-"
+    ],
+    "profile_key": "an01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_cp01",
+    "prefixes": [
+      "CP01-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_d100",
+    "prefixes": [
+      "D100-"
+    ],
+    "profile_key": "d100",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dy01",
+    "prefixes": [
+      "DY01-"
+    ],
+    "profile_key": "x5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dy03",
+    "prefixes": [
+      "DY03-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_dy49",
+    "prefixes": [
+      "DY49-"
+    ],
+    "profile_key": "cp01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_fc02",
+    "prefixes": [
+      "FC02-"
+    ],
+    "profile_key": "fc02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_fl01",
+    "prefixes": [
+      "FL01-"
+    ],
+    "profile_key": "fl01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb01",
+    "prefixes": [
+      "GB01-"
+    ],
+    "profile_key": "gb01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb02",
+    "prefixes": [
+      "GB02-"
+    ],
+    "profile_key": "gb02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb03",
+    "prefixes": [
+      "GB03-"
+    ],
+    "profile_key": "gb03_2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb04",
+    "prefixes": [
+      "GB04-"
+    ],
+    "profile_key": "gb04",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb05",
+    "prefixes": [
+      "GB05-"
+    ],
+    "profile_key": "gb05",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gb06",
+    "prefixes": [
+      "GB06-"
+    ],
+    "profile_key": "gb03_2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt01",
+    "prefixes": [
+      "GT01-"
+    ],
+    "profile_key": "gt01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt02",
+    "prefixes": [
+      "GT02-"
+    ],
+    "profile_key": "gt02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt03",
+    "prefixes": [
+      "GT03-"
+    ],
+    "profile_key": "gt01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt04",
+    "prefixes": [
+      "GT04-"
+    ],
+    "profile_key": "gt04",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt08",
+    "prefixes": [
+      "GT08-"
+    ],
+    "profile_key": "gt08",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt09",
+    "prefixes": [
+      "GT09-"
+    ],
+    "profile_key": "gt09",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gt10",
+    "prefixes": [
+      "GT10-"
+    ],
+    "profile_key": "gt09",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gw08",
+    "prefixes": [
+      "GW08-"
+    ],
+    "profile_key": "gt08",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_gw09",
+    "prefixes": [
+      "GW09-"
+    ],
+    "profile_key": "gw09",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx001",
+    "prefixes": [
+      "JX01-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx002",
+    "prefixes": [
+      "JX02-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx003",
+    "prefixes": [
+      "JX03-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx004",
+    "prefixes": [
+      "JX04-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx005",
+    "prefixes": [
+      "JX05-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_jx006",
+    "prefixes": [
+      "JX06-"
+    ],
+    "profile_key": "jx001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_kf_5",
+    "prefixes": [
+      "KF-5-"
+    ],
+    "profile_key": "fl01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_lt01",
+    "prefixes": [
+      "LT01-"
+    ],
+    "profile_key": "lt01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ly01",
+    "prefixes": [
+      "LY01-"
+    ],
+    "profile_key": "ly01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ly02",
+    "prefixes": [
+      "LY02-"
+    ],
+    "profile_key": "ly02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ly03",
+    "prefixes": [
+      "LY03-"
+    ],
+    "profile_key": "ly03",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_ly05",
+    "prefixes": [
+      "LY05-"
+    ],
+    "profile_key": "ly05",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_lp100",
+    "prefixes": [
+      "LP100-"
+    ],
+    "profile_key": "lp100",
+    "protocol_family": "legacy_prefixed"
+  },
+  {
+    "rule_key": "profile_ly10",
+    "prefixes": [
+      "LY10-"
+    ],
+    "profile_key": "ly10",
+    "protocol_family": "legacy_prefixed"
+  },
+  {
+    "rule_key": "profile_ly11",
+    "prefixes": [
+      "LY11-"
+    ],
+    "profile_key": "ly11",
+    "protocol_family": "legacy_prefixed"
+  },
+  {
+    "rule_key": "profile_m08f",
+    "prefixes": [
+      "M08F-"
+    ],
+    "profile_key": "m08f",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_m832",
+    "prefixes": [
+      "M832-"
+    ],
+    "profile_key": "m832",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_mx02",
+    "prefixes": [
+      "MX02-"
+    ],
+    "profile_key": "mx02",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "profile_mx03",
+    "prefixes": [
+      "MX03-"
+    ],
+    "profile_key": "mx03",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "profile_mx05",
+    "prefixes": [
+      "MX05-"
+    ],
+    "profile_key": "mx05",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "profile_mx06",
+    "prefixes": [
+      "MX06-"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx06",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "profile_mx08",
+    "prefixes": [
+      "MX08-"
+    ],
+    "profile_key": "mx08",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "d2",
+      "density_profile_key": "mx08"
+    }
+  },
+  {
+    "rule_key": "profile_mx09",
+    "prefixes": [
+      "MX09-"
+    ],
+    "profile_key": "mx09",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "d2",
+      "density_profile_key": "mx09"
+    }
+  },
+  {
+    "rule_key": "profile_mx10",
+    "prefixes": [
+      "MX10-"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "profile_mx11",
+    "prefixes": [
+      "MX11-"
+    ],
+    "profile_key": "mx11",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx11"
+    }
+  },
+  {
+    "rule_key": "profile_p100",
+    "prefixes": [
+      "P100-"
+    ],
+    "profile_key": "p100",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental 2-inch family proxy. Width and dpi are known, but exact P100 runtime parameters are not fully confirmed."
+  },
+  {
+    "rule_key": "profile_p5ai",
+    "prefixes": [
+      "P5AI-"
+    ],
+    "profile_key": "m01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr02",
+    "prefixes": [
+      "PR02-"
+    ],
+    "profile_key": "pr02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr07",
+    "prefixes": [
+      "PR07-"
+    ],
+    "profile_key": "m01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw001",
+    "prefixes": [
+      "PR20-",
+      "XW001-"
+    ],
+    "profile_key": "xw001",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw003",
+    "prefixes": [
+      "PR25-",
+      "XW003-"
+    ],
+    "profile_key": "m01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr30",
+    "prefixes": [
+      "PR30-"
+    ],
+    "profile_key": "pr30",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw002",
+    "prefixes": [
+      "XW002-"
+    ],
+    "profile_key": "xw002",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw004",
+    "prefixes": [
+      "XW004-"
+    ],
+    "profile_key": "pr35",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw005",
+    "prefixes": [
+      "XW005-"
+    ],
+    "profile_key": "gt08",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw006",
+    "prefixes": [
+      "XW006-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw007",
+    "prefixes": [
+      "XW007-"
+    ],
+    "profile_key": "pr893",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw008",
+    "prefixes": [
+      "XW008-"
+    ],
+    "profile_key": "pr02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xw009",
+    "prefixes": [
+      "XW009-"
+    ],
+    "profile_key": "m01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr35",
+    "prefixes": [
+      "PR35-"
+    ],
+    "profile_key": "pr35",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr88",
+    "prefixes": [
+      "PR88-"
+    ],
+    "profile_key": "gt08",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_pr89",
+    "prefixes": [
+      "PR89-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_q302",
+    "prefixes": [
+      "Q302-"
+    ],
+    "profile_key": "q302",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_qdid",
+    "prefixes": [
+      "QDID-"
+    ],
+    "profile_key": "x9",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_s101",
+    "prefixes": [
+      "S101-"
+    ],
+    "profile_key": "s101",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_s102",
+    "prefixes": [
+      "S102-"
+    ],
+    "profile_key": "s102_2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc03",
+    "prefixes": [
+      "SC03-"
+    ],
+    "profile_key": "gb03",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc04",
+    "prefixes": [
+      "SC04-"
+    ],
+    "profile_key": "gb03",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_sc05",
+    "prefixes": [
+      "SC05-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_tp81",
+    "prefixes": [
+      "TP81-"
+    ],
+    "profile_key": "m08f",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_wl01",
+    "prefixes": [
+      "WL01-"
+    ],
+    "profile_key": "58p5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x100",
+    "prefixes": [
+      "X100-"
+    ],
+    "exact_names": [
+      "X100"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x102",
+    "prefixes": [
+      "X102-"
+    ],
+    "exact_names": [
+      "X102"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x5hp",
+    "prefixes": [
+      "X5HP-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x6hp",
+    "prefixes": [
+      "X6HP-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x7hp",
+    "prefixes": [
+      "X7HP-"
+    ],
+    "profile_key": "x7hp",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x8_l",
+    "prefixes": [
+      "X8-L-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x8_w",
+    "prefixes": [
+      "X8-W-"
+    ],
+    "profile_key": "pr89",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_yk06",
+    "prefixes": [
+      "YK06-"
+    ],
+    "profile_key": "15p3",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_zhhc",
+    "prefixes": [
+      "ZHHC-"
+    ],
+    "profile_key": "zhhc",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a33",
+    "prefixes": [
+      "A33-"
+    ],
+    "profile_key": "a33",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_a43",
+    "prefixes": [
+      "A43-"
+    ],
+    "profile_key": "a43",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_hd1",
+    "prefixes": [
+      "HD1-"
+    ],
+    "profile_key": "hd1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_lp6",
+    "prefixes": [
+      "LP6-"
+    ],
+    "profile_key": "x5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_m01",
+    "prefixes": [
+      "M01-"
+    ],
+    "profile_key": "m01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p10",
+    "prefixes": [
+      "P10-"
+    ],
+    "profile_key": "p10",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p3s",
+    "prefixes": [
+      "P3S-"
+    ],
+    "profile_key": "p3s",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental high-dpi wide-format family proxy. TiMini Print uses a fixed 1280 px profile here as a best-effort fallback."
+  },
+  {
+    "rule_key": "profile_p7h",
+    "prefixes": [
+      "P7H-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_s01",
+    "prefixes": [
+      "S01-"
+    ],
+    "profile_key": "s01",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_t02",
+    "prefixes": [
+      "T02-"
+    ],
+    "profile_key": "t02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_v5x",
+    "prefixes": [
+      "V5X-"
+    ],
+    "profile_key": "v5x",
+    "protocol_family": "v5x",
+    "testing": true,
+    "testing_note": "Experimental V5X family profile. Width and protocol family are known; remaining runtime values follow current 2-inch defaults."
+  },
+  {
+    "rule_key": "profile_x16",
+    "prefixes": [
+      "X16-"
+    ],
+    "exact_names": [
+      "X16"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x2h",
+    "prefixes": [
+      "X2H-"
+    ],
+    "exact_names": [
+      "X2H"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x2h_2",
+    "prefixes": [
+      "X2h-"
+    ],
+    "exact_names": [
+      "X2h"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x5h",
+    "prefixes": [
+      "X5H-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x5h_2",
+    "prefixes": [
+      "X5h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x6h",
+    "prefixes": [
+      "X6H-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x6h_2",
+    "prefixes": [
+      "X6h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x7h",
+    "prefixes": [
+      "X7H-"
+    ],
+    "profile_key": "x6h",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x7h_2",
+    "prefixes": [
+      "X7h-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_xc9",
+    "prefixes": [
+      "XC9-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_d1",
+    "prefixes": [
+      "D1-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_m2",
+    "prefixes": [
+      "M2-"
+    ],
+    "profile_key": "m2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p1",
+    "prefixes": [
+      "P1-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p2",
+    "prefixes": [
+      "P2-"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p3",
+    "prefixes": [
+      "P3-"
+    ],
+    "profile_key": "p3",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental wide-format family proxy. TiMini Print uses a fixed 832 px profile here as a best-effort fallback."
+  },
+  {
+    "rule_key": "profile_p4",
+    "prefixes": [
+      "P4-"
+    ],
+    "profile_key": "p4",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p5",
+    "prefixes": [
+      "P5-"
+    ],
+    "profile_key": "p5",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p6",
+    "prefixes": [
+      "P6-"
+    ],
+    "profile_key": "p6",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_p7",
+    "prefixes": [
+      "P7-"
+    ],
+    "profile_key": "p7",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_u1",
+    "prefixes": [
+      "U1-"
+    ],
+    "profile_key": "u1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x1",
+    "prefixes": [
+      "X1-"
+    ],
+    "profile_key": "x1",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x5",
+    "prefixes": [
+      "X5-"
+    ],
+    "profile_key": "x5_2",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x6",
+    "prefixes": [
+      "X6-"
+    ],
+    "profile_key": "x6",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x7",
+    "prefixes": [
+      "X7-"
+    ],
+    "profile_key": "x7",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x8",
+    "prefixes": [
+      "X8-"
+    ],
+    "profile_key": "x8",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "profile_x9",
+    "prefixes": [
+      "X9-"
+    ],
+    "profile_key": "x9",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "rule_yt01_v5g",
+    "prefixes": [
+      "YT01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_yt02_v5g",
+    "prefixes": [
+      "YT02"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx01_v5g",
+    "prefixes": [
+      "MX01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx02_v5g",
+    "prefixes": [
+      "MX02"
+    ],
+    "profile_key": "mx02",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx03_v5g",
+    "prefixes": [
+      "MX03"
+    ],
+    "profile_key": "mx03",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx05_v5g",
+    "prefixes": [
+      "MX05"
+    ],
+    "profile_key": "mx05",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx06_v5g",
+    "prefixes": [
+      "MX06"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx06",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_mx07_v5g",
+    "prefixes": [
+      "MX07"
+    ],
+    "profile_key": "mx07",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mx08_v5g",
+    "prefixes": [
+      "MX08"
+    ],
+    "profile_key": "mx08",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "d2",
+      "density_profile_key": "mx08"
+    }
+  },
+  {
+    "rule_key": "rule_mx09_v5g",
+    "prefixes": [
+      "MX09"
+    ],
+    "profile_key": "mx09",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "d2",
+      "density_profile_key": "mx09"
+    }
+  },
+  {
+    "rule_key": "rule_mx10_v5g",
+    "prefixes": [
+      "MX10"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_mx11_v5g",
+    "prefixes": [
+      "MX11"
+    ],
+    "profile_key": "mx11",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx11"
+    }
+  },
+  {
+    "rule_key": "rule_mx12_v5g",
+    "prefixes": [
+      "MX12"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx11"
+    }
+  },
+  {
+    "rule_key": "rule_mx13_v5g",
+    "prefixes": [
+      "MX13"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "xopoppy"
+    }
+  },
+  {
+    "rule_key": "rule_mxtp_100_v5g",
+    "prefixes": [
+      "MXTP-100"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mxpc_100_v5g",
+    "prefixes": [
+      "MXPC-100"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_az_p2108x_v5g",
+    "prefixes": [
+      "AZ-P2108X"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_pd01_v5g",
+    "prefixes": [
+      "PD01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "pd01",
+      "density_profile_key": "mx11"
+    }
+  },
+  {
+    "rule_key": "rule_miniprinter_v5g",
+    "prefixes": [
+      "MINIPRINTER"
+    ],
+    "profile_key": "gt02_v5g",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_jl_br22_v5g",
+    "prefixes": [
+      "JL-BR22"
+    ],
+    "profile_key": "gt02_v5g",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_urbanworxkidscamera_v5g",
+    "prefixes": [
+      "URBANWORXKIDSCAMERA"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_cylobtprinter_v5g",
+    "prefixes": [
+      "CYLOBTPRINTER"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_xopoppy_v5g",
+    "prefixes": [
+      "XOPOPPY"
+    ],
+    "profile_key": "xopoppy",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "xopoppy"
+    }
+  },
+  {
+    "rule_key": "rule_bq01_v5g",
+    "prefixes": [
+      "BQ01"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq02_v5g",
+    "prefixes": [
+      "BQ02"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_ewttoet_z0499_v5g",
+    "prefixes": [
+      "EWTTOET-Z0499"
+    ],
+    "profile_key": "mx06",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq05_v5g",
+    "prefixes": [
+      "BQ05"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq95b_v5g",
+    "prefixes": [
+      "BQ95B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq95c_v5g",
+    "prefixes": [
+      "BQ95C"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq95_v5g",
+    "prefixes": [
+      "BQ95"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq06b_v5g",
+    "prefixes": [
+      "BQ06B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq06_v5g",
+    "prefixes": [
+      "BQ06"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq07_v5g",
+    "prefixes": [
+      "BQ07"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq7a_v5g",
+    "prefixes": [
+      "BQ7A"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq7b_v5g",
+    "prefixes": [
+      "BQ7B"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq08_v5g",
+    "prefixes": [
+      "BQ08"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq96_v5g",
+    "prefixes": [
+      "BQ96"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_mxw009_v5g",
+    "prefixes": [
+      "MXW009"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_mxw010_v5g",
+    "prefixes": [
+      "MXW010"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10"
+    }
+  },
+  {
+    "rule_key": "rule_ewttoet_n3689_v5g",
+    "prefixes": [
+      "EWTTOET-N3689"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_ewttoet_n3687_v5g",
+    "prefixes": [
+      "EWTTOET-N3687"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_kp_im606_v5g",
+    "prefixes": [
+      "KP-IM606"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_gv_ma211_v5g",
+    "prefixes": [
+      "GV-MA211"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g",
+    "v5g_dynamic_helper": {
+      "helper_kind": "mx10",
+      "density_profile_key": "mx06"
+    }
+  },
+  {
+    "rule_key": "rule_bq03_v5g",
+    "prefixes": [
+      "BQ03"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_x6_exact_v5g",
+    "exact_names": [
+      "X6"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_k06_exact_v5g",
+    "prefixes": [
+      "K06-"
+    ],
+    "exact_names": [
+      "K06"
+    ],
+    "profile_key": "v5g_small_203",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "rule_bq17_v5g",
+    "prefixes": [
+      "BQ17"
+    ],
+    "profile_key": "bq02",
+    "protocol_family": "v5g"
+  },
+  {
+    "rule_key": "alias_tp84",
+    "prefixes": [
+      "TP84",
+      "TP85",
+      "TP86",
+      "TP87",
+      "TP88"
+    ],
+    "profile_key": "m08f",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "alias_m836",
+    "prefixes": [
+      "M836"
+    ],
+    "profile_key": "m832",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "alias_q580",
+    "prefixes": [
+      "Q580"
+    ],
+    "profile_key": "q302",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "alias_t02e",
+    "prefixes": [
+      "T02E",
+      "Q02E",
+      "C02E"
+    ],
+    "profile_key": "t02",
+    "protocol_family": "legacy"
+  },
+  {
+    "rule_key": "alias_yintibao_v5pro",
+    "prefixes": [
+      "YINTIBAO-V5PRO",
+      "MP200S",
+      "MP220S"
+    ],
+    "profile_key": "p100s",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental high-dpi 2-inch family aliases mapped to the P100S testing profile."
+  },
+  {
+    "rule_key": "alias_yintibao_v5",
+    "prefixes": [
+      "YINTIBAO-V5",
+      "MP200",
+      "MP220",
+      "AEQ918N4"
+    ],
+    "profile_key": "p100",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental 2-inch family aliases mapped to the P100 testing profile."
+  },
+  {
+    "rule_key": "alias_lp220s",
+    "prefixes": [
+      "LP220S"
+    ],
+    "profile_key": "lp100s",
+    "protocol_family": "legacy_prefixed",
+    "testing": true,
+    "testing_note": "Experimental high-dpi label-family aliases mapped to the LP100S testing profile."
+  },
+  {
+    "rule_key": "alias_lp220",
+    "prefixes": [
+      "LP220",
+      "LY100_BLE"
+    ],
+    "profile_key": "lp100",
+    "protocol_family": "legacy_prefixed",
+    "testing": true,
+    "testing_note": "Experimental label-family aliases mapped to the LP100 profile."
+  },
+  {
+    "rule_key": "alias_mp300s",
+    "prefixes": [
+      "MP300S"
+    ],
+    "profile_key": "p3s",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental high-dpi wide-format family aliases mapped to the P3S testing profile."
+  },
+  {
+    "rule_key": "alias_mp300",
+    "prefixes": [
+      "MP300"
+    ],
+    "profile_key": "p3",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental wide-format family aliases mapped to the P3 testing profile."
+  },
+  {
+    "rule_key": "alias_mxw01",
+    "prefixes": [
+      "MXW01",
+      "MXW01-1",
+      "X2-",
+      "C17",
+      "MXW-W5",
+      "AC695X_PRINT",
+      "JK01",
+      "PORTABLEPRINTER",
+      "INSTANTPRINTPLUS",
+      "REKA",
+      "HDMDT-00",
+      "KERUI",
+      "BH03"
+    ],
+    "exact_names": [
+      "X1",
+      "X2"
+    ],
+    "profile_key": "v5x",
+    "protocol_family": "v5x",
+    "testing": true,
+    "testing_note": "Experimental V5X-family aliases mapped to the local V5X family profile."
+  },
+  {
+    "rule_key": "alias_c21",
+    "prefixes": [
+      "C21",
+      "D2",
+      "E2",
+      "NEWSMY"
+    ],
+    "profile_key": "d1",
+    "protocol_family": "dck",
+    "testing": true,
+    "testing_note": "Experimental DCK-family aliases mapped to the existing D1 profile."
+  },
+  {
+    "rule_key": "alias_mxw_a4",
+    "prefixes": [
+      "MXW-A4"
+    ],
+    "profile_key": "m08f",
+    "protocol_family": "legacy",
+    "testing": true,
+    "testing_note": "Experimental V10G-family alias mapped to the existing M08F profile."
+  }
+]

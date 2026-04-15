@@ -9,7 +9,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from tests.helpers import install_crc8_stub, reset_registry_cache
-from timiniprint.devices.models import PrinterModelRegistry
+from timiniprint.devices import PrinterCatalog
 from timiniprint.protocol.family import ProtocolFamily
 from timiniprint.protocol.types import ImageEncoding, PixelFormat, RasterBuffer, RasterSet
 from timiniprint.rendering.converters.base import Page
@@ -34,7 +34,7 @@ class PrintingJobTests(unittest.TestCase):
 
     def setUp(self) -> None:
         reset_registry_cache()
-        self.model = PrinterModelRegistry.load().get("X6H") or PrinterModelRegistry.load().models[0]
+        self.profile = PrinterCatalog.load().require_profile("x6h")
 
     def test_static_helpers(self) -> None:
         self.assertEqual(self.job_mod.PrintJobBuilder._normalized_width(384), 384)
@@ -43,7 +43,7 @@ class PrintingJobTests(unittest.TestCase):
         self.assertGreater(self.job_mod.PrintJobBuilder._mm_to_px(5, 203), 0)
 
     def test_build_from_file_validation(self) -> None:
-        builder = self.job_mod.PrintJobBuilder(self.model, page_loader=_FakeLoader([]))
+        builder = self.job_mod.PrintJobBuilder(self.profile, page_loader=_FakeLoader([]))
         with self.assertRaises(ValueError):
             builder.build_from_file("bad.unsupported")
         with self.assertRaises(FileNotFoundError):
@@ -53,7 +53,7 @@ class PrintingJobTests(unittest.TestCase):
         img = Image.new("1", (8, 1), 1)
         pages = [Page(img, dither=False, is_text=False), Page(img, dither=True, is_text=True)]
         loader = _FakeLoader(pages)
-        builder = self.job_mod.PrintJobBuilder(self.model, page_loader=loader)
+        builder = self.job_mod.PrintJobBuilder(self.profile, page_loader=loader)
         raster_set = RasterSet(
             rasters={PixelFormat.BW1: RasterBuffer(pixels=[1] * 8, width=8, pixel_format=PixelFormat.BW1)}
         )
@@ -68,7 +68,7 @@ class PrintingJobTests(unittest.TestCase):
 
     def test_mode_energy_speed_selection(self) -> None:
         settings = self.job_mod.PrintSettings(text_mode=None, lsb_first=None)
-        builder = self.job_mod.PrintJobBuilder(self.model, settings=settings, page_loader=_FakeLoader([]))
+        builder = self.job_mod.PrintJobBuilder(self.profile, settings=settings, page_loader=_FakeLoader([]))
         p_text = Page(Image.new("1", (8, 1), 1), dither=False, is_text=True)
         p_img = Page(Image.new("1", (8, 1), 1), dither=True, is_text=False)
         self.assertTrue(builder._select_text_mode(p_text))
@@ -76,11 +76,53 @@ class PrintingJobTests(unittest.TestCase):
         self.assertGreater(builder._select_energy(True), 0)
         self.assertGreater(builder._select_energy(False), 0)
 
+    def test_v5g_dynamic_helper_uses_donor_density_profile(self) -> None:
+        catalog = PrinterCatalog.load()
+        profile = catalog.require_profile("v5g_small_203")
+        donor = catalog.require_profile("mx06")
+        builder = self.job_mod.PrintJobBuilder(
+            profile,
+            protocol_family=ProtocolFamily.V5G,
+            v5g_dynamic_helper=self.job_mod.V5GDynamicHelper(
+                helper_kind="mx10",
+                density_profile_key="mx06",
+            ),
+            v5g_density_profile=donor,
+            page_loader=_FakeLoader([]),
+        )
+
+        self.assertIsNotNone(builder.runtime_context)
+        self.assertEqual(builder.runtime_context.helper_kind, "mx10")
+        self.assertEqual(builder.runtime_context.density_profile_key, "mx06")
+        self.assertEqual(builder.runtime_context.image_levels.middle, 180)
+        self.assertEqual(builder.runtime_context.text_levels.middle, 130)
+        self.assertEqual(builder._select_density(False), 180)
+        self.assertEqual(builder._select_density(True), 130)
+
+    def test_v5g_dynamic_helper_can_use_xopoppy_density_profile(self) -> None:
+        catalog = PrinterCatalog.load()
+        profile = catalog.require_profile("v5g_small_203")
+        donor = catalog.require_profile("xopoppy")
+        builder = self.job_mod.PrintJobBuilder(
+            profile,
+            protocol_family=ProtocolFamily.V5G,
+            v5g_dynamic_helper=self.job_mod.V5GDynamicHelper(
+                helper_kind="mx10",
+                density_profile_key="xopoppy",
+            ),
+            v5g_density_profile=donor,
+            page_loader=_FakeLoader([]),
+        )
+
+        self.assertIsNotNone(builder.runtime_context)
+        self.assertEqual(builder.runtime_context.image_levels.middle, 80)
+        self.assertEqual(builder.runtime_context.text_levels.middle, 80)
+
     def test_build_from_file_uses_v5c_default_bw1_pipeline(self) -> None:
         img = Image.new("L", (8, 1))
         loader = _FakeLoader([Page(img, dither=False, is_text=False)])
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5C,
             settings=self.job_mod.PrintSettings(),
             page_loader=loader,
@@ -124,7 +166,7 @@ class PrintingJobTests(unittest.TestCase):
             pixel_format_override=PixelFormat.GRAY8,
         )
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5C,
             settings=settings,
             page_loader=loader,
@@ -165,7 +207,7 @@ class PrintingJobTests(unittest.TestCase):
             v5c_gamma_value=1.2,
         )
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5C,
             settings=settings,
             page_loader=loader,
@@ -197,7 +239,7 @@ class PrintingJobTests(unittest.TestCase):
             v5c_gamma_handle=False,
         )
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5C,
             settings=settings,
             page_loader=loader,
@@ -226,7 +268,7 @@ class PrintingJobTests(unittest.TestCase):
         loader = _FakeLoader([Page(img, dither=False, is_text=False)])
         settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.V5C_A5)
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5C,
             settings=settings,
             page_loader=loader,
@@ -255,7 +297,7 @@ class PrintingJobTests(unittest.TestCase):
         loader = _FakeLoader([Page(img, dither=False, is_text=False)])
         settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.LEGACY_RLE)
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.LEGACY,
             settings=settings,
             page_loader=loader,
@@ -281,7 +323,7 @@ class PrintingJobTests(unittest.TestCase):
         img = Image.new("L", (8, 1))
         loader = _FakeLoader([Page(img, dither=False, is_text=False)])
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5X,
             settings=self.job_mod.PrintSettings(),
             page_loader=loader,
@@ -317,7 +359,7 @@ class PrintingJobTests(unittest.TestCase):
         loader = _FakeLoader([Page(img, dither=False, is_text=False)])
         settings = self.job_mod.PrintSettings(image_encoding_override=ImageEncoding.V5X_GRAY)
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5X,
             settings=settings,
             page_loader=loader,
@@ -350,7 +392,7 @@ class PrintingJobTests(unittest.TestCase):
             v5x_gamma_value=1.1,
         )
         builder = self.job_mod.PrintJobBuilder(
-            self.model,
+            self.profile,
             protocol_family=ProtocolFamily.V5X,
             settings=settings,
             page_loader=loader,

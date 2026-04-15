@@ -64,6 +64,22 @@ class ProtocolJobTests(unittest.TestCase):
             formats=(cls.types.PixelFormat.BW1,),
             encoding=cls.types.ImageEncoding.DCK_DEFAULT,
         )
+        cls.v5g_dot = cls.types.ImagePipelineConfig(
+            formats=(
+                cls.types.PixelFormat.BW1,
+                cls.types.PixelFormat.GRAY4,
+                cls.types.PixelFormat.GRAY8,
+            ),
+            encoding=cls.types.ImageEncoding.V5G_DOT,
+        )
+        cls.v5g_gray = cls.types.ImagePipelineConfig(
+            formats=(
+                cls.types.PixelFormat.GRAY4,
+                cls.types.PixelFormat.GRAY8,
+                cls.types.PixelFormat.BW1,
+            ),
+            encoding=cls.types.ImageEncoding.V5G_GRAY,
+        )
 
     def _bw_raster(self, pixels: list[int], width: int = 8):
         return self.types.RasterBuffer(
@@ -98,6 +114,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=False,
             speed=10,
             energy=5000,
+            density=None,
             blackening=3,
             lsb_first=True,
             protocol_family=ProtocolFamily.LEGACY,
@@ -116,6 +133,7 @@ class ProtocolJobTests(unittest.TestCase):
                 is_text=False,
                 speed=10,
                 energy=5000,
+                density=None,
                 blackening=3,
                 lsb_first=True,
                 protocol_family=ProtocolFamily.LEGACY,
@@ -131,6 +149,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=False,
             speed=10,
             energy=5000,
+            density=None,
             blackening=3,
             lsb_first=True,
             protocol_family=ProtocolFamily.V5X,
@@ -162,6 +181,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=False,
             speed=10,
             energy=5000,
+            density=None,
             blackening=3,
             lsb_first=True,
             protocol_family=ProtocolFamily.V5X,
@@ -193,6 +213,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=False,
             speed=10,
             energy=5000,
+            density=None,
             blackening=3,
             lsb_first=True,
             protocol_family=ProtocolFamily.V5X,
@@ -232,6 +253,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=False,
             speed=10,
             energy=5000,
+            density=None,
             blackening=2,
             lsb_first=True,
             protocol_family=ProtocolFamily.V5X,
@@ -254,6 +276,7 @@ class ProtocolJobTests(unittest.TestCase):
             is_text=True,
             speed=10,
             energy=5000,
+            density=None,
             blackening=4,
             lsb_first=True,
             protocol_family=ProtocolFamily.V5C,
@@ -294,6 +317,7 @@ class ProtocolJobTests(unittest.TestCase):
                 is_text=False,
                 speed=10,
                 energy=5000,
+                density=None,
                 blackening=3,
                 lsb_first=True,
                 protocol_family=ProtocolFamily.V5C,
@@ -333,6 +357,7 @@ class ProtocolJobTests(unittest.TestCase):
                 is_text=False,
                 speed=10,
                 energy=5000,
+                density=None,
                 blackening=3,
                 lsb_first=True,
                 protocol_family=ProtocolFamily.V5C,
@@ -368,6 +393,7 @@ class ProtocolJobTests(unittest.TestCase):
                     is_text=False,
                     speed=10,
                     energy=5000,
+                    density=None,
                     blackening=3,
                     lsb_first=True,
                     protocol_family=ProtocolFamily.V5C,
@@ -377,20 +403,109 @@ class ProtocolJobTests(unittest.TestCase):
                 )
 
     def test_build_dck_job_is_not_implemented(self) -> None:
-        with self.assertRaisesRegex(NotImplementedError, "DCK protocol family"):
-            self.job.build_job(
-                pixels=[1, 0, 1, 0, 1, 0, 1, 0],
-                width=8,
-                is_text=False,
+            with self.assertRaisesRegex(NotImplementedError, "DCK protocol family"):
+                self.job.build_job(
+                    pixels=[1, 0, 1, 0, 1, 0, 1, 0],
+                    width=8,
+                    is_text=False,
                 speed=10,
                 energy=5000,
+                density=None,
                 blackening=3,
                 lsb_first=True,
                 protocol_family=ProtocolFamily.DCK,
                 feed_padding=12,
+                    dev_dpi=203,
+                    image_pipeline=self.dck,
+                )
+
+    def test_build_v5g_dot_job_uses_v5g_sequence(self) -> None:
+        data = self.job.build_job(
+            pixels=[1, 0, 1, 0, 1, 0, 1, 0],
+            width=8,
+            is_text=False,
+            speed=30,
+            energy=15000,
+            density=None,
+            blackening=3,
+            lsb_first=True,
+            protocol_family=ProtocolFamily.V5G,
+            feed_padding=12,
+            dev_dpi=203,
+            image_pipeline=self.v5g_dot,
+        )
+
+        self.assertIn(
+            self.commands.make_packet(0xA4, bytes([0x33]), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xA6, bytes.fromhex("AA551738445F5F5F44382C"), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xAF, (15000).to_bytes(2, "little"), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xBE, bytes([0x00]), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xBD, bytes([30]), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xA2, bytes([0x55]), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertGreaterEqual(
+            data.count(self.commands.make_packet(0xA1, bytes([0x30, 0x00]), ProtocolFamily.V5G)),
+            2,
+        )
+        self.assertTrue(data.endswith(self.commands.make_packet(0xA3, bytes([0x00]), ProtocolFamily.V5G)))
+
+    def test_build_v5g_gray_job_uses_density_and_compressed_frame(self) -> None:
+        raster_set = self._raster_set(
+            self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0] * 2),
+            self.types.RasterBuffer(
+                pixels=[15, 14, 13, 12, 11, 10, 9, 8] * 2,
+                width=8,
+                pixel_format=self.types.PixelFormat.GRAY4,
+            ),
+        )
+
+        with patch(
+            "timiniprint.protocol.families.v5g.compress_lzo1x_1",
+            return_value=bytes.fromhex("AABB"),
+        ):
+            data = self.job.build_job_from_raster_set(
+                raster_set=raster_set,
+                is_text=False,
+                speed=30,
+                energy=15000,
+                density=0x1234,
+                blackening=4,
+                lsb_first=True,
+                protocol_family=ProtocolFamily.V5G,
+                feed_padding=12,
                 dev_dpi=203,
-                image_pipeline=self.dck,
+                post_print_feed_count=3,
+                image_pipeline=self.v5g_gray,
             )
+
+        self.assertIn(
+            self.commands.make_packet(0xF2, bytes.fromhex("3412"), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertIn(
+            self.commands.make_packet(0xCF, bytes.fromhex("08000200AABB"), ProtocolFamily.V5G),
+            data,
+        )
+        self.assertGreaterEqual(
+            data.count(self.commands.make_packet(0xA1, bytes([0x30, 0x00]), ProtocolFamily.V5G)),
+            3,
+        )
 
 
 if __name__ == "__main__":

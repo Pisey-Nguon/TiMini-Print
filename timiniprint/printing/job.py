@@ -4,7 +4,14 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-from ..devices.models import PrinterModel
+from ..devices.profiles import PrinterProfile
+from ..protocol.dynamic_helpers import (
+    DensityLevels,
+    V5GDynamicHelper,
+    V5GDynamicRuntimeContext,
+    supports_v5g_d2_status,
+    supports_v5g_didian_status,
+)
 from ..protocol import ImageEncoding, ImagePipelineConfig, PixelFormat, build_job_from_raster_set
 from ..protocol.family import ProtocolFamily
 from ..protocol.families import get_protocol_definition
@@ -42,17 +49,21 @@ class PrintSettings:
 class PrintJobBuilder:
     def __init__(
         self,
-        model: PrinterModel,
+        profile: PrinterProfile,
         protocol_family: Optional[ProtocolFamily] = None,
         image_pipeline: Optional[ImagePipelineConfig] = None,
         settings: Optional[PrintSettings] = None,
         page_loader: Optional[PageLoader] = None,
+        v5g_dynamic_helper: Optional[V5GDynamicHelper] = None,
+        v5g_density_profile: Optional[PrinterProfile] = None,
     ) -> None:
-        self.model = model
-        self.protocol_family = protocol_family or model.protocol_family
+        self.profile = profile
+        self.protocol_family = protocol_family or profile.default_protocol_family
         self._explicit_image_pipeline = image_pipeline
         self.settings = settings or PrintSettings()
-        pdf_page_gap_px = self._mm_to_px(self.settings.pdf_page_gap_mm, self.model.dev_dpi)
+        self._v5g_dynamic_helper = v5g_dynamic_helper
+        self._v5g_density_profile = v5g_density_profile
+        pdf_page_gap_px = self._mm_to_px(self.settings.pdf_page_gap_mm, self.profile.dev_dpi)
         self.page_loader = page_loader or PageLoader(
             text_font=self.settings.text_font,
             text_columns=self.settings.text_columns,
@@ -62,10 +73,11 @@ class PrintJobBuilder:
             pdf_pages=self.settings.pdf_pages,
             pdf_page_gap_px=pdf_page_gap_px,
         )
+        self.runtime_context = self._build_runtime_context()
 
     def build_from_file(self, path: str) -> bytes:
         self._validate_input_path(path)
-        width = self._normalized_width(self.model.width)
+        width = self._normalized_width(self.profile.width)
         pages = self.page_loader.load(path, width)
         image_pipeline = self._resolve_image_pipeline()
         required_formats = (image_pipeline.default_format,)
@@ -80,19 +92,22 @@ class PrintJobBuilder:
                 gamma_handle=gamma_handle,
                 gamma_value=gamma_value,
             )
-            speed = self.model.text_print_speed if is_text else self.model.img_print_speed
+            speed = self.profile.select_speed(is_text=is_text)
             energy = self._select_energy(is_text)
+            density = self._select_density(is_text)
             job = build_job_from_raster_set(
                 raster_set=raster_set,
                 is_text=is_text,
                 speed=speed,
                 energy=energy,
+                density=density,
                 blackening=self.settings.blackening,
                 lsb_first=self._lsb_first(),
                 protocol_family=self.protocol_family,
                 feed_padding=self.settings.feed_padding,
-                dev_dpi=self.model.dev_dpi,
-                can_print_label=self.model.can_print_label,
+                dev_dpi=self.profile.dev_dpi,
+                can_print_label=self.profile.can_print_label,
+                post_print_feed_count=self.profile.post_print_feed_count,
                 image_pipeline=image_pipeline,
             )
             data_parts.append(job)
@@ -102,8 +117,8 @@ class PrintJobBuilder:
         behavior = get_protocol_definition(self.protocol_family).behavior
         if self._explicit_image_pipeline is not None:
             pipeline = self._explicit_image_pipeline
-        elif self.protocol_family == self.model.protocol_family:
-            pipeline = self.model.image_pipeline
+        elif self.protocol_family == self.profile.default_protocol_family:
+            pipeline = self.profile.default_image_pipeline
         else:
             pipeline = behavior.default_image_pipeline
 
@@ -146,6 +161,37 @@ class PrintJobBuilder:
                 )
         return pipeline
 
+    def _build_runtime_context(self) -> Optional[V5GDynamicRuntimeContext]:
+        if self.protocol_family is not ProtocolFamily.V5G:
+            return None
+        helper = self._v5g_dynamic_helper
+        density_profile = self._density_profile()
+        if helper is None or density_profile is None or density_profile.density is None:
+            return None
+        return V5GDynamicRuntimeContext(
+            helper_kind=helper.helper_kind,
+            density_profile_key=helper.density_profile_key,
+            image_levels=DensityLevels(
+                low=density_profile.density.image.low,
+                middle=density_profile.density.image.middle,
+                high=density_profile.density.image.high,
+            ),
+            text_levels=DensityLevels(
+                low=density_profile.density.text.low,
+                middle=density_profile.density.text.middle,
+                high=density_profile.density.text.high,
+            ),
+            applies_d2_status=supports_v5g_d2_status(helper.density_profile_key),
+            applies_didian_status=supports_v5g_didian_status(helper.density_profile_key),
+        )
+
+    def _density_profile(self) -> Optional[PrinterProfile]:
+        if self.protocol_family is not ProtocolFamily.V5G:
+            return self.profile
+        if self._v5g_density_profile is not None:
+            return self._v5g_density_profile
+        return self.profile
+
     def _resolve_gray_preprocessing(
         self,
         image_pipeline: ImagePipelineConfig,
@@ -162,7 +208,7 @@ class PrintJobBuilder:
     def _lsb_first(self) -> bool:
         if self.settings.lsb_first is not None:
             return self.settings.lsb_first
-        return not self.model.a4xii
+        return not self.profile.a4xii
 
     def _select_text_mode(self, page: Page) -> bool:
         if self.settings.text_mode is not None:
@@ -170,9 +216,22 @@ class PrintJobBuilder:
         return page.is_text
 
     def _select_energy(self, is_text: bool) -> int:
+        selected = self.profile.select_energy(
+            is_text=is_text,
+            blackening=self.settings.blackening,
+        )
         if is_text:
-            return self.model.text_energy or DEFAULT_TEXT_ENERGY
-        return self.model.moderation_energy or DEFAULT_IMAGE_ENERGY
+            return selected or DEFAULT_TEXT_ENERGY
+        return selected or DEFAULT_IMAGE_ENERGY
+
+    def _select_density(self, is_text: bool) -> int | None:
+        density_profile = self._density_profile()
+        if density_profile is None:
+            return None
+        return density_profile.select_density(
+            is_text=is_text,
+            blackening=self.settings.blackening,
+        )
 
     @staticmethod
     def _mm_to_px(mm: int, dpi: int) -> int:

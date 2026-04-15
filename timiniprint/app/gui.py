@@ -13,7 +13,7 @@ from tkinter import filedialog, ttk
 
 from .diagnostics import emit_startup_warnings
 from .. import reporting
-from ..devices import DeviceResolver, PrinterModelRegistry
+from ..devices import DeviceResolver, PrinterCatalog
 from ..protocol import ImagePipelineConfig, ProtocolFamily
 from ..rendering.converters.text import TextConverter
 from ..transport.bluetooth import SppBackend
@@ -59,8 +59,8 @@ class TiMiniPrintGUI(tk.Tk):
         self.title("TiMini Print")
         self.resizable(True, True)
 
-        self.registry = PrinterModelRegistry.load()
-        self.resolver = DeviceResolver(self.registry)
+        self.catalog = PrinterCatalog.load()
+        self.resolver = DeviceResolver(self.catalog)
         self.ble_loop = BleLoop()
         self.queue: queue.Queue = queue.Queue()
         self.reporter = reporting.Reporter(
@@ -75,7 +75,7 @@ class TiMiniPrintGUI(tk.Tk):
         self.device_map = {}
 
         self.device_var = tk.StringVar()
-        self.model_var = tk.StringVar(value="")
+        self.profile_var = tk.StringVar(value="")
         self.file_var = tk.StringVar()
         self.text_mode_var = tk.BooleanVar(value=False)
         self.darkness_var = tk.IntVar(value=3)
@@ -89,7 +89,7 @@ class TiMiniPrintGUI(tk.Tk):
         self.status_var = tk.StringVar(
             value=reporting.MessageCatalog.resolve("status", reporting.STATUS_IDLE) or "Idle"
         )
-        self.connected_model = None
+        self.connected_profile = None
         self.connected_protocol_family: ProtocolFamily | None = None
         self.connected_image_pipeline: ImagePipelineConfig | None = None
         self._connecting = False
@@ -123,9 +123,9 @@ class TiMiniPrintGUI(tk.Tk):
 
         self.refresh_button = ttk.Button(device_frame, text="Refresh", command=self.scan)
         self.refresh_button.grid(row=0, column=2, **padding)
-        ttk.Label(device_frame, text="Model:").grid(row=1, column=0, sticky="w", **padding)
-        self.model_label = ttk.Label(device_frame, textvariable=self.model_var, width=48)
-        self.model_label.grid(row=1, column=1, sticky="ew", **padding)
+        ttk.Label(device_frame, text="Profile:").grid(row=1, column=0, sticky="w", **padding)
+        self.profile_label = ttk.Label(device_frame, textvariable=self.profile_var, width=48)
+        self.profile_label.grid(row=1, column=1, sticky="ew", **padding)
 
         self.connection_button = ttk.Button(device_frame, text="Connect", command=self.toggle_connection)
         self.connection_button.grid(row=1, column=2, sticky="e", **padding)
@@ -264,7 +264,7 @@ class TiMiniPrintGUI(tk.Tk):
                 if values:
                     if current in self.device_map:
                         self.device_var.set(current)
-                    elif not self.connected_model:
+                    elif not self.connected_profile:
                         self.device_var.set(values[0])
                 else:
                     self.device_var.set("")
@@ -283,11 +283,10 @@ class TiMiniPrintGUI(tk.Tk):
         name = device.name or ""
         transport = f" {device.transport_label}"
         experimental = device.experimental_label
-        brand_conflict = device.brand_conflict_label
         status = " [unpaired]" if device.paired is False else ""
         if name:
-            return f"{name}{experimental}{brand_conflict} ({device.display_address}){transport}{status}"
-        return f"{device.display_address}{experimental}{brand_conflict}{transport}{status}"
+            return f"{name}{experimental} ({device.display_address}){transport}{status}"
+        return f"{device.display_address}{experimental}{transport}{status}"
 
     def _queue_status(self, key: str, **ctx) -> None:
         self.reporter.status(key, **ctx)
@@ -322,7 +321,7 @@ class TiMiniPrintGUI(tk.Tk):
         if not device:
             self._queue_error(reporting.ERROR_NO_DEVICE)
             return
-        attempts = self.resolver.build_connection_attempts(device, device.model_match.protocol_family)
+        attempts = self.resolver.build_connection_attempts(device, device.protocol_family)
         self._queue_status(reporting.STATUS_CONNECT_START)
         self.queue.put(("connecting", True))
 
@@ -346,7 +345,7 @@ class TiMiniPrintGUI(tk.Tk):
     def toggle_connection(self) -> None:
         if self._connecting:
             return
-        if self.connected_model:
+        if self.connected_profile:
             self.disconnect()
         else:
             self.connect()
@@ -437,9 +436,9 @@ class TiMiniPrintGUI(tk.Tk):
         if not path:
             self._queue_error(reporting.ERROR_NO_FILE)
             return
-        model = self.connected_model
-        if not model:
-            self._queue_error(reporting.ERROR_MODEL_NOT_DETECTED)
+        profile = self.connected_profile
+        if not profile:
+            self._queue_error(reporting.ERROR_PROFILE_NOT_DETECTED)
             return
         ext = os.path.splitext(path)[1].lower()
         pdf_pages = None
@@ -458,12 +457,19 @@ class TiMiniPrintGUI(tk.Tk):
             pdf_pages=pdf_pages,
             pdf_page_gap_mm=pdf_page_gap_mm,
         )
-        protocol_family = self.connected_protocol_family or model.protocol_family
+        protocol_family = self.connected_protocol_family or profile.default_protocol_family
         builder = PrintJobBuilder(
-            model,
+            profile,
             protocol_family=protocol_family,
             image_pipeline=self.connected_image_pipeline,
             settings=settings,
+            v5g_dynamic_helper=device.resolved_printer.v5g_dynamic_helper,
+            v5g_density_profile=(
+                None
+                if not device.resolved_printer.v5g_dynamic_helper
+                or not device.resolved_printer.v5g_dynamic_helper.density_profile_key
+                else self.catalog.require_profile(device.resolved_printer.v5g_dynamic_helper.density_profile_key)
+            ),
         )
 
         def done(fut):
@@ -478,13 +484,19 @@ class TiMiniPrintGUI(tk.Tk):
                 await self.backend.connect_attempts(
                     self.resolver.build_connection_attempts(
                         device,
-                        self.connected_protocol_family or model.protocol_family,
+                        self.connected_protocol_family or profile.default_protocol_family,
+                        profile,
                     ),
                     pairing_hint=device.paired is False,
                 )
             self._queue_status(reporting.STATUS_PRINTING)
             data = builder.build_from_file(path)
-            await self.backend.write(data, model.img_mtu or 180, model.interval_ms or 4)
+            await self.backend.write(
+                data,
+                profile.stream.chunk_size,
+                profile.stream.delay_ms,
+                runtime_context=builder.runtime_context,
+            )
 
         self._queue_status(reporting.STATUS_PRINTING)
         self.ble_loop.submit(run(), callback=done)
@@ -529,32 +541,32 @@ class TiMiniPrintGUI(tk.Tk):
             self._queue_error(reporting.ERROR_NO_DEVICE)
             self._stop_paper_motion()
             return
-        model = self.connected_model
-        if not model:
-            self._queue_error(reporting.ERROR_MODEL_NOT_DETECTED)
+        profile = self.connected_profile
+        if not profile:
+            self._queue_error(reporting.ERROR_PROFILE_NOT_DETECTED)
             self._stop_paper_motion()
             return
 
         from ..protocol import advance_paper_cmd, retract_paper_cmd
 
-        family = self.connected_protocol_family or model.protocol_family
+        family = self.connected_protocol_family or profile.default_protocol_family
         if action == "feed":
-            data = advance_paper_cmd(model.dev_dpi, family)
+            data = advance_paper_cmd(profile.dev_dpi, family)
         else:
-            data = retract_paper_cmd(model.dev_dpi, family)
+            data = retract_paper_cmd(profile.dev_dpi, family)
         self._paper_motion_busy = True
 
         async def run() -> None:
             if not self.backend.is_connected():
                 await self.backend.connect_attempts(
-                    self.resolver.build_connection_attempts(device, family),
+                    self.resolver.build_connection_attempts(device, family, profile),
                     pairing_hint=device.paired is False,
                 )
             if action == "feed":
                 self._queue_status(reporting.STATUS_PAPER_FEED)
             else:
                 self._queue_status(reporting.STATUS_PAPER_RETRACT)
-            await self.backend.write(data, model.img_mtu or 180, model.interval_ms or 4)
+            await self.backend.write(data, profile.stream.chunk_size, profile.stream.delay_ms)
 
         def done(fut):
             self._paper_motion_busy = False
@@ -569,29 +581,22 @@ class TiMiniPrintGUI(tk.Tk):
         self.ble_loop.submit(run(), callback=done)
 
     def _restore_status_after_paper_motion(self) -> None:
-        if self.connected_model:
+        if self.connected_profile:
             self._queue_status(reporting.STATUS_CONNECT_DONE)
             return
         self._queue_status(reporting.STATUS_IDLE)
 
     def _set_connected_state(self, connected: bool, device=None) -> None:
         self._connecting = False
-        self.connected_model = None
+        self.connected_profile = None
         self.connected_protocol_family = None
         self.connected_image_pipeline = None
         if connected and device:
-            match = device.model_match
-            self.connected_model = match.model
-            self.connected_protocol_family = match.protocol_family
-            self.connected_image_pipeline = match.image_pipeline
-            self.model_var.set(match.model.model_no)
-            used_alias = getattr(match, "used_alias", False) is True
-            is_testing = getattr(match, "testing", False) is True
-            if used_alias and not is_testing:
-                self._queue_warning(
-                    reporting.WARNING_MODEL_ALIAS,
-                    detail="Model detected via alias; using standard settings. Please help us tune better parameters.",
-                )
+            resolved = device.resolved_printer
+            self.connected_profile = resolved.profile
+            self.connected_protocol_family = resolved.protocol_family
+            self.connected_image_pipeline = resolved.image_pipeline
+            self.profile_var.set(resolved.profile_key)
             self._set_device_combo_state(False)
             self._set_widget_state(self.refresh_button, False)
             self._set_widget_state(self.file_entry, True)
@@ -614,10 +619,10 @@ class TiMiniPrintGUI(tk.Tk):
             self._set_widget_state(self.retract_button, True)
             self._set_widget_state(self.print_button, True)
             self._set_connection_button("Disconnect", True)
-            self._configure_text_columns(match.model)
+            self._configure_text_columns(resolved.profile)
             return
 
-        self.model_var.set("")
+        self.profile_var.set("")
         self._set_device_combo_state(True)
         self._set_widget_state(self.refresh_button, True)
         self._set_widget_state(self.file_entry, False)
@@ -642,8 +647,8 @@ class TiMiniPrintGUI(tk.Tk):
         self._set_connection_button("Connect", True)
         self._stop_paper_motion()
 
-    def _configure_text_columns(self, model) -> None:
-        width = self._normalized_width(model.width)
+    def _configure_text_columns(self, profile) -> None:
+        width = self._normalized_width(profile.width)
         default_columns = TextConverter.default_columns_for_width(width)
         min_columns = max(5, int(round(default_columns * 0.5)))
         max_columns = max(min_columns + 1, int(round(default_columns * 1.5)))
@@ -663,7 +668,7 @@ class TiMiniPrintGUI(tk.Tk):
             self._set_widget_state(self.refresh_button, False)
             self._set_connection_button("Connecting...", False)
             return
-        if self.connected_model:
+        if self.connected_profile:
             return
         self._set_device_combo_state(True)
         self._set_widget_state(self.refresh_button, True)

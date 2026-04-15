@@ -65,7 +65,7 @@ python3 timiniprint_gui.py
 
 - Print via a serial port (skip Bluetooth connection):
   ```bash
-  ./TiMini-Print-Command-Line-Linux-x86_64 --serial /dev/rfcomm0 --model A200 /path/to/file.pdf
+  ./TiMini-Print-Command-Line-Linux-x86_64 --serial /dev/rfcomm0 --profile a200 /path/to/file.pdf
   ```
 
 - Print raw text without creating a file:
@@ -73,9 +73,9 @@ python3 timiniprint_gui.py
   ./TiMini-Print-Command-Line-Linux-x86_64 --text "Hello from CLI"
   ```
 
-- List available printer models:
+- List available printer profiles:
   ```bash
-  ./TiMini-Print-Command-Line-Linux-x86_64 --list-models
+  ./TiMini-Print-Command-Line-Linux-x86_64 --list-profiles
   ```
 
 - Scan for supported printers:
@@ -85,8 +85,8 @@ python3 timiniprint_gui.py
 
 ## Notes
 - If `--bluetooth` is omitted, the first supported printer found is used
-- For `--serial`, you must pass `--model` (see `--list-models`)
-- For Bluetooth printing, you can pass `--model` to override auto-detection
+- For `--serial`, you must pass `--profile` (see `--list-profiles`)
+- For Bluetooth printing, you can pass `--profile` to override auto-detection
 
 # Notes
 - On first Classic connection on Windows/macOS, the system may request pairing confirmation
@@ -98,33 +98,32 @@ python3 timiniprint_gui.py
 - Text: .txt (monospace bold, word-wrapped by default)
 
 # Supported printer models
-A200, A33, A41II, A41III, A42II, A43, A4300, CMT-0510, CP01, D1, D100, DL GE225, DL X2, DL X2 Pro,
-DL X7, DL X7 Pro, DT1-0, DTR-R0, DY03, DY49, EMX-040256, FC02, GB02SH, GB03PH, GB03PL, GB03SH,
-GB03SL, GL-VS9, GT09, GT10, GV-MA211, GW08, GW09, HD1, HT0125, IM.04, IprintIt Printer,
-JRX01, KF-5, LGM01, LP6, Label Printer CPLM10, Luxorp.PX10, ML-MP-01, MPA81, MV-B530, Mini Printer
-CTP500, P2, P4, P5, P6, P7H, PT001, Pocket Printer, Professional Printer CTP100LG, QDID, QDX01,
-ROSSMANN, RS9000, SC03H, Seznik Echo, Seznik Neo, Shipping Printer CTP800BD, Shipping Printer
-CTP750BY, TCM690464, U1, UXPORTMIP, WL01, X103H, X103h, X16, XC9, YK06, YT01, ZHHC, ZP801, ZP802, ZPA4Z1,
-0019B-C, 0019B-D, 15P3, 58P5, AI01, AN01, DY01, Ewtto ET-Z0504, FL01, GB01, GB02, GB03, GB04, GB05,
-GB06, GT01, GT02, GT03, GT04, GT08, JX001 JX01, JX002 JX02, JX003 JX03, JX004 JX04, JX005 JX05,
-JX006 JX06, JXM800 GG-D2100, LP100 LY10, LT01, LY01, LY02, LY03,
-LY05, LY10, LY11, M01, M2, MX05, MX06, MX08, MX09, MX10, MX11, P1, P10, P5AI, P7, PR02, PR07, PR30, PR35, PR88, PR89, PR893, RT034h,
-S01, S101, S102, XiaoWa, SC03, SC03h, SC04, SC04h, SC05, wts07, X1, X100, X101H, X102, X2H, X2h, X5,
-X5H, X5HP, X5h, X6, X6H, X6HP, X6h, X7, X7H, X7HP, X7h, X8, X8-L, X8-W, X9, XW001 PR20, XW002 PR30,
-XW003 PR25, XW004 PR35, XW005 PR88, XW006 PR89, XW007 PR893, XW008 PR02, XW009 PR07,
-M08F, TP81, M832, Q302, T02, V5X, YTB01
-
-Alias-based Bluetooth name prefixes:
-- mapped to GT01 defaults: YT02, MX01, MX02, MX03, MX07, MINIPRINTER, JL-BR22, URBANWORXKIDSCAMERA,
-  CYLOBTPRINTER, MXTP-100, AZ-P2108X, MX12, PD01, XOPOPPY, MX13, BQ01, BQ02, EWTTOET-Z0499, BQ05, BQ06,
-  BQ07, BQ7A, BQ7B, BQ08, BQ95, BQ96, MXW009, MXW010, EWTTOET-N3689, EWTTOET-N3687, MXPC-100, KP-IM606,
-  BQ95B, BQ03, BQ95C, BQ06B, K06, BQ17
-- mapped to TP81 defaults: TP84, TP85, TP86, TP87, TP88
-- mapped to M832 defaults: M836
-- mapped to Q302 defaults: Q580
-- mapped to T02 defaults: T02E, Q02E, C02E
-- mapped to V5X defaults: MXW01, MXW01-1, X1, X2, C17, MXW-W5, AC695X_PRINT, JK01, PORTABLEPRINTER,
-  INSTANTPRINTPLUS, REKA, HDMDT-00, KERUI, BH03
+A200, A33, A41II, A41III, A42II, A43, A4300, CMT-0510, CP01, D1, D100, DL GE225, DL X2, DL X2 Pro, DL X7, DL X7 Pro, DT1-0, DTR-R0, DY03, DY49, EMX-040256, FC02, GB01, GB02, GB02SH, GB03, GB03PH, GB03PL, GB03SH, GB03SL, GB04, GB05, GB06, GL-VS9, GT01, GT03, GT04, GT08, GT09, GT10, GW08, GW09, HD1, HT0125, IM.04, IprintIt Printer, JRX01, JX001, JX002, JX003, JX004, JX005, JX006, JXM800, KF-5, LGM01, LP6, LP100, Label Printer CPLM10, Luxorp.PX10, ML-MP-01, MPA81, MV-B530, Mini Printer CTP500, MX05, MX07, MX08, MX09, MX11, P1, P2, P4, P5, P5AI, P6, P7, P7H, P10, PR02, PR07, PR20, PR25, PR30, PR35, PR88, PR89, PR893, PT001, Pocket Printer, Professional Printer CTP100LG, QDID, QDX01, ROSSMANN, RS9000, S01, S101, S102, SC03, SC03H, SC03h, SC04, SC04H, SC04h, SC05, Seznik Echo, Seznik Neo, Shipping Printer CTP750BY, Shipping Printer CTP800BD, TCM690464, U1, UXPORTMIP, V5X, WL01, WTS07, X100, X101H, X102, X103H, X103h, X16, X2H, X2h, X5, X5H, X5HP, X5h, X6H, X6HP, X6h, X7, X7H, X7HP, X7h, X8, X8-L, X8-W, X9, XC9, XiaoWa, XOPOPPY, YK06, YTB01, ZHHC, ZP801, ZP802, ZPA4Z1, 0019B-C, 0019B-D, 15P3, 58P5, AN01, DY01, Ewtto ET-Z0504, FL01, LT01, LY01, LY02, LY03, LY05, LY11, M01, M2, RT034h
+- JX001 and clones: JX01
+- JX002 and clones: JX02
+- JX003 and clones: JX03
+- JX004 and clones: JX04
+- JX005 and clones: JX05
+- JX006 and clones: JX06
+- JXM800 and clones: GG-D2100
+- LP100 and clones: LY10
+- MX02 and clones: MX03
+- MX06 and clones: MXTP-100, CYLO BT PRINTER, EWTTO ET-Z0499
+- MX10 and clones: AZ-P2108X, PD01, MX12, MX13, MXW009, MXW010, KP-IM606, GV-MA211
+- BQ02 and clones: BQ03, BQ17
+- GT02 and clones: MINI PRINTER, JL-BR22
+- YT01 and clones: YT02, MX01, MXPC-100, URBANWORX KIDS CAMERA, BQ01, BQ05, BQ06, BQ06B, BQ07, BQ08, BQ7A, BQ7B, BQ95, BQ95B, BQ95C, BQ96, EWTTO ET-N3687, EWTTO ET-N3689, K06, X6
+- V5X and clones: AI01, MXW01, MXW01-1, MXW-W5, X1, X2, C17, AC695X_PRINT, JK01, PORTABLEPRINTER, INSTANTPRINTPLUS, REKA, HDMDT-00, KERUI, BH03
+- M08F and clones: TP81, TP84, TP85, TP86, TP87, TP88, M832, M836, Q302, Q580, T02, T02E, Q02E, C02E
+- PR20 and clones: XW001
+- PR25 and clones: XW003
+- PR30 and clones: XW002
+- PR35 and clones: XW004
+- PR88 and clones: XW005
+- PR89 and clones: XW006
+- PR893 and clones: XW007
+- PR02 and clones: XW008
+- PR07 and clones: XW009
 
 ## Experimental support
 These entries are available, but they still need more real-device reports and tuning. In Bluetooth device lists they appear as `[experimental]`
@@ -132,9 +131,12 @@ These entries are available, but they still need more real-device reports and tu
 Experimental printer models:
 P100, MP100, P100S, MP100S, LP100S, P3, P3S
 
-Experimental alias-based Bluetooth name prefixes:
-- mapped to P100 defaults: YINTIBAO-V5, MP200, MP220, AEQ918N4
-- mapped to P100S defaults: YINTIBAO-V5PRO, MP200S, MP220S
-- mapped to LP100 / LP100S defaults: LP220, LY100_BLE, LP220S
-- mapped to P3 / P3S defaults: MP300, MP300S
-- mapped to M08F defaults: MXW-A4
+Experimental Bluetooth names:
+- P100 and clones: YINTIBAO-V5, MP200, MP220, AEQ918N4
+- P100S and clones: YINTIBAO-V5PRO, MP200S, MP220S
+- LP100 and clones: LP220, LY100_BLE
+- LP100S and clones: LP220S
+- P3 and clones: MP300
+- P3S and clones: MP300S
+- DCK and clones: C21, D2, E2, NEWSMY
+- V10G and clones: MXW-A4

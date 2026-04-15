@@ -1,4 +1,11 @@
-from .models import PrinterModel, PrinterModelRegistry
+from .profiles import DetectionRule, PrinterCatalog, PrinterProfile, ResolvedPrinter
 from .resolve import DeviceResolver, ResolvedBluetoothDevice
 
-__all__ = ["DeviceResolver", "ResolvedBluetoothDevice", "PrinterModel", "PrinterModelRegistry"]
+__all__ = [
+    "DetectionRule",
+    "DeviceResolver",
+    "PrinterCatalog",
+    "PrinterProfile",
+    "ResolvedBluetoothDevice",
+    "ResolvedPrinter",
+]

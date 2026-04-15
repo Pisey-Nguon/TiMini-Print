@@ -44,8 +44,6 @@ class _BleakSocket:
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._mtu_size = 180
         self._timeout = 30.0
-        self._write_delay_ms = 50
-        self._bulk_write_delay_ms = 10
         self._pairing_hint = pairing_hint is True and not IS_MACOS
         self._protocol_family = protocol_family
         self._reporter = reporter
@@ -141,7 +139,6 @@ class _BleakSocket:
             self._client,
             mtu_size=self._mtu_size,
             timeout=self._timeout,
-            write_delay_ms=self._write_delay_ms,
         )
 
     async def _resolve_client_target(self, address: str) -> Any:
@@ -175,6 +172,9 @@ class _BleakSocket:
         return self._write_resolver.resolve(self._client.services)
 
     def send(self, data: bytes) -> int:
+        return self.send_payload(data)
+
+    def send_payload(self, data: bytes, runtime_context=None) -> int:
         """Send one payload using the active BLE transport session."""
         if not self._connected or not self._client:
             raise RuntimeError("Not connected to BLE device")
@@ -182,7 +182,7 @@ class _BleakSocket:
             raise RuntimeError("Event loop not initialized")
 
         try:
-            self._loop.run_until_complete(self._send_async(data))
+            self._loop.run_until_complete(self._send_async(data, runtime_context=runtime_context))
             return len(data)
         except Exception as exc:
             bindings = self._transport.bindings
@@ -194,17 +194,16 @@ class _BleakSocket:
 
     def sendall(self, data: bytes) -> None:
         """Compatibility alias matching socket-style APIs."""
-        self.send(data)
+        self.send_payload(data)
 
-    async def _send_async(self, data: bytes) -> None:
+    async def _send_async(self, data: bytes, runtime_context=None) -> None:
         """Delegate payload routing and chunking to the transport session."""
         await self._transport.send(
             self._client,
             data,
             mtu_size=self._mtu_size,
             timeout=self._timeout,
-            write_delay_ms=self._write_delay_ms,
-            bulk_write_delay_ms=self._bulk_write_delay_ms,
+            runtime_context=runtime_context,
         )
 
     async def _pair_if_supported(self) -> None:
