@@ -1,7 +1,7 @@
 # TiMini Print Bluetooth Printer Tool
 Alternative [desktop software for Chinese Bluetooth thermal printers](https://github.com/Dejniel/TiMini-Print/releases) that use proprietary protocols (not ESC/POS), as a replacement for apps like “Tiny Print”, “Fun Print”, “Phomemo”, or “iBleem”.
 It supports almost all mini printers! Check the huge list of [supported Bluetooth printer models](#supported-printer-models), or report missing ones.
-It lets you print images, PDFs, or plain text from your computer. It supports both a GUI and a “fire-and-forget” CLI mode
+It lets you print images, PDFs, or plain text from your computer. It supports both a GUI and a “fire-and-forget” CLI mode, plus [custom integrations](#library-integration).
 
 These printers are often sold on AliExpress and under generic names such as “thermal printer”, “mini printer”, or “cat printer”.
 TiMini Print works on Windows, Linux, and macOS as a standalone tool without a system printer driver (it does not emulate a driver or print spooler)
@@ -69,16 +69,6 @@ python3 timiniprint_gui.py
   ./TiMini-Print-Command-Line-Linux-x86_64 --serial /dev/rfcomm0 --device-config printer.json /path/to/file.pdf
   ```
 
-- Export the resolved runtime config of a Bluetooth printer:
-  ```bash
-  ./TiMini-Print-Command-Line-Linux-x86_64 --bluetooth "PRINTER_NAME" --export-device-config printer.json
-  ```
-
-- Print over Bluetooth with a manually edited device config:
-  ```bash
-  ./TiMini-Print-Command-Line-Linux-x86_64 --bluetooth "PRINTER_NAME" --device-config printer.json /path/to/file.pdf
-  ```
-
 - Print raw text without creating a file:
   ```bash
   ./TiMini-Print-Command-Line-Linux-x86_64 --text "Hello from CLI"
@@ -97,13 +87,13 @@ python3 timiniprint_gui.py
 ## Notes
 - If `--bluetooth` is omitted, the first supported printer found is used
 - For `--serial`, you must pass `--device-config`
-- `--export-device-config` writes the full resolved runtime config as JSON
-- `--device-config` loads that JSON back and forces the saved protocol/profile/runtime values
+- `--export-device-config` writes the full resolved runtime config as JSON and `--device-config` loads that JSON back and forces the saved protocol/profile/runtime values
 
 # Notes
 - On first Classic connection on Windows/macOS, the system may request pairing confirmation
-- Protocol integration guide: [docs/protocol.md](docs/protocol.md)
-- Architecture guide: [docs/architecture.md](docs/architecture.md)
+
+## Library integration
+If you want to build your own integration instead of using only the bundled GUI or CLI, start with [docs/protocol.md](docs/protocol.md). It is the practical first-steps guide to creating a `PrinterDevice`, building a printable job, and sending it through a connector from your own code. If you also want the package boundaries and design rationale behind that API, continue with [docs/architecture.md](docs/architecture.md).
 
 # Supported formats
 - Images: .png .jpg .jpeg .gif .bmp
