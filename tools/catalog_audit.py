@@ -49,10 +49,10 @@ def _find_rule_reachability_error(catalog: PrinterCatalog, rule: dict[str, Any])
     blocking: dict[str, Any] | None = None
     for sample in samples:
         for address in addresses:
-            resolved = catalog.resolve(sample, address)
+            resolved = catalog.detect_device(sample, address=address)
             if resolved is None:
                 continue
-            if resolved.matched_rule_key == rule["rule_key"]:
+            if resolved.detection_rule_key == rule["rule_key"]:
                 return None
             if blocking is None:
                 blocking = {
@@ -60,7 +60,7 @@ def _find_rule_reachability_error(catalog: PrinterCatalog, rule: dict[str, Any])
                     "rule_key": rule["rule_key"],
                     "sample_name": sample,
                     "sample_address": address,
-                    "blocked_by_rule_key": resolved.matched_rule_key,
+                    "blocked_by_rule_key": resolved.detection_rule_key,
                     "expected_profile_key": rule["profile_key"],
                     "expected_protocol_family": rule["protocol_family"],
                     "actual_profile_key": resolved.profile_key,

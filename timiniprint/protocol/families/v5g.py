@@ -4,12 +4,18 @@ from ..compression import compress_lzo1x_1
 from ..encoding import pack_line
 from ..family import ProtocolFamily
 from ..packet import make_packet
-from ..types import ImageEncoding, ImagePipelineConfig, PixelFormat
+from ...raster import PixelFormat
+from ..types import ImageEncoding, ImagePipelineConfig
 from .base import BleTransportProfile, PrintJobRequest, ProtocolBehavior
 
+# Firmware blackening 1-5 maps to the protocol A4 quality bytes, not to
+# literal energy values. Keep this as a lookup table rather than arithmetic.
 _QUALITY_BY_LEVEL = (0x31, 0x32, 0x33, 0x34, 0x35)
+# These A6 payloads are the fixed "lattice" envelopes used before and after
+# a V5G print job.
 _START_LATTICE = bytes.fromhex("AA551738445F5F5F44382C")
 _FINISH_LATTICE = bytes.fromhex("AA55170000000000000017")
+# Gray jobs are sent in 20-row compressed bands.
 _GRAY_BAND_ROWS = 20
 V5G_CONNECT_QUERY_PACKET = bytes.fromhex("5178A30001000000FF")
 
@@ -34,6 +40,7 @@ def _feed_packet(speed: int, protocol_family) -> bytes:
 
 
 def _paper_packet(dev_dpi: int, protocol_family) -> bytes:
+    # The paper motion distance differs between 203 dpi and 300 dpi heads.
     payload = bytes([0x48, 0x00]) if int(dev_dpi) == 300 else bytes([0x30, 0x00])
     return make_packet(0xA1, payload, protocol_family)
 

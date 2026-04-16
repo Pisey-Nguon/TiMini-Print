@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from timiniprint.protocol.dynamic_helpers import (
+from timiniprint.printing.runtime.v5g import (
     DensityLevels,
     mx06_continuous_plan,
     mx06_single_density_value,
@@ -16,7 +16,7 @@ from timiniprint.protocol.dynamic_helpers import (
 )
 
 
-class DynamicHelpersTests(unittest.TestCase):
+class V5GRuntimeDensityPlanTests(unittest.TestCase):
     def setUp(self) -> None:
         self.levels = DensityLevels(low=100, middle=130, high=150)
 

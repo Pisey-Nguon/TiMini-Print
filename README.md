@@ -65,7 +65,18 @@ python3 timiniprint_gui.py
 
 - Print via a serial port (skip Bluetooth connection):
   ```bash
-  ./TiMini-Print-Command-Line-Linux-x86_64 --serial /dev/rfcomm0 --profile a200 /path/to/file.pdf
+  ./TiMini-Print-Command-Line-Linux-x86_64 --bluetooth "PRINTER_NAME" --export-device-config printer.json
+  ./TiMini-Print-Command-Line-Linux-x86_64 --serial /dev/rfcomm0 --device-config printer.json /path/to/file.pdf
+  ```
+
+- Export the resolved runtime config of a Bluetooth printer:
+  ```bash
+  ./TiMini-Print-Command-Line-Linux-x86_64 --bluetooth "PRINTER_NAME" --export-device-config printer.json
+  ```
+
+- Print over Bluetooth with a manually edited device config:
+  ```bash
+  ./TiMini-Print-Command-Line-Linux-x86_64 --bluetooth "PRINTER_NAME" --device-config printer.json /path/to/file.pdf
   ```
 
 - Print raw text without creating a file:
@@ -85,12 +96,14 @@ python3 timiniprint_gui.py
 
 ## Notes
 - If `--bluetooth` is omitted, the first supported printer found is used
-- For `--serial`, you must pass `--profile` (see `--list-profiles`)
-- For Bluetooth printing, you can pass `--profile` to override auto-detection
+- For `--serial`, you must pass `--device-config`
+- `--export-device-config` writes the full resolved runtime config as JSON
+- `--device-config` loads that JSON back and forces the saved protocol/profile/runtime values
 
 # Notes
 - On first Classic connection on Windows/macOS, the system may request pairing confirmation
 - Protocol integration guide: [docs/protocol.md](docs/protocol.md)
+- Architecture guide: [docs/architecture.md](docs/architecture.md)
 
 # Supported formats
 - Images: .png .jpg .jpeg .gif .bmp

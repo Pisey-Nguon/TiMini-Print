@@ -10,7 +10,7 @@ class GuiPaperMotionStatusTests(unittest.TestCase):
     def test_restore_status_after_paper_motion_uses_connected_when_connected(self) -> None:
         gui = TiMiniPrintGUI.__new__(TiMiniPrintGUI)
         seen: list[str] = []
-        gui.connected_profile = object()
+        gui.connected_device = object()
         gui._queue_status = lambda key, **ctx: seen.append(key)
 
         gui._restore_status_after_paper_motion()
@@ -20,7 +20,7 @@ class GuiPaperMotionStatusTests(unittest.TestCase):
     def test_restore_status_after_paper_motion_uses_idle_when_disconnected(self) -> None:
         gui = TiMiniPrintGUI.__new__(TiMiniPrintGUI)
         seen: list[str] = []
-        gui.connected_profile = None
+        gui.connected_device = None
         gui._queue_status = lambda key, **ctx: seen.append(key)
 
         gui._restore_status_after_paper_motion()

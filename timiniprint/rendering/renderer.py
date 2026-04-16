@@ -8,7 +8,7 @@ from PIL import ImageOps
 from PIL import ImageStat
 
 from .converters.base import Page
-from ..protocol.types import PixelFormat, RasterBuffer, RasterSet
+from ..raster import PixelFormat, RasterBuffer, RasterSet
 
 
 def apply_page_transforms(pages: Sequence[Page], rotate_90_clockwise: bool = False) -> List[Page]:

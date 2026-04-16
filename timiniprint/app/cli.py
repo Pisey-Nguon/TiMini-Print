@@ -2,18 +2,21 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import tempfile
+from pathlib import Path
+from typing import Mapping
 from typing import Optional, Sequence
 
-from ..devices import DeviceResolver, PrinterCatalog, PrinterProfile
-from ..protocol.dynamic_helpers import V5GDynamicHelper
-from ..protocol import ImagePipelineConfig, ProtocolFamily
-from ..transport.bluetooth import SppBackend
-from ..transport.bluetooth.types import DeviceTransport
-from ..transport.serial import SerialTransport
-from .diagnostics import emit_startup_warnings
 from .. import reporting
+from ..devices import BluetoothTarget, PrinterCatalog, PrinterDevice, SerialTarget
+from ..printing import PrintJobBuilder, PrintSettings
+from ..protocol import PrinterProtocol, ProtocolJob
+from ..transport.bluetooth import BluetoothDiscovery, BleakBluetoothConnector
+from ..transport.bluetooth.types import DeviceTransport
+from ..transport.serial import SerialConnector
+from .diagnostics import emit_startup_warnings
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -23,7 +26,16 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("path", nargs="?", help="File to print (.png/.jpg/.pdf/.txt)")
     parser.add_argument("--bluetooth", help="Bluetooth name or address (default: first supported printer)")
     parser.add_argument("--serial", metavar="PATH", help="Serial port path to bypass Bluetooth (e.g. /dev/rfcomm0)")
-    parser.add_argument("--profile", help="Printer profile key (required for --serial)")
+    parser.add_argument(
+        "--device-config",
+        metavar="PATH",
+        help="Path to a JSON printer device config used for serial printing or manual runtime overrides",
+    )
+    parser.add_argument(
+        "--export-device-config",
+        metavar="PATH",
+        help="Resolve the current printer device config, write it as JSON, and exit",
+    )
     parser.add_argument("--scan", action="store_true", help="List nearby supported printers and exit")
     parser.add_argument("--list-profiles", action="store_true", help="List known printer profiles and exit")
     parser.add_argument("--text", metavar="TEXT", help="Print raw text instead of a file path")
@@ -55,35 +67,43 @@ def list_profiles() -> int:
     return 0
 
 
+def _load_device_config(path: str) -> Mapping[str, object]:
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise RuntimeError("Device config JSON must contain an object at the top level")
+    return raw
+
+
+def _write_device_config(path: str, config: Mapping[str, object]) -> None:
+    Path(path).write_text(
+        json.dumps(dict(config), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def scan_devices(reporter: reporting.Reporter) -> int:
     async def run() -> None:
         catalog = PrinterCatalog.load()
-        resolver = DeviceResolver(catalog)
-        devices, failures = await resolver.scan_printer_devices_with_failures(
+        discovery = BluetoothDiscovery(catalog)
+        result = await discovery.scan_report(
             include_classic=True,
             include_ble=True,
         )
-        for failure in failures:
+        for failure in result.failures:
             if failure.transport == DeviceTransport.BLE:
                 reporter.warning(reporting.WARNING_SCAN_BLE_FAILED, detail=str(failure.error))
             else:
                 reporter.warning(reporting.WARNING_SCAN_CLASSIC_FAILED, detail=str(failure.error))
-        for device in devices:
-            name = device.name or ""
-            transport_label = f" {device.transport_label}"
-            experimental = device.experimental_label
+        for device in result.devices:
+            name = device.display_name or ""
+            transport_badge = f" {device.transport_badge}" if device.transport_badge else ""
+            experimental = device.experimental_badge
             status = " [unpaired]" if device.paired is False else ""
             profile = f" [profile: {device.profile_key}]"
             if name:
-                print(
-                    f"{name}{experimental}{profile} "
-                    f"({device.display_address}){transport_label}{status}"
-                )
+                print(f"{name}{experimental}{profile} ({device.address}){transport_badge}{status}")
             else:
-                print(
-                    f"{device.display_address}{experimental}{profile}"
-                    f"{transport_label}{status}"
-                )
+                print(f"{device.address}{experimental}{profile}{transport_badge}{status}")
 
     try:
         asyncio.run(run())
@@ -93,11 +113,36 @@ def scan_devices(reporter: reporting.Reporter) -> int:
     return 0
 
 
-def build_print_data(
-    profile: PrinterProfile,
+def create_print_job_builder(
+    device: PrinterDevice,
+    text_mode: Optional[bool] = None,
+    blackening: Optional[int] = None,
+    text_font: Optional[str] = None,
+    text_columns: Optional[int] = None,
+    text_wrap: bool = True,
+    trim_side_margins: bool = True,
+    trim_top_bottom_margins: bool = True,
+    pdf_pages: Optional[str] = None,
+    pdf_page_gap_mm: int = 5,
+) -> PrintJobBuilder:
+    settings = PrintSettings(
+        text_mode=text_mode,
+        text_font=text_font,
+        text_columns=text_columns,
+        text_wrap=text_wrap,
+        trim_side_margins=trim_side_margins,
+        trim_top_bottom_margins=trim_top_bottom_margins,
+        pdf_pages=pdf_pages,
+        pdf_page_gap_mm=pdf_page_gap_mm,
+    )
+    if blackening is not None:
+        settings.blackening = blackening
+    return PrintJobBuilder(device, settings=settings)
+
+
+def build_print_job(
+    device: PrinterDevice,
     path: Optional[str],
-    protocol_family: Optional[ProtocolFamily] = None,
-    image_pipeline: Optional[ImagePipelineConfig] = None,
     text_mode: Optional[bool] = None,
     blackening: Optional[int] = None,
     text_input: Optional[str] = None,
@@ -108,11 +153,9 @@ def build_print_data(
     trim_top_bottom_margins: bool = True,
     pdf_pages: Optional[str] = None,
     pdf_page_gap_mm: int = 5,
-) -> bytes:
+) -> ProtocolJob:
     builder = create_print_job_builder(
-        profile,
-        protocol_family,
-        image_pipeline,
+        device,
         text_mode,
         blackening,
         text_font,
@@ -138,59 +181,76 @@ def build_print_data(
             os.remove(temp_path)
 
 
-def create_print_job_builder(
-    profile: PrinterProfile,
-    protocol_family: Optional[ProtocolFamily] = None,
-    image_pipeline: Optional[ImagePipelineConfig] = None,
-    text_mode: Optional[bool] = None,
-    blackening: Optional[int] = None,
-    text_font: Optional[str] = None,
-    text_columns: Optional[int] = None,
-    text_wrap: bool = True,
-    trim_side_margins: bool = True,
-    trim_top_bottom_margins: bool = True,
-    pdf_pages: Optional[str] = None,
-    pdf_page_gap_mm: int = 5,
-    v5g_dynamic_helper: Optional[V5GDynamicHelper] = None,
-    v5g_density_profile: Optional[PrinterProfile] = None,
-):
-    from ..printing import PrintJobBuilder, PrintSettings
+def build_paper_motion_job(device: PrinterDevice, action: str) -> ProtocolJob:
+    return PrinterProtocol(device).build_paper_motion(action)
 
-    settings = PrintSettings(
-        text_mode=text_mode,
-        text_font=text_font,
-        text_columns=text_columns,
-        text_wrap=text_wrap,
-        trim_side_margins=trim_side_margins,
-        trim_top_bottom_margins=trim_top_bottom_margins,
-        pdf_pages=pdf_pages,
-        pdf_page_gap_mm=pdf_page_gap_mm,
+
+async def _resolve_bluetooth_device(
+    args: argparse.Namespace,
+    catalog: PrinterCatalog,
+) -> PrinterDevice:
+    discovery = BluetoothDiscovery(catalog)
+    config = _load_device_config(args.device_config) if args.device_config else None
+    if config is None:
+        return await discovery.resolve_device(args.bluetooth)
+    if args.bluetooth:
+        detected = await discovery.resolve_device(args.bluetooth)
+        return catalog.device_from_config(
+            config,
+            transport_target=detected.transport_target,
+            display_name=detected.display_name,
+        )
+    device = catalog.device_from_config(config)
+    if not isinstance(device.transport_target, BluetoothTarget):
+        raise RuntimeError(
+            "Bluetooth printing with --device-config requires either --bluetooth "
+            "or a saved Bluetooth transport target in the config"
+        )
+    return device
+
+
+def _resolve_serial_device(
+    args: argparse.Namespace,
+    catalog: PrinterCatalog,
+) -> PrinterDevice:
+    if not args.device_config:
+        raise RuntimeError(
+            "Serial printing requires --device-config "
+            "(export one first with --export-device-config)"
+        )
+    return catalog.device_from_config(
+        _load_device_config(args.device_config),
+        transport_target=SerialTarget(args.serial),
     )
-    if blackening is not None:
-        settings.blackening = blackening
-    return PrintJobBuilder(
-        profile,
-        protocol_family=protocol_family,
-        image_pipeline=image_pipeline,
-        settings=settings,
-        v5g_dynamic_helper=v5g_dynamic_helper,
-        v5g_density_profile=v5g_density_profile,
-    )
 
 
-def build_paper_motion_data(
-    profile: PrinterProfile,
-    action: str,
-    protocol_family: Optional[ProtocolFamily] = None,
-) -> bytes:
-    from ..protocol import advance_paper_cmd, retract_paper_cmd
+def export_device_config(
+    args: argparse.Namespace,
+    reporter: reporting.Reporter,
+) -> int:
+    catalog = PrinterCatalog.load()
 
-    family = protocol_family or profile.default_protocol_family
-    if action == "feed":
-        return advance_paper_cmd(profile.dev_dpi, family)
-    if action == "retract":
-        return retract_paper_cmd(profile.dev_dpi, family)
-    raise ValueError(f"Unknown paper motion action: {action}")
+    async def run() -> None:
+        if args.serial:
+            device = _resolve_serial_device(args, catalog)
+        else:
+            device = await _resolve_bluetooth_device(args, catalog)
+        _write_device_config(
+            args.export_device_config,
+            catalog.serialize_device_config(device),
+        )
+        reporter.debug(
+            short="Config",
+            detail=(
+                "Exported device config: "
+                f"path={args.export_device_config} "
+                f"profile={device.profile_key} "
+                f"family={device.protocol_family.value}"
+            ),
+        )
+
+    asyncio.run(run())
+    return 0
 
 
 def _resolve_text_mode(args: argparse.Namespace) -> Optional[bool]:
@@ -264,79 +324,40 @@ def print_bluetooth(
     reporter: reporting.Reporter,
 ) -> int:
     catalog = PrinterCatalog.load()
-    resolver = DeviceResolver(catalog)
 
     async def run() -> None:
-        resolved = await resolver.resolve_printer_device(args.bluetooth)
-        printer = resolved.resolved_printer
-        if args.profile:
-            printer = resolver.resolve_printer(resolved.name or "", args.profile, resolved.address)
-        profile = printer.profile
-        protocol_family = printer.protocol_family
-        image_pipeline = printer.image_pipeline
-        density_profile = None
-        helper = printer.v5g_dynamic_helper
-        if helper and helper.density_profile_key:
-            density_profile = catalog.require_profile(helper.density_profile_key)
-        attempts = resolver.build_connection_attempts(resolved, protocol_family, profile)
+        device = await _resolve_bluetooth_device(args, catalog)
         reporter.debug(
             short="Bluetooth",
             detail=(
                 "Resolved device for print: "
-                f"name={resolved.name or '<unknown>'} "
-                f"address={resolved.display_address} "
-                f"transport_label={resolved.transport_label} "
-                f"profile={printer.profile_key} "
-                f"use_spp={profile.use_spp} "
-                f"attempts={[f'{item.transport.value}:{item.address}' for item in attempts]}"
+                f"name={device.display_name or '<unknown>'} "
+                f"address={device.address} "
+                f"transport_badge={device.transport_badge} "
+                f"profile={device.profile_key} "
+                f"use_spp={device.profile.use_spp}"
             ),
         )
-        builder = create_print_job_builder(
-            profile,
-            protocol_family,
-            image_pipeline,
-            _resolve_text_mode(args),
-            _resolve_blackening(args),
-            _resolve_text_font(args),
-            _resolve_text_columns(args),
-            _resolve_text_wrap(args),
-            _resolve_trim_side_margins(args),
-            _resolve_trim_top_bottom_margins(args),
-            _resolve_pdf_pages(args),
-            _resolve_pdf_page_gap(args),
-            v5g_dynamic_helper=helper,
-            v5g_density_profile=density_profile,
+        job = build_print_job(
+            device,
+            args.path,
+            text_mode=_resolve_text_mode(args),
+            blackening=_resolve_blackening(args),
+            text_input=_resolve_text_input(args),
+            text_font=_resolve_text_font(args),
+            text_columns=_resolve_text_columns(args),
+            text_wrap=_resolve_text_wrap(args),
+            trim_side_margins=_resolve_trim_side_margins(args),
+            trim_top_bottom_margins=_resolve_trim_top_bottom_margins(args),
+            pdf_pages=_resolve_pdf_pages(args),
+            pdf_page_gap_mm=_resolve_pdf_page_gap(args),
         )
-        text_input = _resolve_text_input(args)
-        if text_input is None:
-            if not args.path:
-                raise RuntimeError("Missing file path")
-            data = builder.build_from_file(args.path)
-        else:
-            temp_path = None
-            try:
-                with tempfile.NamedTemporaryFile("w", suffix=".txt", encoding="utf-8", delete=False) as handle:
-                    handle.write(text_input)
-                    temp_path = handle.name
-                data = builder.build_from_file(temp_path)
-            finally:
-                if temp_path and os.path.exists(temp_path):
-                    os.remove(temp_path)
-        backend = SppBackend(reporter=reporter)
+        connection = await BleakBluetoothConnector(reporter=reporter).connect(device)
         try:
-            await backend.connect_attempts(
-                attempts,
-                pairing_hint=resolved.paired is False,
-            )
-            await backend.write(
-                data,
-                profile.stream.chunk_size,
-                profile.stream.delay_ms,
-                runtime_context=builder.runtime_context,
-            )
+            await connection.send(job)
         finally:
             try:
-                await backend.disconnect()
+                await connection.disconnect()
             except Exception as exc:
                 reporter.debug(short="Bluetooth", detail=f"Disconnect cleanup failed: {exc}")
 
@@ -346,28 +367,28 @@ def print_bluetooth(
 
 def print_serial(args: argparse.Namespace) -> int:
     catalog = PrinterCatalog.load()
-    resolver = DeviceResolver(catalog)
-    profile = resolver.require_profile(args.profile)
-    data = build_print_data(
-        profile,
+    device = _resolve_serial_device(args, catalog)
+    job = build_print_job(
+        device,
         args.path,
-        profile.default_protocol_family,
-        profile.default_image_pipeline,
-        _resolve_text_mode(args),
-        _resolve_blackening(args),
-        _resolve_text_input(args),
-        _resolve_text_font(args),
-        _resolve_text_columns(args),
-        _resolve_text_wrap(args),
-        _resolve_trim_side_margins(args),
-        _resolve_trim_top_bottom_margins(args),
-        _resolve_pdf_pages(args),
-        _resolve_pdf_page_gap(args),
+        text_mode=_resolve_text_mode(args),
+        blackening=_resolve_blackening(args),
+        text_input=_resolve_text_input(args),
+        text_font=_resolve_text_font(args),
+        text_columns=_resolve_text_columns(args),
+        text_wrap=_resolve_text_wrap(args),
+        trim_side_margins=_resolve_trim_side_margins(args),
+        trim_top_bottom_margins=_resolve_trim_top_bottom_margins(args),
+        pdf_pages=_resolve_pdf_pages(args),
+        pdf_page_gap_mm=_resolve_pdf_page_gap(args),
     )
 
     async def run() -> None:
-        transport = SerialTransport(args.serial)
-        await transport.write(data, profile.stream.chunk_size, profile.stream.delay_ms)
+        connection = await SerialConnector().connect(device)
+        try:
+            await connection.send(job)
+        finally:
+            await connection.disconnect()
 
     asyncio.run(run())
     return 0
@@ -379,39 +400,27 @@ def paper_motion_bluetooth(
     reporter: reporting.Reporter,
 ) -> int:
     catalog = PrinterCatalog.load()
-    resolver = DeviceResolver(catalog)
 
     async def run() -> None:
-        resolved = await resolver.resolve_printer_device(args.bluetooth)
-        printer = resolved.resolved_printer
-        if args.profile:
-            printer = resolver.resolve_printer(resolved.name or "", args.profile, resolved.address)
-        profile = printer.profile
-        protocol_family = printer.protocol_family
-        attempts = resolver.build_connection_attempts(resolved, protocol_family, profile)
+        device = await _resolve_bluetooth_device(args, catalog)
         reporter.debug(
             short="Bluetooth",
             detail=(
                 f"Resolved device for {action}: "
-                f"name={resolved.name or '<unknown>'} "
-                f"address={resolved.display_address} "
-                f"transport_label={resolved.transport_label} "
-                f"profile={printer.profile_key} "
-                f"use_spp={profile.use_spp} "
-                f"attempts={[f'{item.transport.value}:{item.address}' for item in attempts]}"
+                f"name={device.display_name or '<unknown>'} "
+                f"address={device.address} "
+                f"transport_badge={device.transport_badge} "
+                f"profile={device.profile_key} "
+                f"use_spp={device.profile.use_spp}"
             ),
         )
-        data = build_paper_motion_data(profile, action, protocol_family)
-        backend = SppBackend(reporter=reporter)
+        job = build_paper_motion_job(device, action)
+        connection = await BleakBluetoothConnector(reporter=reporter).connect(device)
         try:
-            await backend.connect_attempts(
-                attempts,
-                pairing_hint=resolved.paired is False,
-            )
-            await backend.write(data, profile.stream.chunk_size, profile.stream.delay_ms)
+            await connection.send(job)
         finally:
             try:
-                await backend.disconnect()
+                await connection.disconnect()
             except Exception as exc:
                 reporter.debug(short="Bluetooth", detail=f"Disconnect cleanup failed: {exc}")
 
@@ -421,13 +430,15 @@ def paper_motion_bluetooth(
 
 def paper_motion_serial(args: argparse.Namespace, action: str) -> int:
     catalog = PrinterCatalog.load()
-    resolver = DeviceResolver(catalog)
-    profile = resolver.require_profile(args.profile)
-    data = build_paper_motion_data(profile, action, profile.default_protocol_family)
+    device = _resolve_serial_device(args, catalog)
+    job = build_paper_motion_job(device, action)
 
     async def run() -> None:
-        transport = SerialTransport(args.serial)
-        await transport.write(data, profile.stream.chunk_size, profile.stream.delay_ms)
+        connection = await SerialConnector().connect(device)
+        try:
+            await connection.send(job)
+        finally:
+            await connection.disconnect()
 
     asyncio.run(run())
     return 0
@@ -448,6 +459,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return list_profiles()
     if args.scan:
         return scan_devices(reporter)
+    if args.export_device_config:
+        if args.path or args.text is not None or args.feed or args.retract:
+            reporter.error(
+                detail=(
+                    "Provide either --export-device-config or a file path/--text/"
+                    "--feed/--retract, not both. Use --help for usage."
+                )
+            )
+            return 2
+        try:
+            return export_device_config(args, reporter)
+        except Exception as exc:
+            reporter.error(detail=str(exc), exc=exc)
+            return 2
     action = _resolve_paper_motion_action(args)
     if action and (args.path or args.text is not None):
         reporter.error(

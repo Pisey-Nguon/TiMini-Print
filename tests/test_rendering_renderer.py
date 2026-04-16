@@ -4,7 +4,7 @@ import unittest
 
 from PIL import Image
 
-from timiniprint.protocol.types import PixelFormat
+from timiniprint.raster import PixelFormat
 from timiniprint.rendering.renderer import image_to_bw_pixels, image_to_raster_set
 
 

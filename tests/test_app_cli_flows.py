@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import tempfile
 import sys
 import types
 import unittest
@@ -25,7 +26,8 @@ class AppCliFlowsTests(unittest.TestCase):
             text=None,
             verbose=False,
             bluetooth=None,
-            profile=None,
+            device_config=None,
+            export_device_config=None,
             force_text_mode=False,
             force_image_mode=False,
             darkness=None,
@@ -67,66 +69,82 @@ class AppCliFlowsTests(unittest.TestCase):
         ):
             self.assertEqual(cli.main(["a.pdf", "--text", "x"]), 2)
 
-    def test_build_print_data_text_path_and_cleanup(self) -> None:
-        fake_printing = types.ModuleType("timiniprint.printing")
+    def test_build_print_job_text_path_and_cleanup(self) -> None:
+        device = MagicMock()
 
         class _B:
             def __init__(self, *_args, **_kwargs):
                 pass
 
-            def build_from_file(self, path: str) -> bytes:
-                return ("OK:" + path.split("/")[-1]).encode("utf-8")
+            def build_from_file(self, path: str):
+                from timiniprint.protocol import ProtocolJob
 
-        class _S:
-            def __init__(self, **_kwargs):
-                self.blackening = 3
+                return ProtocolJob(payload=("OK:" + path.split("/")[-1]).encode("utf-8"))
 
-        fake_printing.PrintJobBuilder = _B
-        fake_printing.PrintSettings = _S
+        with patch.object(cli, "PrintJobBuilder", _B), patch.object(
+            cli,
+            "PrintSettings",
+            lambda **_kwargs: types.SimpleNamespace(blackening=3),
+        ):
+            job = cli.build_print_job(device, path=None, text_input="hello")
+        self.assertTrue(job.payload.startswith(b"OK:"))
 
-        profile = MagicMock()
-        with patch.dict(sys.modules, {"timiniprint.printing": fake_printing}):
-            data = cli.build_print_data(profile, path=None, text_input="hello")
-        self.assertTrue(data.startswith(b"OK:"))
-
-    def test_print_and_motion_flows_use_backend_attempts(self) -> None:
+    def test_print_and_motion_flows_use_connectors(self) -> None:
         args = self._args(path="x.txt", bluetooth="X6H")
-        profile = MagicMock()
-        profile.stream.chunk_size = 180
-        profile.stream.delay_ms = 1
-        printer = MagicMock()
-        printer.profile = profile
-        printer.profile_key = "x6h"
-        printer.protocol_family = "legacy"
-        printer.image_pipeline = MagicMock()
-        resolved = MagicMock()
-        resolved.resolved_printer = printer
-        resolved.paired = False
-        resolved.name = "X6H"
-        resolved.address = "AA"
-        resolved.display_address = "AA"
-        resolved.transport_label = "[classic]"
-        backend = MagicMock()
-        backend.connect_attempts = AsyncMock()
-        backend.write = AsyncMock()
-        backend.disconnect = AsyncMock()
+        device = MagicMock()
+        device.profile.use_spp = True
+        device.profile.dev_dpi = 203
+        device.profile_key = "x6h"
+        device.address = "AA"
+        device.transport_badge = "[classic]"
+        device.protocol_family = "legacy"
+        connection = MagicMock()
+        connection.send = AsyncMock()
+        connection.disconnect = AsyncMock()
         builder = MagicMock()
-        builder.runtime_context = object()
-        builder.build_from_file.return_value = b"123"
+        job = types.SimpleNamespace(payload=b"123", runtime_controller=object())
+        builder.build_from_file.return_value = job
 
         with patch("timiniprint.app.cli.PrinterCatalog.load"), patch(
-            "timiniprint.app.cli.DeviceResolver"
-        ) as resolver_cls, patch(
-            "timiniprint.app.cli.SppBackend", return_value=backend
-        ), patch("timiniprint.app.cli.create_print_job_builder", return_value=builder):
-            resolver = resolver_cls.return_value
-            resolver.resolve_printer_device = AsyncMock(return_value=resolved)
-            resolver.build_connection_attempts.return_value = [MagicMock()]
-            code = cli.print_bluetooth(args, cli._build_cli_reporter(verbose=False))
+            "timiniprint.app.cli._resolve_bluetooth_device",
+            new=AsyncMock(return_value=device),
+        ), patch(
+            "timiniprint.app.cli.BleakBluetoothConnector"
+        ) as connector_cls, patch(
+            "timiniprint.app.cli.create_print_job_builder", return_value=builder
+        ):
+            connector_cls.return_value.connect = AsyncMock(return_value=connection)
 
-        self.assertEqual(code, 0)
-        self.assertEqual(backend.connect_attempts.await_count, 1)
-        backend.write.assert_awaited_once_with(b"123", 180, 1, runtime_context=builder.runtime_context)
+            code = cli.print_bluetooth(args, cli._build_cli_reporter(verbose=False))
+            self.assertEqual(code, 0)
+            connector_cls.return_value.connect.assert_awaited_once_with(device)
+            connection.send.assert_awaited_once_with(job)
+            connection.disconnect.assert_awaited_once()
+
+            motion = self._args(feed=True, bluetooth="X6H")
+            code = cli.paper_motion_bluetooth(motion, "feed", cli._build_cli_reporter(verbose=False))
+            self.assertEqual(code, 0)
+            self.assertGreaterEqual(connection.send.await_count, 2)
+
+    def test_export_device_config_uses_resolved_device(self) -> None:
+        device = MagicMock()
+        device.profile_key = "x6h"
+        device.protocol_family.value = "legacy"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_path = f"{tmpdir}/device.json"
+            args = self._args(export_device_config=out_path, bluetooth="X6H")
+            with patch("timiniprint.app.cli.PrinterCatalog.load") as load_catalog, patch(
+                "timiniprint.app.cli._resolve_bluetooth_device",
+                new=AsyncMock(return_value=device),
+            ):
+                catalog = load_catalog.return_value
+                catalog.serialize_device_config.return_value = {"schema": "demo"}
+
+                code = cli.export_device_config(args, cli._build_cli_reporter(verbose=False))
+
+            self.assertEqual(code, 0)
+            catalog.serialize_device_config.assert_called_once_with(device)
 
 
 if __name__ == "__main__":

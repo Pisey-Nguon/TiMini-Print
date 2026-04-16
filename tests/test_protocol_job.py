@@ -14,85 +14,86 @@ class ProtocolJobTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         install_crc8_stub()
         cls.commands = importlib.import_module("timiniprint.protocol.commands")
-        cls.job = importlib.import_module("timiniprint.protocol.job")
+        cls.builders = importlib.import_module("timiniprint.protocol._builders")
         cls.types = importlib.import_module("timiniprint.protocol.types")
+        cls.raster = importlib.import_module("timiniprint.raster")
         cls.legacy_raw = cls.types.ImagePipelineConfig(
-            formats=(cls.types.PixelFormat.BW1,),
+            formats=(cls.raster.PixelFormat.BW1,),
             encoding=cls.types.ImageEncoding.LEGACY_RAW,
         )
         cls.legacy_rle = cls.types.ImagePipelineConfig(
-            formats=(cls.types.PixelFormat.BW1,),
+            formats=(cls.raster.PixelFormat.BW1,),
             encoding=cls.types.ImageEncoding.LEGACY_RLE,
         )
         cls.v5x_dot = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.BW1,
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.GRAY8,
             ),
             encoding=cls.types.ImageEncoding.V5X_DOT,
         )
         cls.v5x_gray = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.GRAY8,
-                cls.types.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.BW1,
             ),
             encoding=cls.types.ImageEncoding.V5X_GRAY,
         )
         cls.v5c_a4 = cls.types.ImagePipelineConfig(
-            formats=(cls.types.PixelFormat.BW1,),
+            formats=(cls.raster.PixelFormat.BW1,),
             encoding=cls.types.ImageEncoding.V5C_A4,
         )
         cls.v5c_a5_gray4 = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.GRAY8,
-                cls.types.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.BW1,
             ),
             encoding=cls.types.ImageEncoding.V5C_A5,
         )
         cls.v5c_a5_gray8 = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.GRAY8,
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.BW1,
             ),
             encoding=cls.types.ImageEncoding.V5C_A5,
         )
         cls.dck = cls.types.ImagePipelineConfig(
-            formats=(cls.types.PixelFormat.BW1,),
+            formats=(cls.raster.PixelFormat.BW1,),
             encoding=cls.types.ImageEncoding.DCK_DEFAULT,
         )
         cls.v5g_dot = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.BW1,
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.GRAY8,
             ),
             encoding=cls.types.ImageEncoding.V5G_DOT,
         )
         cls.v5g_gray = cls.types.ImagePipelineConfig(
             formats=(
-                cls.types.PixelFormat.GRAY4,
-                cls.types.PixelFormat.GRAY8,
-                cls.types.PixelFormat.BW1,
+                cls.raster.PixelFormat.GRAY4,
+                cls.raster.PixelFormat.GRAY8,
+                cls.raster.PixelFormat.BW1,
             ),
             encoding=cls.types.ImageEncoding.V5G_GRAY,
         )
 
     def _bw_raster(self, pixels: list[int], width: int = 8):
-        return self.types.RasterBuffer(
+        return self.raster.RasterBuffer(
             pixels=pixels,
             width=width,
-            pixel_format=self.types.PixelFormat.BW1,
+            pixel_format=self.raster.PixelFormat.BW1,
         )
 
     def _raster_set(self, *rasters):
-        return self.types.RasterSet(rasters={raster.pixel_format: raster for raster in rasters})
+        return self.raster.RasterSet(rasters={raster.pixel_format: raster for raster in rasters})
 
     def test_build_print_payload_contains_expected_sections(self) -> None:
-        payload = self.job.build_print_payload(
+        payload = self.builders._build_print_payload(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=False,
@@ -108,7 +109,7 @@ class ProtocolJobTests(unittest.TestCase):
         self.assertIn(bytes([0xA2]), payload)
 
     def test_build_job_appends_final_sequence(self) -> None:
-        data = self.job.build_job(
+        data = self.builders._build_job(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=False,
@@ -126,9 +127,9 @@ class ProtocolJobTests(unittest.TestCase):
         self.assertIn(bytes([0xA3]), data)
 
     def test_build_from_raster_validates(self) -> None:
-        raster = self.types.RasterBuffer(pixels=[1, 0, 1], width=2)
+        raster = self.raster.RasterBuffer(pixels=[1, 0, 1], width=2)
         with self.assertRaisesRegex(ValueError, "multiple of width"):
-            self.job.build_job_from_raster(
+            self.builders._build_job_from_raster(
                 raster=raster,
                 is_text=False,
                 speed=10,
@@ -143,7 +144,7 @@ class ProtocolJobTests(unittest.TestCase):
             )
 
     def test_build_v5x_job_uses_family_specific_sequence(self) -> None:
-        data = self.job.build_job(
+        data = self.builders._build_job(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=False,
@@ -175,7 +176,7 @@ class ProtocolJobTests(unittest.TestCase):
         self.assertTrue(data.endswith(V5X_FINALIZE_PACKET))
 
     def test_build_v5x_job_uses_standard_mode_when_labels_disabled(self) -> None:
-        data = self.job.build_job(
+        data = self.builders._build_job(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=False,
@@ -202,13 +203,13 @@ class ProtocolJobTests(unittest.TestCase):
     def test_build_v5x_gray_job_uses_gray4_payload(self) -> None:
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0]),
-            self.types.RasterBuffer(
+            self.raster.RasterBuffer(
                 pixels=[15, 14, 13, 12, 11, 10, 9, 8],
                 width=8,
-                pixel_format=self.types.PixelFormat.GRAY4,
+                pixel_format=self.raster.PixelFormat.GRAY4,
             ),
         )
-        data = self.job.build_job_from_raster_set(
+        data = self.builders._build_job_from_raster_set(
             raster_set=raster_set,
             is_text=False,
             speed=10,
@@ -242,13 +243,13 @@ class ProtocolJobTests(unittest.TestCase):
     def test_build_v5x_gray_job_supports_gray8_raster(self) -> None:
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0]),
-            self.types.RasterBuffer(
+            self.raster.RasterBuffer(
                 pixels=[0, 16, 32, 48, 64, 80, 96, 112],
                 width=8,
-                pixel_format=self.types.PixelFormat.GRAY8,
+                pixel_format=self.raster.PixelFormat.GRAY8,
             ),
         )
-        data = self.job.build_job_from_raster_set(
+        data = self.builders._build_job_from_raster_set(
             raster_set=raster_set,
             is_text=False,
             speed=10,
@@ -260,7 +261,7 @@ class ProtocolJobTests(unittest.TestCase):
             feed_padding=12,
             dev_dpi=203,
             can_print_label=False,
-            image_pipeline=self.v5x_gray.with_default_format(self.types.PixelFormat.GRAY8),
+            image_pipeline=self.v5x_gray.with_default_format(self.raster.PixelFormat.GRAY8),
         )
 
         self.assertIn(
@@ -270,7 +271,7 @@ class ProtocolJobTests(unittest.TestCase):
         self.assertIn(bytes([0, 16, 32, 48, 64, 80, 96, 112]), data)
 
     def test_build_v5c_job_uses_family_specific_sequence(self) -> None:
-        data = self.job.build_job(
+        data = self.builders._build_job(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=True,
@@ -298,10 +299,10 @@ class ProtocolJobTests(unittest.TestCase):
         )
 
     def test_build_v5c_compressed_job_uses_a5_frames(self) -> None:
-        gray_raster = self.types.RasterBuffer(
+        gray_raster = self.raster.RasterBuffer(
             pixels=[15, 14, 13, 12, 11, 10, 9, 8, 15, 14, 13, 12, 11, 10, 9, 8],
             width=8,
-            pixel_format=self.types.PixelFormat.GRAY4,
+            pixel_format=self.raster.PixelFormat.GRAY4,
         )
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0] * 2),
@@ -312,7 +313,7 @@ class ProtocolJobTests(unittest.TestCase):
             "timiniprint.protocol.families.v5c.compress_lzo1x_1",
             side_effect=lambda data: captured_blocks.append(data) or bytes.fromhex("AABBCC"),
         ):
-            data = self.job.build_job_from_raster_set(
+            data = self.builders._build_job_from_raster_set(
                 raster_set=raster_set,
                 is_text=False,
                 speed=10,
@@ -338,10 +339,10 @@ class ProtocolJobTests(unittest.TestCase):
         )
 
     def test_build_v5c_compressed_job_supports_gray8_raster(self) -> None:
-        gray_raster = self.types.RasterBuffer(
+        gray_raster = self.raster.RasterBuffer(
             pixels=[0, 16, 32, 48, 64, 80, 96, 112, 1, 17, 33, 49, 65, 81, 97, 113],
             width=8,
-            pixel_format=self.types.PixelFormat.GRAY8,
+            pixel_format=self.raster.PixelFormat.GRAY8,
         )
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0] * 2),
@@ -352,7 +353,7 @@ class ProtocolJobTests(unittest.TestCase):
             "timiniprint.protocol.families.v5c.compress_lzo1x_1",
             side_effect=lambda data: captured_blocks.append(data) or bytes.fromhex("AABBCC"),
         ):
-            data = self.job.build_job_from_raster_set(
+            data = self.builders._build_job_from_raster_set(
                 raster_set=raster_set,
                 is_text=False,
                 speed=10,
@@ -374,10 +375,10 @@ class ProtocolJobTests(unittest.TestCase):
         )
 
     def test_build_v5c_compressed_job_raises_when_compressor_fails(self) -> None:
-        gray_raster = self.types.RasterBuffer(
+        gray_raster = self.raster.RasterBuffer(
             pixels=[15, 13, 11, 9, 7, 5, 3, 1],
             width=8,
-            pixel_format=self.types.PixelFormat.GRAY4,
+            pixel_format=self.raster.PixelFormat.GRAY4,
         )
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0]),
@@ -388,7 +389,7 @@ class ProtocolJobTests(unittest.TestCase):
             side_effect=RuntimeError("python-lzo is required for V5C compressed jobs"),
         ):
             with self.assertRaisesRegex(RuntimeError, "python-lzo is required"):
-                self.job.build_job_from_raster_set(
+                self.builders._build_job_from_raster_set(
                     raster_set=raster_set,
                     is_text=False,
                     speed=10,
@@ -404,7 +405,7 @@ class ProtocolJobTests(unittest.TestCase):
 
     def test_build_dck_job_is_not_implemented(self) -> None:
             with self.assertRaisesRegex(NotImplementedError, "DCK protocol family"):
-                self.job.build_job(
+                self.builders._build_job(
                     pixels=[1, 0, 1, 0, 1, 0, 1, 0],
                     width=8,
                     is_text=False,
@@ -420,7 +421,7 @@ class ProtocolJobTests(unittest.TestCase):
                 )
 
     def test_build_v5g_dot_job_uses_v5g_sequence(self) -> None:
-        data = self.job.build_job(
+        data = self.builders._build_job(
             pixels=[1, 0, 1, 0, 1, 0, 1, 0],
             width=8,
             is_text=False,
@@ -468,10 +469,10 @@ class ProtocolJobTests(unittest.TestCase):
     def test_build_v5g_gray_job_uses_density_and_compressed_frame(self) -> None:
         raster_set = self._raster_set(
             self._bw_raster([1, 0, 1, 0, 1, 0, 1, 0] * 2),
-            self.types.RasterBuffer(
+            self.raster.RasterBuffer(
                 pixels=[15, 14, 13, 12, 11, 10, 9, 8] * 2,
                 width=8,
-                pixel_format=self.types.PixelFormat.GRAY4,
+                pixel_format=self.raster.PixelFormat.GRAY4,
             ),
         )
 
@@ -479,7 +480,7 @@ class ProtocolJobTests(unittest.TestCase):
             "timiniprint.protocol.families.v5g.compress_lzo1x_1",
             return_value=bytes.fromhex("AABB"),
         ):
-            data = self.job.build_job_from_raster_set(
+            data = self.builders._build_job_from_raster_set(
                 raster_set=raster_set,
                 is_text=False,
                 speed=30,

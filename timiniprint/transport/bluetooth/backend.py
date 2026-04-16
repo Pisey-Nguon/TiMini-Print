@@ -71,10 +71,17 @@ class SppBackend:
         data: bytes,
         chunk_size: int,
         delay_ms: int,
-        runtime_context=None,
+        runtime_controller=None,
     ) -> None:
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._write_blocking, data, chunk_size, delay_ms, runtime_context)
+        await loop.run_in_executor(
+            None,
+            self._write_blocking,
+            data,
+            chunk_size,
+            delay_ms,
+            runtime_controller,
+        )
 
     def _connect_attempts_blocking(
         self,
@@ -266,13 +273,13 @@ class SppBackend:
             self._channel = None
             self._transport = None
 
-    def _write_blocking(self, data: bytes, chunk_size: int, delay_ms: int, runtime_context=None) -> None:
+    def _write_blocking(self, data: bytes, chunk_size: int, delay_ms: int, runtime_controller=None) -> None:
         if not self._sock or not self._connected:
             raise RuntimeError("Not connected to a Bluetooth device")
         if self._transport == DeviceTransport.BLE:
             with self._lock:
-                _send_all(self._sock, data, runtime_context=runtime_context)
-            return
+                _send_all(self._sock, data, runtime_controller=runtime_controller)
+                return
         delay = max(0.0, delay_ms / 1000.0)
         offset = 0
         while offset < len(data):
@@ -359,10 +366,10 @@ def _safe_close(sock: Optional[SocketLike]) -> None:
         pass
 
 
-def _send_all(sock: SocketLike, data: bytes, runtime_context=None) -> None:
+def _send_all(sock: SocketLike, data: bytes, runtime_controller=None) -> None:
     send_payload = getattr(sock, "send_payload", None)
     if callable(send_payload):
-        send_payload(data, runtime_context=runtime_context)
+        send_payload(data, runtime_controller=runtime_controller)
         return
     sendall = getattr(sock, "sendall", None)
     if callable(sendall):

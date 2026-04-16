@@ -1,3 +1,6 @@
-from .serial import SerialTransport
+from .base import PrinterConnection, PrinterConnector
 
-__all__ = ["SerialTransport"]
+__all__ = [
+    "PrinterConnection",
+    "PrinterConnector",
+]

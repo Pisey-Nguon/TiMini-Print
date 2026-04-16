@@ -6,7 +6,8 @@ from tests.helpers import reset_registry_cache
 from timiniprint.devices import PrinterCatalog
 from timiniprint.devices.profiles import DetectionRule
 from timiniprint.protocol.family import ProtocolFamily
-from timiniprint.protocol.types import ImageEncoding, PixelFormat
+from timiniprint.protocol.types import ImageEncoding
+from timiniprint.raster import PixelFormat
 
 
 def _profile_payload(profile_key: str = "demo") -> dict:
@@ -82,23 +83,23 @@ class DevicesModelsTests(unittest.TestCase):
         ]
         catalog = PrinterCatalog([shared_profile], rules)
 
-        resolved = catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:59")
+        resolved = catalog.detect_device("MX05-ABCD", "AA:BB:CC:DD:EE:59")
 
         self.assertIsNotNone(resolved)
         self.assertEqual(resolved.profile_key, "shared")
         self.assertEqual(resolved.protocol_family, ProtocolFamily.V5X)
-        self.assertEqual(resolved.matched_rule_key, "mac59")
+        self.assertEqual(resolved.detection_rule_key, "mac59")
 
     def test_direct_profiles_resolve_without_alias_semantics(self) -> None:
-        resolved = self.catalog.resolve("X6H-1234")
+        resolved = self.catalog.detect_device("X6H-1234")
         self.assertIsNotNone(resolved)
         self.assertEqual(resolved.profile_key, "x6h")
         self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
         self.assertEqual(resolved.image_pipeline.encoding, ImageEncoding.LEGACY_RLE)
 
     def test_old_small_bucket_uses_v5g_and_mac59_switches_family_only(self) -> None:
-        normal = self.catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:58")
-        mac59 = self.catalog.resolve("MX05-ABCD", "AA:BB:CC:DD:EE:59")
+        normal = self.catalog.detect_device("MX05-ABCD", "AA:BB:CC:DD:EE:58")
+        mac59 = self.catalog.detect_device("MX05-ABCD", "AA:BB:CC:DD:EE:59")
 
         self.assertIsNotNone(normal)
         self.assertIsNotNone(mac59)
@@ -108,8 +109,8 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertEqual(mac59.protocol_family, ProtocolFamily.V5X)
 
     def test_old_small_bucket_shared_names_resolve_to_shared_profile(self) -> None:
-        normal = self.catalog.resolve("XOPOPPY", "AA:BB:CC:DD:EE:58")
-        mac59 = self.catalog.resolve("XOPOPPY", "AA:BB:CC:DD:EE:59")
+        normal = self.catalog.detect_device("XOPOPPY", "AA:BB:CC:DD:EE:58")
+        mac59 = self.catalog.detect_device("XOPOPPY", "AA:BB:CC:DD:EE:59")
 
         self.assertIsNotNone(normal)
         self.assertIsNotNone(mac59)
@@ -119,51 +120,77 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertEqual(mac59.protocol_family, ProtocolFamily.V5X)
 
     def test_dynamic_v5g_rules_expose_helper_metadata(self) -> None:
-        mx06 = self.catalog.resolve("MX06-ABCD", "AA:BB:CC:DD:EE:58")
-        mx08 = self.catalog.resolve("MX08-ABCD", "AA:BB:CC:DD:EE:58")
-        mx09 = self.catalog.resolve("MX09-ABCD", "AA:BB:CC:DD:EE:58")
-        mx10 = self.catalog.resolve("MX10-ABCD", "AA:BB:CC:DD:EE:58")
-        pd01 = self.catalog.resolve("PD01-ABCD", "AA:BB:CC:DD:EE:58")
-        xopoppy = self.catalog.resolve("XOPOPPY-ABCD", "AA:BB:CC:DD:EE:58")
-        mx13 = self.catalog.resolve("MX13-ABCD", "AA:BB:CC:DD:EE:58")
-        mxw010 = self.catalog.resolve("MXW010-ABCD", "AA:BB:CC:DD:EE:58")
+        mx06 = self.catalog.detect_device("MX06-ABCD", "AA:BB:CC:DD:EE:58")
+        mx08 = self.catalog.detect_device("MX08-ABCD", "AA:BB:CC:DD:EE:58")
+        mx09 = self.catalog.detect_device("MX09-ABCD", "AA:BB:CC:DD:EE:58")
+        mx10 = self.catalog.detect_device("MX10-ABCD", "AA:BB:CC:DD:EE:58")
+        pd01 = self.catalog.detect_device("PD01-ABCD", "AA:BB:CC:DD:EE:58")
+        xopoppy = self.catalog.detect_device("XOPOPPY-ABCD", "AA:BB:CC:DD:EE:58")
+        mx13 = self.catalog.detect_device("MX13-ABCD", "AA:BB:CC:DD:EE:58")
+        mxw010 = self.catalog.detect_device("MXW010-ABCD", "AA:BB:CC:DD:EE:58")
 
         self.assertIsNotNone(mx06)
-        self.assertEqual(mx06.v5g_dynamic_helper.helper_kind, "mx06")
-        self.assertEqual(mx06.v5g_dynamic_helper.density_profile_key, "mx06")
+        self.assertEqual(mx06.runtime_variant, "mx06")
+        self.assertIsNotNone(mx06.runtime_density_profile)
+        self.assertEqual(mx06.runtime_density_profile.profile_key, "mx06")
 
         self.assertIsNotNone(mx08)
-        self.assertEqual(mx08.v5g_dynamic_helper.helper_kind, "d2")
-        self.assertEqual(mx08.v5g_dynamic_helper.density_profile_key, "mx08")
+        self.assertEqual(mx08.runtime_variant, "d2")
+        self.assertIsNotNone(mx08.runtime_density_profile)
+        self.assertEqual(mx08.runtime_density_profile.profile_key, "mx08")
 
         self.assertIsNotNone(mx09)
-        self.assertEqual(mx09.v5g_dynamic_helper.helper_kind, "d2")
-        self.assertEqual(mx09.v5g_dynamic_helper.density_profile_key, "mx09")
+        self.assertEqual(mx09.runtime_variant, "d2")
+        self.assertIsNotNone(mx09.runtime_density_profile)
+        self.assertEqual(mx09.runtime_density_profile.profile_key, "mx09")
 
         self.assertIsNotNone(mx10)
-        self.assertEqual(mx10.v5g_dynamic_helper.helper_kind, "mx10")
-        self.assertEqual(mx10.v5g_dynamic_helper.density_profile_key, "mx06")
+        self.assertEqual(mx10.runtime_variant, "mx10")
+        self.assertIsNotNone(mx10.runtime_density_profile)
+        self.assertEqual(mx10.runtime_density_profile.profile_key, "mx06")
 
         self.assertIsNotNone(pd01)
-        self.assertEqual(pd01.v5g_dynamic_helper.helper_kind, "pd01")
-        self.assertEqual(pd01.v5g_dynamic_helper.density_profile_key, "mx11")
+        self.assertEqual(pd01.runtime_variant, "pd01")
+        self.assertIsNotNone(pd01.runtime_density_profile)
+        self.assertEqual(pd01.runtime_density_profile.profile_key, "mx11")
 
         self.assertIsNotNone(xopoppy)
-        self.assertEqual(xopoppy.v5g_dynamic_helper.helper_kind, "mx10")
-        self.assertEqual(xopoppy.v5g_dynamic_helper.density_profile_key, "xopoppy")
+        self.assertEqual(xopoppy.runtime_variant, "mx10")
+        self.assertIsNotNone(xopoppy.runtime_density_profile)
+        self.assertEqual(xopoppy.runtime_density_profile.profile_key, "xopoppy")
 
         self.assertIsNotNone(mx13)
-        self.assertEqual(mx13.v5g_dynamic_helper.helper_kind, "mx10")
-        self.assertEqual(mx13.v5g_dynamic_helper.density_profile_key, "xopoppy")
+        self.assertEqual(mx13.runtime_variant, "mx10")
+        self.assertIsNotNone(mx13.runtime_density_profile)
+        self.assertEqual(mx13.runtime_density_profile.profile_key, "xopoppy")
 
         self.assertIsNotNone(mxw010)
-        self.assertEqual(mxw010.v5g_dynamic_helper.helper_kind, "mx10")
-        self.assertIsNone(mxw010.v5g_dynamic_helper.density_profile_key)
+        self.assertEqual(mxw010.runtime_variant, "mx10")
+        self.assertIsNone(mxw010.runtime_density_profile)
+
+    def test_device_config_roundtrip_preserves_runtime_fields(self) -> None:
+        resolved = self.catalog.detect_device("MX10-ABCD", "AA:BB:CC:DD:EE:59")
+
+        self.assertIsNotNone(resolved)
+        config = self.catalog.serialize_device_config(resolved)
+        rebuilt = self.catalog.device_from_config(config)
+
+        self.assertEqual(rebuilt.display_name, resolved.display_name)
+        self.assertEqual(rebuilt.profile_key, resolved.profile_key)
+        self.assertEqual(rebuilt.protocol_family, resolved.protocol_family)
+        self.assertEqual(rebuilt.image_pipeline, resolved.image_pipeline)
+        self.assertEqual(rebuilt.runtime_variant, resolved.runtime_variant)
+        self.assertEqual(
+            None if rebuilt.runtime_density_profile is None else rebuilt.runtime_density_profile.profile_key,
+            None if resolved.runtime_density_profile is None else resolved.runtime_density_profile.profile_key,
+        )
+        self.assertEqual(rebuilt.address, resolved.address)
+        self.assertEqual(rebuilt.transport_badge, resolved.transport_badge)
 
     def test_exact_name_rules_cover_x6_without_shadowing_x6h(self) -> None:
-        x6 = self.catalog.resolve("X6", "AA:BB:CC:DD:EE:58")
-        x6_mac59 = self.catalog.resolve("X6", "AA:BB:CC:DD:EE:59")
-        x6h = self.catalog.resolve("X6H-1234", "AA:BB:CC:DD:EE:59")
+        x6 = self.catalog.detect_device("X6", "AA:BB:CC:DD:EE:58")
+        x6_mac59 = self.catalog.detect_device("X6", "AA:BB:CC:DD:EE:59")
+        x6h = self.catalog.detect_device("X6H-1234", "AA:BB:CC:DD:EE:59")
 
         self.assertIsNotNone(x6)
         self.assertIsNotNone(x6_mac59)
@@ -176,10 +203,10 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertEqual(x6h.protocol_family, ProtocolFamily.LEGACY)
 
     def test_v5x_exact_name_rules_do_not_shadow_other_x_series_profiles(self) -> None:
-        x1 = self.catalog.resolve("X1")
-        x2 = self.catalog.resolve("X2")
-        x103h = self.catalog.resolve("X103H")
-        x2h = self.catalog.resolve("X2H")
+        x1 = self.catalog.detect_device("X1")
+        x2 = self.catalog.detect_device("X2")
+        x103h = self.catalog.detect_device("X103H")
+        x2h = self.catalog.detect_device("X2H")
 
         self.assertIsNotNone(x1)
         self.assertIsNotNone(x2)
@@ -212,7 +239,7 @@ class DevicesModelsTests(unittest.TestCase):
 
         for name, profile_key in expected.items():
             with self.subTest(name=name):
-                resolved = self.catalog.resolve(name)
+                resolved = self.catalog.detect_device(name)
                 self.assertIsNotNone(resolved)
                 self.assertEqual(resolved.profile_key, profile_key)
                 self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
@@ -227,20 +254,20 @@ class DevicesModelsTests(unittest.TestCase):
 
         for name, (profile_key, family) in expected.items():
             with self.subTest(name=name):
-                resolved = self.catalog.resolve(name, "AA:BB:CC:DD:EE:58")
+                resolved = self.catalog.detect_device(name, "AA:BB:CC:DD:EE:58")
                 self.assertIsNotNone(resolved)
                 self.assertEqual(resolved.profile_key, profile_key)
                 self.assertEqual(resolved.protocol_family, family)
 
     def test_case_insensitive_fallback_still_detects_lowercase_names(self) -> None:
-        resolved = self.catalog.resolve("sc03h-abcd")
+        resolved = self.catalog.detect_device("sc03h-abcd")
 
         self.assertIsNotNone(resolved)
         self.assertEqual(resolved.profile_key, "fc02")
         self.assertEqual(resolved.protocol_family, ProtocolFamily.LEGACY)
 
     def test_ai01_resolves_to_v5x_family(self) -> None:
-        ai01 = self.catalog.resolve("AI01-ABCD")
+        ai01 = self.catalog.detect_device("AI01-ABCD")
 
         self.assertIsNotNone(ai01)
         self.assertEqual(ai01.profile_key, "ai01")
@@ -261,7 +288,7 @@ class DevicesModelsTests(unittest.TestCase):
 
         for (name, address), (profile_key, family) in expected.items():
             with self.subTest(name=name, address=address):
-                resolved = self.catalog.resolve(name, address)
+                resolved = self.catalog.detect_device(name, address)
                 self.assertIsNotNone(resolved)
                 self.assertEqual(resolved.profile_key, profile_key)
                 self.assertEqual(resolved.protocol_family, family)
@@ -305,10 +332,10 @@ class DevicesModelsTests(unittest.TestCase):
         self.assertEqual(shared.energy.text.high, 20000)
 
     def test_experimental_rules_resolve_to_profiles_not_alias_donors(self) -> None:
-        jk01 = self.catalog.resolve("JK01-ABCD")
-        c21 = self.catalog.resolve("C21-ABCD")
-        mxwa4 = self.catalog.resolve("MXW-A4-ABCD")
-        ytb01 = self.catalog.resolve("YTB01-ABCD")
+        jk01 = self.catalog.detect_device("JK01-ABCD")
+        c21 = self.catalog.detect_device("C21-ABCD")
+        mxwa4 = self.catalog.detect_device("MXW-A4-ABCD")
+        ytb01 = self.catalog.detect_device("YTB01-ABCD")
 
         self.assertIsNotNone(jk01)
         self.assertEqual(jk01.profile_key, "v5x")
@@ -374,7 +401,7 @@ class DevicesModelsTests(unittest.TestCase):
 
         for name, profile_key in expected.items():
             with self.subTest(name=name):
-                resolved = self.catalog.resolve(name, "AA:BB:CC:DD:EE:58")
+                resolved = self.catalog.detect_device(name, "AA:BB:CC:DD:EE:58")
                 self.assertIsNotNone(resolved)
                 self.assertEqual(resolved.profile_key, profile_key)
 

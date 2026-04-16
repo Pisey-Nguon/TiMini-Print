@@ -1,178 +1,131 @@
 from __future__ import annotations
 
+import asyncio
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from tests.helpers import reset_registry_cache
-from timiniprint.devices import DeviceResolver, PrinterCatalog
-from timiniprint.devices.resolve import ResolvedBluetoothDevice
+from timiniprint.devices import PrinterCatalog
 from timiniprint.protocol.family import ProtocolFamily
+from timiniprint.transport.bluetooth import BleakBluetoothConnector, BluetoothDiscovery, BluetoothScanResult
 from timiniprint.transport.bluetooth.types import DeviceInfo, DeviceTransport
 
 
-class DevicesResolverTests(unittest.TestCase):
+class BluetoothDiscoveryAndConnectorTests(unittest.TestCase):
     def setUp(self) -> None:
         reset_registry_cache()
         self.catalog = PrinterCatalog.load()
-        self.resolver = DeviceResolver(self.catalog)
+        self.discovery = BluetoothDiscovery(self.catalog)
 
-    def test_filter_printer_devices(self) -> None:
+    def test_devices_from_scan_discards_unsupported_endpoints(self) -> None:
         devices = [
             DeviceInfo(name="X6H-ABCD", address="AA:BB:CC:DD:EE:01", transport=DeviceTransport.CLASSIC),
             DeviceInfo(name="Unknown Device", address="AA:BB:CC:DD:EE:02", transport=DeviceTransport.BLE),
         ]
 
-        out = self.resolver.filter_printer_devices(devices)
+        out = self.discovery.devices_from_scan(devices)
 
         self.assertEqual(len(out), 1)
-        self.assertEqual(out[0].name, "X6H-ABCD")
+        self.assertEqual(out[0].display_name, "X6H-ABCD")
 
-    def test_resolve_printer_device_selects_by_name_contains_and_address(self) -> None:
-        resolved_printer = self.catalog.resolve("X6H-FF5F")
-        self.assertIsNotNone(resolved_printer)
-        logical = ResolvedBluetoothDevice(
-            name="X6H-FF5F",
-            resolved_printer=resolved_printer,
-            classic_endpoint=DeviceInfo(
-                name="X6H-FF5F",
-                address="AA:BB:CC:DD:EE:01",
-                transport=DeviceTransport.CLASSIC,
-            ),
-            ble_endpoint=None,
-            display_address="AA:BB:CC:DD:EE:01",
-            transport_label="[classic]",
-        )
-
+    def test_resolve_device_selects_by_name_contains_and_address(self) -> None:
+        device = self.discovery.devices_from_scan(
+            [
+                DeviceInfo(
+                    name="X6H-FF5F",
+                    address="AA:BB:CC:DD:EE:01",
+                    transport=DeviceTransport.CLASSIC,
+                )
+            ]
+        )[0]
         with patch.object(
-            self.resolver,
-            "scan_printer_devices_with_failures",
-            AsyncMock(return_value=([logical], [])),
+            self.discovery,
+            "scan_report",
+            AsyncMock(return_value=BluetoothScanResult(devices=[device], failures=[])),
         ):
-            by_name = _run(self.resolver.resolve_printer_device("X6H-FF5F"))
-            by_contains = _run(self.resolver.resolve_printer_device("FF5F"))
-            by_address = _run(self.resolver.resolve_printer_device("AA:BB:CC:DD:EE:01"))
+            by_name = _run(self.discovery.resolve_device("X6H-FF5F"))
+            by_contains = _run(self.discovery.resolve_device("FF5F"))
+            by_address = _run(self.discovery.resolve_device("AA:BB:CC:DD:EE:01"))
 
-        self.assertEqual(by_name, logical)
-        self.assertEqual(by_contains, logical)
-        self.assertEqual(by_address, logical)
+        self.assertEqual(by_name, device)
+        self.assertEqual(by_contains, device)
+        self.assertEqual(by_address, device)
 
     def test_scan_retry_ble_when_classic_only_detected(self) -> None:
         classic = DeviceInfo(name="X6H-ABCD", address="AA:BB:CC:DD:EE:01", transport=DeviceTransport.CLASSIC)
         ble = DeviceInfo(name="X6H-ABCD", address="UUID-1", transport=DeviceTransport.BLE)
 
         with patch(
-            "timiniprint.devices.resolve.SppBackend.scan_with_failures",
+            "timiniprint.transport.bluetooth.discovery.SppBackend.scan_with_failures",
             AsyncMock(side_effect=[([classic], []), ([ble], [])]),
         ) as scan_mock:
-            resolved, failures = _run(
-                self.resolver.scan_printer_devices_with_failures(include_classic=True, include_ble=True)
-            )
+            result = _run(self.discovery.scan_report(include_classic=True, include_ble=True))
 
-        self.assertEqual(failures, [])
+        self.assertEqual(result.failures, [])
         self.assertEqual(scan_mock.await_count, 2)
-        self.assertEqual(len(resolved), 1)
-        self.assertEqual(resolved[0].transport_label, "[classic+ble]")
-        self.assertEqual(resolved[0].profile_key, "x6h")
+        self.assertEqual(len(result.devices), 1)
+        self.assertEqual(result.devices[0].transport_badge, "[classic+ble]")
+        self.assertEqual(result.devices[0].profile_key, "x6h")
 
-    def test_build_connection_attempts_respects_profile_use_spp(self) -> None:
-        classic = DeviceInfo(name="X6H-ABCD", address="AA:BB:CC:DD:EE:01", transport=DeviceTransport.CLASSIC)
-        ble = DeviceInfo(name="X6H-ABCD", address="UUID-1", transport=DeviceTransport.BLE)
-        spp_printer = self.catalog.resolve("X6H-ABCD")
-        ble_printer = self.catalog.resolve("CP01-ABCD")
-        self.assertIsNotNone(spp_printer)
-        self.assertIsNotNone(ble_printer)
+    def test_device_config_roundtrip_preserves_detected_bluetooth_metadata(self) -> None:
+        auto = self.catalog.detect_device("MX10-ABCD", "AA:BB:CC:DD:EE:58")
+        self.assertIsNotNone(auto)
 
-        spp_first = ResolvedBluetoothDevice("X6H-ABCD", spp_printer, classic, ble, classic.address, "[classic+ble]")
-        ble_first = ResolvedBluetoothDevice("CP01-ABCD", ble_printer, classic, ble, classic.address, "[classic+ble]")
+        config = self.catalog.serialize_device_config(auto)
+        manual = self.catalog.device_from_config(config)
 
-        self.assertEqual(
-            self.resolver.build_connection_attempts(spp_first),
-            [
-                DeviceInfo(
-                    name=classic.name,
-                    address=classic.address,
-                    paired=classic.paired,
-                    transport=classic.transport,
-                    protocol_family=ProtocolFamily.LEGACY,
-                ),
-                DeviceInfo(
-                    name=ble.name,
-                    address=ble.address,
-                    paired=ble.paired,
-                    transport=ble.transport,
-                    protocol_family=ProtocolFamily.LEGACY,
-                ),
-            ],
-        )
-        self.assertEqual(
-            self.resolver.build_connection_attempts(ble_first),
-            [
-                DeviceInfo(
-                    name=ble.name,
-                    address=ble.address,
-                    paired=ble.paired,
-                    transport=ble.transport,
-                    protocol_family=ble_printer.protocol_family,
-                ),
-                DeviceInfo(
-                    name=classic.name,
-                    address=classic.address,
-                    paired=classic.paired,
-                    transport=classic.transport,
-                    protocol_family=ble_printer.protocol_family,
-                ),
-            ],
-        )
-
-    def test_manual_profile_preserves_detected_bluetooth_metadata(self) -> None:
-        auto = self.resolver.resolve_printer("MX10-ABCD", address="AA:BB:CC:DD:EE:58")
-        manual = self.resolver.resolve_printer("MX10-ABCD", profile_key="v5g_small_203", address="AA:BB:CC:DD:EE:58")
-
-        self.assertEqual(manual.profile_key, "v5g_small_203")
+        self.assertEqual(manual.profile_key, auto.profile_key)
         self.assertEqual(manual.protocol_family, auto.protocol_family)
         self.assertEqual(manual.image_pipeline, auto.image_pipeline)
-        self.assertEqual(manual.v5g_dynamic_helper, auto.v5g_dynamic_helper)
+        self.assertEqual(manual.runtime_variant, auto.runtime_variant)
+        self.assertEqual(
+            None if manual.runtime_density_profile is None else manual.runtime_density_profile.profile_key,
+            None if auto.runtime_density_profile is None else auto.runtime_density_profile.profile_key,
+        )
+        self.assertEqual(manual.transport_badge, auto.transport_badge)
 
-    def test_manual_profile_preserves_mac59_family_switch(self) -> None:
-        auto = self.resolver.resolve_printer("MX10-ABCD", address="AA:BB:CC:DD:EE:59")
-        manual = self.resolver.resolve_printer("MX10-ABCD", profile_key="v5g_small_203", address="AA:BB:CC:DD:EE:59")
+    def test_device_config_roundtrip_preserves_mac59_family_switch(self) -> None:
+        auto = self.catalog.detect_device("MX10-ABCD", "AA:BB:CC:DD:EE:59")
+        self.assertIsNotNone(auto)
+
+        manual = self.catalog.device_from_config(
+            self.catalog.serialize_device_config(auto)
+        )
 
         self.assertEqual(auto.protocol_family, ProtocolFamily.V5X)
         self.assertEqual(manual.protocol_family, auto.protocol_family)
         self.assertEqual(manual.image_pipeline, auto.image_pipeline)
-        self.assertEqual(manual.v5g_dynamic_helper, auto.v5g_dynamic_helper)
+        self.assertEqual(manual.runtime_variant, auto.runtime_variant)
 
-    def test_manual_profile_changes_connection_order_when_transport_preference_differs(self) -> None:
+    def test_connector_prefers_classic_for_spp_profiles(self) -> None:
+        classic = DeviceInfo(name="X6H-ABCD", address="AA:BB:CC:DD:EE:01", transport=DeviceTransport.CLASSIC)
+        ble = DeviceInfo(name="X6H-ABCD", address="UUID-1", transport=DeviceTransport.BLE)
+        device = self.discovery.devices_from_scan([classic, ble])[0]
+        backend = MagicMock()
+        backend.connect_attempts = AsyncMock()
+
+        with patch("timiniprint.transport.bluetooth.connector.SppBackend", return_value=backend):
+            connection = _run(BleakBluetoothConnector().connect(device))
+
+        attempts = backend.connect_attempts.await_args.args[0]
+        self.assertEqual([item.transport for item in attempts], [DeviceTransport.CLASSIC, DeviceTransport.BLE])
+        self.assertEqual(connection._device, device)
+
+    def test_connector_prefers_ble_for_non_spp_profiles(self) -> None:
         classic = DeviceInfo(name="CP01-ABCD", address="AA:BB:CC:DD:EE:01", transport=DeviceTransport.CLASSIC)
         ble = DeviceInfo(name="CP01-ABCD", address="UUID-1", transport=DeviceTransport.BLE)
-        auto_printer = self.catalog.resolve("CP01-ABCD")
-        manual_printer = self.resolver.resolve_printer("CP01-ABCD", profile_key="x6h", address=classic.address)
+        device = self.discovery.devices_from_scan([classic, ble])[0]
+        backend = MagicMock()
+        backend.connect_attempts = AsyncMock()
 
-        self.assertIsNotNone(auto_printer)
-        self.assertFalse(auto_printer.profile.use_spp)
-        self.assertTrue(manual_printer.profile.use_spp)
+        with patch("timiniprint.transport.bluetooth.connector.SppBackend", return_value=backend):
+            _run(BleakBluetoothConnector().connect(device))
 
-        resolved = ResolvedBluetoothDevice(
-            "CP01-ABCD",
-            auto_printer,
-            classic,
-            ble,
-            classic.address,
-            "[classic+ble]",
-        )
-
-        attempts = self.resolver.build_connection_attempts(
-            resolved,
-            manual_printer.protocol_family,
-            manual_printer.profile,
-        )
-
-        self.assertEqual([item.transport for item in attempts], [DeviceTransport.CLASSIC, DeviceTransport.BLE])
+        attempts = backend.connect_attempts.await_args.args[0]
+        self.assertEqual([item.transport for item in attempts], [DeviceTransport.BLE, DeviceTransport.CLASSIC])
 
 
 def _run(coro):
-    import asyncio
-
     return asyncio.run(coro)
 
 

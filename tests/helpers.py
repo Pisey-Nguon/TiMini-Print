@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List
 
 from timiniprint import reporting
-from timiniprint.devices.profiles import PrinterCatalog
+from timiniprint.devices import PrinterCatalog
 
 
 class CaptureSink(reporting.ReportSink):

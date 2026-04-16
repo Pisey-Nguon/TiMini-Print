@@ -1,11 +1,12 @@
-from .profiles import DetectionRule, PrinterCatalog, PrinterProfile, ResolvedPrinter
-from .resolve import DeviceResolver, ResolvedBluetoothDevice
+from .device import BluetoothTarget, PrinterDevice, SerialTarget, TransportTarget
+from .catalog import PrinterCatalog
+from .profiles import PrinterProfile
 
 __all__ = [
-    "DetectionRule",
-    "DeviceResolver",
+    "BluetoothTarget",
     "PrinterCatalog",
+    "PrinterDevice",
     "PrinterProfile",
-    "ResolvedBluetoothDevice",
-    "ResolvedPrinter",
+    "SerialTarget",
+    "TransportTarget",
 ]

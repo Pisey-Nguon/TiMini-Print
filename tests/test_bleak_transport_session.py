@@ -4,10 +4,13 @@ import asyncio
 import time
 import unittest
 from dataclasses import replace
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from tests.helpers import build_capture_reporter
-from timiniprint.protocol.dynamic_helpers import DensityLevels, V5GDynamicRuntimeContext
+from timiniprint.printing.runtime.v5c import V5CRuntimeController
+from timiniprint.printing.runtime.v5g import DensityLevels, V5GRuntimeController
+from timiniprint.printing.runtime.v5x import V5XRuntimeController
 from timiniprint.protocol.families import get_protocol_behavior, split_prefixed_bulk_stream
 from timiniprint.protocol.family import ProtocolFamily
 from timiniprint.protocol.families.v5g import V5G_CONNECT_QUERY_PACKET
@@ -60,6 +63,52 @@ class _Client:
     async def stop_notify(self, char_uuid):
         self.stop_notify_calls.append(char_uuid)
         self.notify_callbacks.pop(char_uuid, None)
+
+
+def _to_namespace(value):
+    if isinstance(value, dict):
+        return SimpleNamespace(**{key: _to_namespace(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return [_to_namespace(item) for item in value]
+    return value
+
+
+def _v5g_state(session):
+    return _to_namespace(session.debug_snapshot())
+
+
+def _v5x_state(session):
+    return _to_namespace(session.debug_snapshot())
+
+
+def _v5c_state(session):
+    return _to_namespace(session.debug_snapshot())
+
+
+def _make_level_profile(levels: DensityLevels):
+    return SimpleNamespace(low=levels.low, middle=levels.middle, high=levels.high)
+
+
+def _make_v5g_controller(
+    *,
+    helper_kind: str,
+    density_profile_key: str | None,
+    image_levels: DensityLevels,
+    text_levels: DensityLevels,
+    **_unused,
+) -> V5GRuntimeController:
+    density_profile = SimpleNamespace(
+        profile_key=density_profile_key or "test",
+        density=SimpleNamespace(
+            image=_make_level_profile(image_levels),
+            text=_make_level_profile(text_levels),
+        ),
+    )
+    return V5GRuntimeController(
+        helper_kind=helper_kind,
+        density_profile_key=density_profile_key,
+        density_profile=density_profile,
+    )
 
 
 class BleakTransportSessionTests(unittest.TestCase):
@@ -266,9 +315,9 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(make_packet(0xD2, bytes([0x01]), ProtocolFamily.V5G))
         session.handle_notification(make_packet(0xA3, bytes([0x00]), ProtocolFamily.V5G))
 
-        self.assertFalse(session._v5g_state.didian_status)
-        self.assertTrue(session._v5g_state.d2_status)
-        self.assertEqual(session._v5g_state.temperature_c, 60)
+        self.assertFalse(_v5g_state(session).didian_status)
+        self.assertTrue(_v5g_state(session).d2_status)
+        self.assertEqual(_v5g_state(session).temperature_c, 60)
 
     def test_v5g_mx10_helper_rewrites_single_density_packet(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5G)
@@ -277,8 +326,8 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        session._v5g_state.temperature_c = 60
-        runtime_context = V5GDynamicRuntimeContext(
+        session.debug_update(temperature_c=60)
+        runtime_controller = _make_v5g_controller(
             helper_kind="mx10",
             density_profile_key="mx06",
             image_levels=DensityLevels(low=150, middle=180, high=200),
@@ -300,7 +349,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 self.assertIn(
@@ -317,8 +366,8 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        session._v5g_state.temperature_c = 50
-        runtime_context = V5GDynamicRuntimeContext(
+        session.debug_update(temperature_c=50)
+        runtime_controller = _make_v5g_controller(
             helper_kind="mx10",
             density_profile_key="mx06",
             image_levels=DensityLevels(low=150, middle=180, high=200),
@@ -340,7 +389,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 expected_values = [160, 145, 130, 115, 100]
@@ -359,8 +408,8 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        session._v5g_state.temperature_c = 60
-        runtime_context = V5GDynamicRuntimeContext(
+        session.debug_update(temperature_c=60)
+        runtime_controller = _make_v5g_controller(
             helper_kind="pd01",
             density_profile_key="mx11",
             image_levels=DensityLevels(low=100, middle=130, high=150),
@@ -382,7 +431,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 self.assertIn(
@@ -399,10 +448,12 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        session._v5g_state.d2_status = True
-        session._v5g_state.last_complete_time = time.time()
-        session._v5g_state.last_single_density_value = 150
-        runtime_context = V5GDynamicRuntimeContext(
+        session.debug_update(
+            d2_status=True,
+            last_complete_time=time.time(),
+            last_single_density_value=150,
+        )
+        runtime_controller = _make_v5g_controller(
             helper_kind="mx06",
             density_profile_key="mx06",
             image_levels=DensityLevels(low=150, middle=180, high=200),
@@ -424,7 +475,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 self.assertIn(
@@ -441,10 +492,12 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        session._v5g_state.d2_status = True
-        session._v5g_state.last_complete_time = time.time()
-        session._v5g_state.last_print_record_density = 150
-        runtime_context = V5GDynamicRuntimeContext(
+        session.debug_update(
+            d2_status=True,
+            last_complete_time=time.time(),
+            last_print_record_density=150,
+        )
+        runtime_controller = _make_v5g_controller(
             helper_kind="mx06",
             density_profile_key="mx06",
             image_levels=DensityLevels(low=150, middle=180, high=200),
@@ -466,7 +519,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 expected_values = [140, 140, 140, 140, 135, 130]
@@ -485,7 +538,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
-        runtime_context = V5GDynamicRuntimeContext(
+        runtime_controller = _make_v5g_controller(
             helper_kind="d2",
             density_profile_key="mx08",
             image_levels=DensityLevels(low=60, middle=90, high=110),
@@ -507,7 +560,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                     data,
                     mtu_size=180,
                     timeout=0.2,
-                    runtime_context=runtime_context,
+                    runtime_controller=runtime_controller,
                 )
                 sent = write_chunks.await_args.args[2]
                 expected_values = [90, 90, 90, 90, 80]
@@ -527,8 +580,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = cmd.uuid
         session._client = client
-        session._v5g_state.helper_kind = "pd01"
-        session._v5g_state.temperature_c = 80
+        session.debug_update(helper_kind="pd01", temperature_c=80)
 
         async def run() -> None:
             with patch.object(session, "_write_chunks", new=AsyncMock()) as write_chunks:
@@ -701,27 +753,27 @@ class BleakTransportSessionTests(unittest.TestCase):
         )
         session.handle_notification(make_packet(0xA9, bytes([0x00]), ProtocolFamily.V5X))
 
-        self.assertEqual(session._v5x_state.device_serial, "112233445566")
-        self.assertTrue(session._v5x_state.serial_valid)
-        self.assertEqual(session._v5x_state.last_a7_payload, bytes.fromhex("112233445566"))
-        self.assertEqual(session._v5x_state.print_head_type, "gaoya")
-        self.assertEqual(session._v5x_state.firmware_version, "FW1.0.22")
-        self.assertTrue(session._v5x_state.connect_info_received)
-        self.assertEqual(session._v5x_state.last_a9_status, 0x00)
-        self.assertEqual(session._v5x_state.task_state, 0x01)
-        self.assertEqual(session._v5x_state.task_state_name, "printing")
-        self.assertEqual(session._v5x_state.battery_level, 99)
-        self.assertEqual(session._v5x_state.temperature_c, 30)
-        self.assertEqual(session._v5x_state.error_group, 0x00)
-        self.assertEqual(session._v5x_state.error_code, 0x00)
-        self.assertEqual(session._v5x_state.compatibility.mode, "auth")
+        self.assertEqual(_v5x_state(session).device_serial, "112233445566")
+        self.assertTrue(_v5x_state(session).serial_valid)
+        self.assertEqual(_v5x_state(session).last_a7_payload, bytes.fromhex("112233445566"))
+        self.assertEqual(_v5x_state(session).print_head_type, "gaoya")
+        self.assertEqual(_v5x_state(session).firmware_version, "FW1.0.22")
+        self.assertTrue(_v5x_state(session).connect_info_received)
+        self.assertEqual(_v5x_state(session).last_a9_status, 0x00)
+        self.assertEqual(_v5x_state(session).task_state, 0x01)
+        self.assertEqual(_v5x_state(session).task_state_name, "printing")
+        self.assertEqual(_v5x_state(session).battery_level, 99)
+        self.assertEqual(_v5x_state(session).temperature_c, 30)
+        self.assertEqual(_v5x_state(session).error_group, 0x00)
+        self.assertEqual(_v5x_state(session).error_code, 0x00)
+        self.assertEqual(_v5x_state(session).compatibility.mode, "auth")
 
     def test_v5x_framed_a9_status_uses_payload_byte_not_crc(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
 
         session.handle_notification(make_packet(0xA9, bytes([0x03]), ProtocolFamily.V5X))
 
-        self.assertEqual(session._v5x_state.last_a9_status, 0x03)
+        self.assertEqual(_v5x_state(session).last_a9_status, 0x03)
 
     def test_v5x_invalid_serial_is_marked_invalid(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
@@ -730,9 +782,9 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA7, bytes.fromhex("FFFFFFFFFFFF"), ProtocolFamily.V5X)
         )
 
-        self.assertEqual(session._v5x_state.device_serial, "ffffffffffff")
-        self.assertFalse(session._v5x_state.serial_valid)
-        self.assertEqual(session._v5x_state.compatibility.mode, "get_sn")
+        self.assertEqual(_v5x_state(session).device_serial, "ffffffffffff")
+        self.assertFalse(_v5x_state(session).serial_valid)
+        self.assertEqual(_v5x_state(session).compatibility.mode, "get_sn")
 
     def test_v5x_builds_compat_request_for_auth_mode(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
@@ -741,7 +793,7 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA7, bytes.fromhex("112233445566"), ProtocolFamily.V5X)
         )
 
-        request = session.build_v5x_compat_request(
+        request = session.build_compat_request(
             ble_name="JK01",
             ble_address="48:0F:57:49:1D:3A",
         )
@@ -764,7 +816,7 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA7, bytes.fromhex("FFFFFFFFFFFF"), ProtocolFamily.V5X)
         )
 
-        request = session.build_v5x_compat_request(
+        request = session.build_compat_request(
             ble_name="JK01",
             ble_address="48:0F:57:49:1D:3A",
             ble_model="JK01",
@@ -787,11 +839,11 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(
             make_packet(0xA7, bytes.fromhex("112233445566"), ProtocolFamily.V5X)
         )
-        session.apply_v5x_compat_result(mode="auth", result_code=-2)
+        session.apply_compat_result(mode="auth", result_code=-2)
 
-        self.assertTrue(session._v5x_state.compatibility.checked)
-        self.assertFalse(session._v5x_state.compatibility.confirmed)
-        self.assertEqual(session._v5x_state.compatibility.last_result_code, -2)
+        self.assertTrue(_v5x_state(session).compatibility.checked)
+        self.assertFalse(_v5x_state(session).compatibility.confirmed)
+        self.assertEqual(_v5x_state(session).compatibility.last_result_code, -2)
         warnings = [msg for msg in sink.messages if msg.level == "warning"]
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].short, "V5X compatibility check failed")
@@ -802,17 +854,17 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(
             make_packet(0xA7, bytes.fromhex("FFFFFFFFFFFF"), ProtocolFamily.V5X)
         )
-        session.apply_v5x_compat_result(
+        session.apply_compat_result(
             mode="get_sn",
             result_code=1,
             write_cmd=bytes.fromhex("2221A70000000000"),
         )
 
-        self.assertTrue(session._v5x_state.compatibility.checked)
-        self.assertTrue(session._v5x_state.compatibility.confirmed)
-        self.assertEqual(session._v5x_state.compatibility.last_result_code, 1)
+        self.assertTrue(_v5x_state(session).compatibility.checked)
+        self.assertTrue(_v5x_state(session).compatibility.confirmed)
+        self.assertEqual(_v5x_state(session).compatibility.last_result_code, 1)
         self.assertEqual(
-            session._v5x_state.compatibility.backend_write_cmd,
+            _v5x_state(session).compatibility.backend_write_cmd,
             bytes.fromhex("2221A70000000000"),
         )
 
@@ -821,14 +873,14 @@ class BleakTransportSessionTests(unittest.TestCase):
 
         session.handle_notification(make_packet(0xA3, bytes([0x00]), ProtocolFamily.V5X))
 
-        self.assertTrue(session._v5x_state.status_poll_ack_seen)
+        self.assertTrue(_v5x_state(session).status_poll_ack_seen)
 
     def test_v5x_ab_status_is_tracked(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
 
         session.handle_notification(make_packet(0xAB, bytes([0x11]), ProtocolFamily.V5X))
 
-        self.assertEqual(session._v5x_state.last_ab_status, 0x11)
+        self.assertEqual(_v5x_state(session).last_ab_status, 0x11)
 
     def test_v5x_error_status_warns_once_per_signature(self) -> None:
         session, _, sink = self._make_session_with_sink(ProtocolFamily.V5X)
@@ -854,7 +906,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(make_packet(0xB3, bytes([0x01]), ProtocolFamily.V5X))
         session.handle_notification(make_packet(0xB3, bytes([0x01]), ProtocolFamily.V5X))
 
-        self.assertTrue(session._v5x_state.mxw_sign_requested)
+        self.assertTrue(_v5x_state(session).mxw_sign_requested)
         warnings = [msg for msg in sink.messages if msg.level == "warning"]
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].short, "V5X printer requested an additional signing step")
@@ -878,16 +930,16 @@ class BleakTransportSessionTests(unittest.TestCase):
             ProtocolFamily.V5X,
             get_protocol_behavior(ProtocolFamily.V5X).transport.split_tail_packets,
         )
-        context = session._build_v5x_job_context(split)
+        context = session._runtime_controller.build_split_context(session, split)
         self.assertIsNotNone(context)
 
-        adjusted = session._adjust_v5x_density_payload(bytes([0x5D]), context)
+        adjusted = session._runtime_controller._adjust_density_payload(bytes([0x5D]), context)
 
         self.assertEqual(adjusted, bytes([0x05]))
 
     def test_v5x_start_delay_prefers_gaoya_high_coverage_rule(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
-        session._v5x_state.print_head_type = "gaoya"
+        session.debug_update(print_head_type="gaoya")
         split = split_prefixed_bulk_stream(
             bytes.fromhex("2221A9000600010030010000EBFF")
             + (b"\xAA\x55" * 16)
@@ -895,16 +947,16 @@ class BleakTransportSessionTests(unittest.TestCase):
             ProtocolFamily.V5X,
             get_protocol_behavior(ProtocolFamily.V5X).transport.split_tail_packets,
         )
-        context = session._build_v5x_job_context(split)
+        context = session._runtime_controller.build_split_context(session, split)
         self.assertIsNotNone(context)
 
-        delay_ms = session._compute_v5x_start_delay_ms(context, density_updated=True)
+        delay_ms = session._runtime_controller._compute_start_delay_ms(context, density_updated=True)
 
         self.assertEqual(delay_ms, 200)
 
     def test_v5x_start_delay_uses_short_density_settle_for_lower_coverage(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5X)
-        session._v5x_state.print_head_type = "diya"
+        session.debug_update(print_head_type="diya")
         split = split_prefixed_bulk_stream(
             bytes.fromhex("2221A9000600010030010000EBFF")
             + (b"\x80" * 8)
@@ -912,10 +964,10 @@ class BleakTransportSessionTests(unittest.TestCase):
             ProtocolFamily.V5X,
             get_protocol_behavior(ProtocolFamily.V5X).transport.split_tail_packets,
         )
-        context = session._build_v5x_job_context(split)
+        context = session._runtime_controller.build_split_context(session, split)
         self.assertIsNotNone(context)
 
-        delay_ms = session._compute_v5x_start_delay_ms(context, density_updated=True)
+        delay_ms = session._runtime_controller._compute_start_delay_ms(context, density_updated=True)
 
         self.assertEqual(delay_ms, 60)
 
@@ -930,7 +982,7 @@ class BleakTransportSessionTests(unittest.TestCase):
             get_protocol_behavior(ProtocolFamily.V5X).transport.split_tail_packets,
         )
 
-        context = session._build_v5x_job_context(split)
+        context = session._runtime_controller.build_split_context(session, split)
 
         self.assertIsNotNone(context)
         self.assertTrue(context.is_gray)
@@ -994,8 +1046,8 @@ class BleakTransportSessionTests(unittest.TestCase):
 
         asyncio.run(run())
 
-        self.assertEqual(session._command_ack_events, {})
-        self.assertIsNone(session._start_ready_event)
+        self.assertEqual(_v5x_state(session).pending_command_ack_opcodes, [])
+        self.assertFalse(_v5x_state(session).has_start_ready_event)
 
     def test_v5x_nonzero_a9_status_fails_immediately(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5X)
@@ -1083,7 +1135,7 @@ class BleakTransportSessionTests(unittest.TestCase):
 
         asyncio.run(run())
 
-        self.assertTrue(session._v5c_state.query_status_in_flight)
+        self.assertTrue(_v5c_state(session).query_status_in_flight)
 
     def test_v5c_notifications_update_session_state(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
@@ -1094,19 +1146,19 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA9, bytes.fromhex("1122334455667788"), ProtocolFamily.V5C)
         )
 
-        self.assertEqual(session._v5c_state.status_code, 0x80)
-        self.assertEqual(session._v5c_state.status_name, "printing")
-        self.assertFalse(session._v5c_state.is_charging)
-        self.assertFalse(session._v5c_state.print_complete_seen)
-        self.assertEqual(session._v5c_state.max_print_height, 800)
-        self.assertEqual(session._v5c_state.device_serial, "1122334455667788")
-        self.assertTrue(session._v5c_state.serial_valid)
+        self.assertEqual(_v5c_state(session).status_code, 0x80)
+        self.assertEqual(_v5c_state(session).status_name, "printing")
+        self.assertFalse(_v5c_state(session).is_charging)
+        self.assertFalse(_v5c_state(session).print_complete_seen)
+        self.assertEqual(_v5c_state(session).max_print_height, 800)
+        self.assertEqual(_v5c_state(session).device_serial, "1122334455667788")
+        self.assertTrue(_v5c_state(session).serial_valid)
         self.assertEqual(
-            session._v5c_state.last_auth_payload,
+            _v5c_state(session).last_auth_payload,
             bytes.fromhex("1122334455667788"),
         )
-        self.assertEqual(session._v5c_state.compatibility.mode, "auth")
-        self.assertEqual(session._v5c_state.compatibility.last_trigger_opcode, 0xA9)
+        self.assertEqual(_v5c_state(session).compatibility.mode, "auth")
+        self.assertEqual(_v5c_state(session).compatibility.last_trigger_opcode, 0xA9)
 
     def test_v5c_invalid_serial_switches_to_get_sn_mode(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
@@ -1115,16 +1167,16 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA9, bytes.fromhex("0000000000000000"), ProtocolFamily.V5C)
         )
 
-        self.assertEqual(session._v5c_state.device_serial, "0000000000000000")
-        self.assertFalse(session._v5c_state.serial_valid)
-        self.assertEqual(session._v5c_state.compatibility.mode, "get_sn")
-        self.assertEqual(session._v5c_state.compatibility.last_trigger_opcode, 0xA9)
+        self.assertEqual(_v5c_state(session).device_serial, "0000000000000000")
+        self.assertFalse(_v5c_state(session).serial_valid)
+        self.assertEqual(_v5c_state(session).compatibility.mode, "get_sn")
+        self.assertEqual(_v5c_state(session).compatibility.last_trigger_opcode, 0xA9)
 
     def test_v5c_builds_compat_request(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
 
         self.assertIsNone(
-            session.build_v5c_compat_request(
+            session.build_compat_request(
                 ble_name="YTB01",
                 ble_address="48:0F:57:49:1D:3A",
             )
@@ -1134,7 +1186,7 @@ class BleakTransportSessionTests(unittest.TestCase):
             make_packet(0xA9, bytes.fromhex("1122334455667788"), ProtocolFamily.V5C)
         )
 
-        request = session.build_v5c_compat_request(
+        request = session.build_compat_request(
             ble_name="YTB01",
             ble_address="48:0F:57:49:1D:3A",
         )
@@ -1149,7 +1201,7 @@ class BleakTransportSessionTests(unittest.TestCase):
                 "ble_model": "V5C",
             },
         )
-        self.assertTrue(session._v5c_state.compatibility.request_pending)
+        self.assertTrue(_v5c_state(session).compatibility.request_pending)
 
     def test_v5c_a8_builds_to_auth_request_from_full_packet(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
@@ -1157,7 +1209,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         packet = make_packet(0xA8, bytes.fromhex("1122334455667788"), ProtocolFamily.V5C)
         session.handle_notification(packet)
 
-        request = session.build_v5c_compat_request(
+        request = session.build_compat_request(
             ble_name="YTB01",
             ble_address="48:0F:57:49:1D:3A",
         )
@@ -1172,9 +1224,9 @@ class BleakTransportSessionTests(unittest.TestCase):
                 "ble_model": "V5C",
             },
         )
-        self.assertEqual(session._v5c_state.compatibility.last_trigger_opcode, 0xA8)
-        self.assertIsNone(session._v5c_state.serial_valid)
-        self.assertTrue(session._v5c_state.compatibility.request_pending)
+        self.assertEqual(_v5c_state(session).compatibility.last_trigger_opcode, 0xA8)
+        self.assertIsNone(_v5c_state(session).serial_valid)
+        self.assertTrue(_v5c_state(session).compatibility.request_pending)
 
     def test_v5c_compat_result_is_non_blocking_and_warns_on_rejection(self) -> None:
         session, _, sink = self._make_session_with_sink(ProtocolFamily.V5C)
@@ -1182,14 +1234,14 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(
             make_packet(0xA9, bytes.fromhex("1122334455667788"), ProtocolFamily.V5C)
         )
-        session.apply_v5c_compat_result(mode="auth", result_code=-2)
+        session.apply_compat_result(mode="auth", result_code=-2)
 
-        self.assertTrue(session._v5c_state.compatibility.checked)
-        self.assertFalse(session._v5c_state.compatibility.confirmed)
-        self.assertEqual(session._v5c_state.compatibility.last_result_code, -2)
-        self.assertFalse(session._v5c_state.compatibility.request_pending)
+        self.assertTrue(_v5c_state(session).compatibility.checked)
+        self.assertFalse(_v5c_state(session).compatibility.confirmed)
+        self.assertEqual(_v5c_state(session).compatibility.last_result_code, -2)
+        self.assertFalse(_v5c_state(session).compatibility.request_pending)
         self.assertIsNone(
-            session.build_v5c_compat_request(
+            session.build_compat_request(
                 ble_name="YTB01",
                 ble_address="48:0F:57:49:1D:3A",
             )
@@ -1209,7 +1261,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].short, "V5C printer reported an overheat state")
         self.assertIn("status=0x04", warnings[0].detail)
-        self.assertEqual(session._v5c_state.status_name, "overheat")
+        self.assertEqual(_v5c_state(session).status_name, "overheat")
 
     def test_v5c_attention_status_warns_and_uses_grouped_name(self) -> None:
         session, _, sink = self._make_session_with_sink(ProtocolFamily.V5C)
@@ -1222,7 +1274,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].short, "V5C printer reported an attention state")
         self.assertIn("status=0x01", warnings[0].detail)
-        self.assertEqual(session._v5c_state.status_name, "attention")
+        self.assertEqual(_v5c_state(session).status_name, "attention")
 
     def test_v5c_normal_status_clears_previous_error_state(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
@@ -1230,8 +1282,8 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(make_packet(0xA1, bytes([0x04]), ProtocolFamily.V5C))
         session.handle_notification(make_packet(0xA1, bytes([0x00]), ProtocolFamily.V5C))
 
-        self.assertIsNone(session._v5c_state.last_error_status)
-        self.assertEqual(session._v5c_state.status_name, "normal")
+        self.assertIsNone(_v5c_state(session).last_error_status)
+        self.assertEqual(_v5c_state(session).status_name, "normal")
 
     def test_v5c_low_power_status_warns_once_per_status_code(self) -> None:
         session, _, sink = self._make_session_with_sink(ProtocolFamily.V5C)
@@ -1244,16 +1296,16 @@ class BleakTransportSessionTests(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].short, "V5C printer reported a low-power state")
         self.assertIn("status=0x08", warnings[0].detail)
-        self.assertEqual(session._v5c_state.status_name, "low_power")
+        self.assertEqual(_v5c_state(session).status_name, "low_power")
 
     def test_v5c_charging_status_sets_charging_flag(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
 
         session.handle_notification(make_packet(0xA1, bytes([0x10]), ProtocolFamily.V5C))
 
-        self.assertEqual(session._v5c_state.status_name, "charging")
-        self.assertTrue(session._v5c_state.is_charging)
-        self.assertIsNone(session._v5c_state.last_error_status)
+        self.assertEqual(_v5c_state(session).status_name, "charging")
+        self.assertTrue(_v5c_state(session).is_charging)
+        self.assertIsNone(_v5c_state(session).last_error_status)
 
     def test_v5c_return_to_normal_marks_print_complete_after_printing(self) -> None:
         session, _ = self._make_session(ProtocolFamily.V5C)
@@ -1261,9 +1313,9 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.handle_notification(make_packet(0xA1, bytes([0x80]), ProtocolFamily.V5C))
         session.handle_notification(make_packet(0xA1, bytes([0x00]), ProtocolFamily.V5C))
 
-        self.assertEqual(session._v5c_state.status_name, "normal")
-        self.assertTrue(session._v5c_state.print_complete_seen)
-        self.assertFalse(session._v5c_state.is_charging)
+        self.assertEqual(_v5c_state(session).status_name, "normal")
+        self.assertTrue(_v5c_state(session).print_complete_seen)
+        self.assertFalse(_v5c_state(session).is_charging)
 
     def test_v5c_query_status_ack_does_not_mark_print_complete(self) -> None:
         session, client = self._make_session(ProtocolFamily.V5C)
@@ -1272,8 +1324,7 @@ class BleakTransportSessionTests(unittest.TestCase):
         session.bindings.write_selection_strategy = "preferred_uuid"
         session.bindings.write_response_preference = False
         session.bindings.write_char_uuid = write_char.uuid
-        session._v5c_state.status_code = 0x80
-        session._v5c_state.status_name = "printing"
+        session.debug_update(status_code=0x80, status_name="printing")
 
         async def run() -> None:
             await session.send(
@@ -1286,8 +1337,8 @@ class BleakTransportSessionTests(unittest.TestCase):
         asyncio.run(run())
         session.handle_notification(make_packet(0xA1, bytes([0x00]), ProtocolFamily.V5C))
 
-        self.assertFalse(session._v5c_state.query_status_in_flight)
-        self.assertFalse(session._v5c_state.print_complete_seen)
+        self.assertFalse(_v5c_state(session).query_status_in_flight)
+        self.assertFalse(_v5c_state(session).print_complete_seen)
 
 
 if __name__ == "__main__":

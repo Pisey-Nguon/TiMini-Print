@@ -1434,10 +1434,8 @@
     ],
     "profile_key": "mx06",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx06",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx06",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "profile_mx08",
@@ -1446,10 +1444,8 @@
     ],
     "profile_key": "mx08",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "d2",
-      "density_profile_key": "mx08"
-    }
+    "runtime_variant": "d2",
+    "runtime_density_profile_key": "mx08"
   },
   {
     "rule_key": "profile_mx09",
@@ -1458,10 +1454,8 @@
     ],
     "profile_key": "mx09",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "d2",
-      "density_profile_key": "mx09"
-    }
+    "runtime_variant": "d2",
+    "runtime_density_profile_key": "mx09"
   },
   {
     "rule_key": "profile_mx10",
@@ -1470,10 +1464,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "profile_mx11",
@@ -1482,10 +1474,8 @@
     ],
     "profile_key": "mx11",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx11"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx11"
   },
   {
     "rule_key": "profile_p100",
@@ -2143,10 +2133,8 @@
     ],
     "profile_key": "mx06",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx06",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx06",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_mx07_v5g",
@@ -2163,10 +2151,8 @@
     ],
     "profile_key": "mx08",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "d2",
-      "density_profile_key": "mx08"
-    }
+    "runtime_variant": "d2",
+    "runtime_density_profile_key": "mx08"
   },
   {
     "rule_key": "rule_mx09_v5g",
@@ -2175,10 +2161,8 @@
     ],
     "profile_key": "mx09",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "d2",
-      "density_profile_key": "mx09"
-    }
+    "runtime_variant": "d2",
+    "runtime_density_profile_key": "mx09"
   },
   {
     "rule_key": "rule_mx10_v5g",
@@ -2187,10 +2171,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_mx11_v5g",
@@ -2199,10 +2181,8 @@
     ],
     "profile_key": "mx11",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx11"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx11"
   },
   {
     "rule_key": "rule_mx12_v5g",
@@ -2211,10 +2191,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx11"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx11"
   },
   {
     "rule_key": "rule_mx13_v5g",
@@ -2223,10 +2201,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "xopoppy"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "xopoppy"
   },
   {
     "rule_key": "rule_mxtp_100_v5g",
@@ -2251,10 +2227,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_pd01_v5g",
@@ -2263,10 +2237,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "pd01",
-      "density_profile_key": "mx11"
-    }
+    "runtime_variant": "pd01",
+    "runtime_density_profile_key": "mx11"
   },
   {
     "rule_key": "rule_miniprinter_v5g",
@@ -2307,10 +2279,8 @@
     ],
     "profile_key": "xopoppy",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "xopoppy"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "xopoppy"
   },
   {
     "rule_key": "rule_bq01_v5g",
@@ -2431,10 +2401,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_mxw010_v5g",
@@ -2443,9 +2411,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": null
   },
   {
     "rule_key": "rule_ewttoet_n3689_v5g",
@@ -2470,10 +2437,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_gv_ma211_v5g",
@@ -2482,10 +2447,8 @@
     ],
     "profile_key": "v5g_small_203",
     "protocol_family": "v5g",
-    "v5g_dynamic_helper": {
-      "helper_kind": "mx10",
-      "density_profile_key": "mx06"
-    }
+    "runtime_variant": "mx10",
+    "runtime_density_profile_key": "mx06"
   },
   {
     "rule_key": "rule_bq03_v5g",
