@@ -3,15 +3,26 @@ from __future__ import annotations
 from typing import List, Optional
 
 from .base import _ClassicBluetoothAdapter
+<<<<<<< HEAD
+=======
+from ....protocol.family import ProtocolFamily
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 from ..constants import RFCOMM_CHANNELS
 from ..types import DeviceInfo, SocketLike
 from .windows_win32 import _Win32ClassicBackend
 from .windows_winrt import _WinRtClassicBackend
+<<<<<<< HEAD
 
 
 class _WindowsClassicAdapter(_ClassicBluetoothAdapter):
     single_channel = True
 
+=======
+from .... import reporting
+
+
+class _WindowsClassicAdapter(_ClassicBluetoothAdapter):
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
     def __init__(self) -> None:
         self._win32 = _Win32ClassicBackend()
         self._winrt = _WinRtClassicBackend()
@@ -27,11 +38,25 @@ class _WindowsClassicAdapter(_ClassicBluetoothAdapter):
             pass
         return devices
 
+<<<<<<< HEAD
     def create_socket(self, pairing_hint: Optional[bool] = None) -> SocketLike:
         return self._winrt.create_socket()
 
     def resolve_rfcomm_channel(self, address: str) -> Optional[int]:
         return RFCOMM_CHANNELS[0]
+=======
+    def create_socket(
+        self,
+        pairing_hint: Optional[bool] = None,
+        protocol_family: Optional[ProtocolFamily] = None,
+        reporter: reporting.Reporter = reporting.DUMMY_REPORTER,
+    ) -> SocketLike:
+        _ = protocol_family
+        return self._winrt.create_socket()
+
+    def resolve_rfcomm_channels(self, address: str) -> List[int]:
+        return [RFCOMM_CHANNELS[0]]
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def ensure_paired(self, address: str, pairing_hint: Optional[bool] = None) -> None:
         winrt_error = None

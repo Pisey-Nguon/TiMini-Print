@@ -53,9 +53,15 @@ class LinuxCommandTools:
             return DeviceInfo.dedupe(devices), derived_paired
         return DeviceInfo.dedupe(devices), None
 
+<<<<<<< HEAD
     def resolve_rfcomm_channel(self, address: str) -> Optional[int]:
         if not shutil.which("sdptool"):
             return None
+=======
+    def resolve_rfcomm_channels(self, address: str) -> List[int]:
+        if not shutil.which("sdptool"):
+            return []
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         try:
             result = subprocess.run(
                 ["sdptool", "browse", address],
@@ -65,7 +71,11 @@ class LinuxCommandTools:
                 text=True,
             )
         except Exception:
+<<<<<<< HEAD
             return None
+=======
+            return []
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         output = result.stdout or ""
         channel = None
         seen_serial = False
@@ -82,13 +92,23 @@ class LinuxCommandTools:
                 if value is None:
                     continue
                 if seen_serial:
+<<<<<<< HEAD
                     return value
+=======
+                    return [value]
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                 if channel is None:
                     channel = value
                 seen_serial = False
             elif not line:
                 seen_serial = False
+<<<<<<< HEAD
         return channel
+=======
+        if channel is None:
+            return []
+        return [channel]
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def ensure_paired(self, address: str) -> None:
         if not self._has_bluetoothctl():

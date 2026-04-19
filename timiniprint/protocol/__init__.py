@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from .commands import (
     advance_paper_cmd,
     blackening_cmd,
@@ -34,4 +35,16 @@ __all__ = [
     "Raster",
     "retract_paper_cmd",
     "rle_encode_line",
+=======
+from .family import ProtocolFamily
+from .job import PrinterProtocol, ProtocolJob
+from .types import ImageEncoding, ImagePipelineConfig
+
+__all__ = [
+    "ProtocolFamily",
+    "ProtocolJob",
+    "PrinterProtocol",
+    "ImageEncoding",
+    "ImagePipelineConfig",
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 ]

@@ -17,7 +17,10 @@ STATUS_PRINT_SENT = "print_sent"
 STATUS_PAPER_FEED = "paper_feed"
 STATUS_PAPER_RETRACT = "paper_retract"
 
+<<<<<<< HEAD
 WARNING_MODEL_ALIAS = "model_alias"
+=======
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 WARNING_DEPENDENCY = "dependency_missing"
 WARNING_SCAN_CLASSIC_FAILED = "scan_classic_failed"
 WARNING_SCAN_BLE_FAILED = "scan_ble_failed"
@@ -29,7 +32,11 @@ ERROR_PRINT_FAILED = "print_failed"
 ERROR_PAPER_MOTION_FAILED = "paper_motion_failed"
 ERROR_NO_DEVICE = "no_device"
 ERROR_NO_FILE = "no_file"
+<<<<<<< HEAD
 ERROR_MODEL_NOT_DETECTED = "model_not_detected"
+=======
+ERROR_PROFILE_NOT_DETECTED = "profile_not_detected"
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
 
 class MessageCatalog:
@@ -48,7 +55,10 @@ class MessageCatalog:
         STATUS_PAPER_RETRACT: "Retracting paper...",
     }
     WARNING = {
+<<<<<<< HEAD
         WARNING_MODEL_ALIAS: "Model detected via alias",
+=======
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         WARNING_DEPENDENCY: "Missing dependency",
         WARNING_SCAN_CLASSIC_FAILED: "Classic scan failed",
         WARNING_SCAN_BLE_FAILED: "BLE scan failed",
@@ -61,7 +71,11 @@ class MessageCatalog:
         ERROR_PAPER_MOTION_FAILED: "Paper motion failed",
         ERROR_NO_DEVICE: "Select a Bluetooth device",
         ERROR_NO_FILE: "Select a file to print",
+<<<<<<< HEAD
         ERROR_MODEL_NOT_DETECTED: "Printer model not detected",
+=======
+        ERROR_PROFILE_NOT_DETECTED: "Printer profile not detected",
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
     }
 
     @classmethod
@@ -72,6 +86,11 @@ class MessageCatalog:
             mapping = cls.STATUS
         elif level == "warning":
             mapping = cls.WARNING
+<<<<<<< HEAD
+=======
+        elif level == "debug":
+            mapping = {}
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         else:
             mapping = cls.ERROR
         template = mapping.get(key)
@@ -188,6 +207,20 @@ class Reporter:
     ) -> None:
         self._emit("error", key, short, detail, exc, ctx)
 
+<<<<<<< HEAD
+=======
+    def debug(
+        self,
+        key: Optional[str] = None,
+        *,
+        short: Optional[str] = None,
+        detail: Optional[str] = None,
+        exc: Optional[Exception] = None,
+        **ctx: Any,
+    ) -> None:
+        self._emit("debug", key, short, detail, exc, ctx)
+
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
     def _emit(
         self,
         level: str,
@@ -215,3 +248,10 @@ class Reporter:
         )
         for sink in self._sinks:
             sink.emit(message)
+<<<<<<< HEAD
+=======
+
+
+# Shared no-op reporter for tests and non-interactive call paths.
+DUMMY_REPORTER = Reporter(())
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f

@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
+<<<<<<< HEAD
+=======
+from ...protocol.family import ProtocolFamily
+
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 SocketLike = Any
 
 
@@ -18,6 +23,10 @@ class DeviceInfo:
     address: str
     paired: Optional[bool] = None
     transport: DeviceTransport = DeviceTransport.CLASSIC
+<<<<<<< HEAD
+=======
+    protocol_family: Optional[ProtocolFamily] = None
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def merge(self, other: "DeviceInfo") -> "DeviceInfo":
         if self.address != other.address or self.transport != other.transport:
@@ -32,7 +41,18 @@ class DeviceInfo:
             paired = False
         else:
             paired = None
+<<<<<<< HEAD
         return DeviceInfo(name=name, address=self.address, paired=paired, transport=self.transport)
+=======
+        protocol_family = self.protocol_family or other.protocol_family
+        return DeviceInfo(
+            name=name,
+            address=self.address,
+            paired=paired,
+            transport=self.transport,
+            protocol_family=protocol_family,
+        )
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     @staticmethod
     def dedupe(devices: List["DeviceInfo"]) -> List["DeviceInfo"]:

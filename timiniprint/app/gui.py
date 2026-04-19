@@ -13,9 +13,16 @@ from tkinter import filedialog, ttk
 
 from .diagnostics import emit_startup_warnings
 from .. import reporting
+<<<<<<< HEAD
 from ..devices import DeviceResolver, PrinterModelRegistry
 from ..rendering.converters.text import TextConverter
 from ..transport.bluetooth import DeviceInfo, SppBackend
+=======
+from ..devices import PrinterCatalog
+from ..protocol import PrinterProtocol
+from ..rendering.converters.text import TextConverter
+from ..transport.bluetooth import BleakBluetoothConnector, BluetoothDiscovery
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 from ..transport.bluetooth.types import DeviceTransport
 
 PAPER_MOTION_INTERVAL_MS = 1000
@@ -30,6 +37,16 @@ class BleLoop:
     def _run(self) -> None:
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
+<<<<<<< HEAD
+=======
+        pending = [task for task in asyncio.all_tasks(self._loop) if not task.done()]
+        for task in pending:
+            task.cancel()
+        if pending:
+            self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+        self._loop.run_until_complete(self._loop.shutdown_asyncgens())
+        self._loop.close()
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def submit(self, coro, callback=None):
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
@@ -37,6 +54,15 @@ class BleLoop:
             future.add_done_callback(callback)
         return future
 
+<<<<<<< HEAD
+=======
+    def shutdown(self, timeout: float = 2.0) -> None:
+        if self._loop.is_closed():
+            return
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._thread.join(timeout)
+
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
 class TiMiniPrintGUI(tk.Tk):
     def __init__(self) -> None:
@@ -45,8 +71,13 @@ class TiMiniPrintGUI(tk.Tk):
         self.title("TiMini Print")
         self.resizable(True, True)
 
+<<<<<<< HEAD
         self.registry = PrinterModelRegistry.load()
         self.resolver = DeviceResolver(self.registry)
+=======
+        self.catalog = PrinterCatalog.load()
+        self.discovery = BluetoothDiscovery(self.catalog)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self.ble_loop = BleLoop()
         self.queue: queue.Queue = queue.Queue()
         self.reporter = reporting.Reporter(
@@ -55,15 +86,27 @@ class TiMiniPrintGUI(tk.Tk):
                 reporting.StderrSink(),
             ]
         )
+<<<<<<< HEAD
         self.backend = SppBackend(reporter=self.reporter)
+=======
+        self.connector = BleakBluetoothConnector(reporter=self.reporter)
+        self.connection = None
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         self.devices = []
         self.device_map = {}
 
         self.device_var = tk.StringVar()
+<<<<<<< HEAD
         self.model_var = tk.StringVar(value="")
         self.file_var = tk.StringVar()
         self.text_mode_var = tk.BooleanVar(value=False)
+=======
+        self.profile_var = tk.StringVar(value="")
+        self.file_var = tk.StringVar()
+        self.text_mode_var = tk.BooleanVar(value=False)
+        self.rotate_90_var = tk.BooleanVar(value=False)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self.darkness_var = tk.IntVar(value=3)
         self.text_font_var = tk.StringVar()
         self.text_columns_var = tk.IntVar(value=35)
@@ -75,13 +118,23 @@ class TiMiniPrintGUI(tk.Tk):
         self.status_var = tk.StringVar(
             value=reporting.MessageCatalog.resolve("status", reporting.STATUS_IDLE) or "Idle"
         )
+<<<<<<< HEAD
         self.connected_model = None
+=======
+        self.connected_device = None
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self._connecting = False
         self._paper_motion_action = None
         self._paper_motion_job = None
         self._paper_motion_busy = False
         self._layout_ready = False
+<<<<<<< HEAD
         self.file_var.trace_add("write", self._on_file_path_change)
+=======
+        self._closing = False
+        self.file_var.trace_add("write", self._on_file_path_change)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         self._build_ui()
         self.update_idletasks()
@@ -105,9 +158,15 @@ class TiMiniPrintGUI(tk.Tk):
 
         self.refresh_button = ttk.Button(device_frame, text="Refresh", command=self.scan)
         self.refresh_button.grid(row=0, column=2, **padding)
+<<<<<<< HEAD
         ttk.Label(device_frame, text="Model:").grid(row=1, column=0, sticky="w", **padding)
         self.model_label = ttk.Label(device_frame, textvariable=self.model_var, width=48)
         self.model_label.grid(row=1, column=1, sticky="ew", **padding)
+=======
+        ttk.Label(device_frame, text="Profile:").grid(row=1, column=0, sticky="w", **padding)
+        self.profile_label = ttk.Label(device_frame, textvariable=self.profile_var, width=48)
+        self.profile_label.grid(row=1, column=1, sticky="ew", **padding)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         self.connection_button = ttk.Button(device_frame, text="Connect", command=self.toggle_connection)
         self.connection_button.grid(row=1, column=2, sticky="e", **padding)
@@ -132,6 +191,15 @@ class TiMiniPrintGUI(tk.Tk):
             variable=self.text_mode_var,
         )
         self.text_mode_check.pack(side="left", padx=(0, 12))
+<<<<<<< HEAD
+=======
+        self.rotate_90_check = ttk.Checkbutton(
+            checks_frame,
+            text="Rotate 90 deg",
+            variable=self.rotate_90_var,
+        )
+        self.rotate_90_check.pack(side="left", padx=(0, 12))
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self.trim_margins_check = ttk.Checkbutton(
             checks_frame,
             text="Trim side margins",
@@ -246,14 +314,21 @@ class TiMiniPrintGUI(tk.Tk):
                 if values:
                     if current in self.device_map:
                         self.device_var.set(current)
+<<<<<<< HEAD
                     elif not self.connected_model:
+=======
+                    elif not self.connected_device:
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                         self.device_var.set(values[0])
                 else:
                     self.device_var.set("")
             elif action == "connected":
                 device = payload
+<<<<<<< HEAD
                 if device:
                     device = self._mark_device_paired(device)
+=======
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                 self._set_connected_state(True, device)
             elif action == "disconnected":
                 self._set_connected_state(False)
@@ -264,6 +339,7 @@ class TiMiniPrintGUI(tk.Tk):
         self.after(100, self._process_queue)
 
     def _device_label(self, device) -> str:
+<<<<<<< HEAD
         name = device.name or ""
         transport = f" [{device.transport.value}]"
         status = " [unpaired]" if device.paired is False else ""
@@ -301,6 +377,15 @@ class TiMiniPrintGUI(tk.Tk):
         self.device_combo["values"] = values
         self.device_var.set(self._device_label(updated))
         return updated
+=======
+        name = device.display_name or ""
+        transport = f" {device.transport_badge}"
+        experimental = device.experimental_badge
+        status = " [unpaired]" if device.paired is False else ""
+        if name:
+            return f"{name}{experimental} ({device.address}){transport}{status}"
+        return f"{device.address}{experimental}{transport}{status}"
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def _queue_status(self, key: str, **ctx) -> None:
         self.reporter.status(key, **ctx)
@@ -316,19 +401,33 @@ class TiMiniPrintGUI(tk.Tk):
 
         def done(fut):
             try:
+<<<<<<< HEAD
                 devices, failures = fut.result()
                 filtered = self.resolver.filter_printer_devices(devices)
                 self.queue.put(("devices", filtered))
                 for failure in failures:
+=======
+                result = fut.result()
+                self.queue.put(("devices", result.devices))
+                for failure in result.failures:
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                     if failure.transport == DeviceTransport.BLE:
                         self._queue_warning(reporting.WARNING_SCAN_BLE_FAILED, detail=str(failure.error))
                     else:
                         self._queue_warning(reporting.WARNING_SCAN_CLASSIC_FAILED, detail=str(failure.error))
+<<<<<<< HEAD
                 self._queue_status(reporting.STATUS_SCAN_DONE, count=len(filtered))
             except Exception as exc:
                 self._queue_error(reporting.ERROR_SCAN_FAILED, detail=str(exc), exc=exc)
 
         self.ble_loop.submit(self.backend.scan_with_failures(), callback=done)
+=======
+                self._queue_status(reporting.STATUS_SCAN_DONE, count=len(result.devices))
+            except Exception as exc:
+                self._queue_error(reporting.ERROR_SCAN_FAILED, detail=str(exc), exc=exc)
+
+        self.ble_loop.submit(self.discovery.scan_report(), callback=done)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def connect(self) -> None:
         label = self.device_var.get()
@@ -341,38 +440,65 @@ class TiMiniPrintGUI(tk.Tk):
 
         def done(fut):
             try:
+<<<<<<< HEAD
                 fut.result()
+=======
+                self.connection = fut.result()
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                 self._queue_status(reporting.STATUS_CONNECT_DONE)
                 self.queue.put(("connected", device))
             except Exception as exc:
                 self._queue_error(reporting.ERROR_CONNECT_FAILED, detail=str(exc), exc=exc)
                 self.queue.put(("connecting", False))
 
+<<<<<<< HEAD
         self.ble_loop.submit(
             self.backend.connect(device, pairing_hint=device.paired is False),
             callback=done,
         )
+=======
+        self.ble_loop.submit(self.connector.connect(device), callback=done)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def toggle_connection(self) -> None:
         if self._connecting:
             return
+<<<<<<< HEAD
         if self.connected_model:
+=======
+        if self.connected_device:
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             self.disconnect()
         else:
             self.connect()
 
     def disconnect(self) -> None:
         self._queue_status(reporting.STATUS_DISCONNECT_START)
+<<<<<<< HEAD
+=======
+        connection = self.connection
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         def done(fut):
             try:
                 fut.result()
+<<<<<<< HEAD
+=======
+                self.connection = None
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
                 self._queue_status(reporting.STATUS_DISCONNECT_DONE)
                 self.queue.put(("disconnected", None))
             except Exception as exc:
                 self._queue_error(reporting.ERROR_DISCONNECT_FAILED, detail=str(exc), exc=exc)
 
+<<<<<<< HEAD
         self.ble_loop.submit(self.backend.disconnect(), callback=done)
+=======
+        if connection is None:
+            self.queue.put(("disconnected", None))
+            return
+        self.ble_loop.submit(connection.disconnect(), callback=done)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def browse(self) -> None:
         path = filedialog.askopenfilename(
@@ -447,9 +573,15 @@ class TiMiniPrintGUI(tk.Tk):
         if not path:
             self._queue_error(reporting.ERROR_NO_FILE)
             return
+<<<<<<< HEAD
         model = self.connected_model
         if not model:
             self._queue_error(reporting.ERROR_MODEL_NOT_DETECTED)
+=======
+        connected_device = self.connected_device
+        if not connected_device or self.connection is None:
+            self._queue_error(reporting.ERROR_PROFILE_NOT_DETECTED)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             return
         ext = os.path.splitext(path)[1].lower()
         pdf_pages = None
@@ -459,6 +591,10 @@ class TiMiniPrintGUI(tk.Tk):
             pdf_page_gap_mm = int(self.pdf_gap_var.get())
         settings = PrintSettings(
             text_mode=self.text_mode_var.get(),
+<<<<<<< HEAD
+=======
+            rotate_90_clockwise=self.rotate_90_var.get(),
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             blackening=self.darkness_var.get(),
             text_font=self.text_font_var.get().strip() or None,
             text_columns=self.text_columns_var.get(),
@@ -468,7 +604,11 @@ class TiMiniPrintGUI(tk.Tk):
             pdf_pages=pdf_pages,
             pdf_page_gap_mm=pdf_page_gap_mm,
         )
+<<<<<<< HEAD
         builder = PrintJobBuilder(model, settings)
+=======
+        builder = PrintJobBuilder(connected_device, settings=settings)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         def done(fut):
             try:
@@ -478,11 +618,17 @@ class TiMiniPrintGUI(tk.Tk):
                 self._queue_error(reporting.ERROR_PRINT_FAILED, detail=str(exc), exc=exc)
 
         async def run() -> None:
+<<<<<<< HEAD
             if not self.backend.is_connected():
                 await self.backend.connect(device, pairing_hint=device.paired is False)
             self._queue_status(reporting.STATUS_PRINTING)
             data = builder.build_from_file(path)
             await self.backend.write(data, model.img_mtu or 180, model.interval_ms or 4)
+=======
+            self._queue_status(reporting.STATUS_PRINTING)
+            job = builder.build_from_file(path)
+            await self.connection.send(job)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         self._queue_status(reporting.STATUS_PRINTING)
         self.ble_loop.submit(run(), callback=done)
@@ -515,6 +661,11 @@ class TiMiniPrintGUI(tk.Tk):
         if self._paper_motion_job is not None:
             self.after_cancel(self._paper_motion_job)
             self._paper_motion_job = None
+<<<<<<< HEAD
+=======
+        if not self._paper_motion_busy:
+            self._restore_status_after_paper_motion()
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
     def _send_paper_motion(self, action: str) -> None:
         if self._paper_motion_busy:
@@ -525,6 +676,7 @@ class TiMiniPrintGUI(tk.Tk):
             self._queue_error(reporting.ERROR_NO_DEVICE)
             self._stop_paper_motion()
             return
+<<<<<<< HEAD
         model = self.connected_model
         if not model:
             self._queue_error(reporting.ERROR_MODEL_NOT_DETECTED)
@@ -542,22 +694,43 @@ class TiMiniPrintGUI(tk.Tk):
         async def run() -> None:
             if not self.backend.is_connected():
                 await self.backend.connect(device, pairing_hint=device.paired is False)
+=======
+        connected_device = self.connected_device
+        if not connected_device or self.connection is None:
+            self._queue_error(reporting.ERROR_PROFILE_NOT_DETECTED)
+            self._stop_paper_motion()
+            return
+        job = PrinterProtocol(connected_device).build_paper_motion(action)
+        self._paper_motion_busy = True
+
+        async def run() -> None:
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             if action == "feed":
                 self._queue_status(reporting.STATUS_PAPER_FEED)
             else:
                 self._queue_status(reporting.STATUS_PAPER_RETRACT)
+<<<<<<< HEAD
             await self.backend.write(data, model.img_mtu or 180, model.interval_ms or 4)
+=======
+            await self.connection.send(job)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
 
         def done(fut):
             self._paper_motion_busy = False
             try:
                 fut.result()
+<<<<<<< HEAD
+=======
+                if not self._paper_motion_action:
+                    self._restore_status_after_paper_motion()
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             except Exception as exc:
                 self._queue_error(reporting.ERROR_PAPER_MOTION_FAILED, detail=str(exc), exc=exc)
                 self._stop_paper_motion()
 
         self.ble_loop.submit(run(), callback=done)
 
+<<<<<<< HEAD
     def _set_connected_state(self, connected: bool, device=None) -> None:
         self._connecting = False
         self.connected_model = None
@@ -576,11 +749,29 @@ class TiMiniPrintGUI(tk.Tk):
                     reporting.WARNING_MODEL_ALIAS,
                     detail="Model detected via alias; using standard settings. Please help us tune better parameters.",
                 )
+=======
+    def _restore_status_after_paper_motion(self) -> None:
+        if self.__dict__.get("connected_device") is not None:
+            self._queue_status(reporting.STATUS_CONNECT_DONE)
+            return
+        self._queue_status(reporting.STATUS_IDLE)
+
+    def _set_connected_state(self, connected: bool, device=None) -> None:
+        self._connecting = False
+        self.connected_device = None
+        if connected and device:
+            self.connected_device = device
+            self.profile_var.set(device.profile_key.upper())
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             self._set_device_combo_state(False)
             self._set_widget_state(self.refresh_button, False)
             self._set_widget_state(self.file_entry, True)
             self._set_widget_state(self.browse_button, True)
             self._set_widget_state(self.text_mode_check, True)
+<<<<<<< HEAD
+=======
+            self._set_widget_state(self.rotate_90_check, True)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             self._set_widget_state(self.darkness_scale, True)
             self._set_widget_state(self.darkness_value_label, True)
             self._set_widget_state(self.text_font_entry, True)
@@ -598,15 +789,26 @@ class TiMiniPrintGUI(tk.Tk):
             self._set_widget_state(self.retract_button, True)
             self._set_widget_state(self.print_button, True)
             self._set_connection_button("Disconnect", True)
+<<<<<<< HEAD
             self._configure_text_columns(match.model)
             return
 
         self.model_var.set("")
+=======
+            self._configure_text_columns(device.profile)
+            return
+
+        self.profile_var.set("")
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self._set_device_combo_state(True)
         self._set_widget_state(self.refresh_button, True)
         self._set_widget_state(self.file_entry, False)
         self._set_widget_state(self.browse_button, False)
         self._set_widget_state(self.text_mode_check, False)
+<<<<<<< HEAD
+=======
+        self._set_widget_state(self.rotate_90_check, False)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         self._set_widget_state(self.darkness_scale, False)
         self._set_widget_state(self.darkness_value_label, False)
         self._set_widget_state(self.text_font_entry, False)
@@ -626,8 +828,13 @@ class TiMiniPrintGUI(tk.Tk):
         self._set_connection_button("Connect", True)
         self._stop_paper_motion()
 
+<<<<<<< HEAD
     def _configure_text_columns(self, model) -> None:
         width = self._normalized_width(model.width)
+=======
+    def _configure_text_columns(self, profile) -> None:
+        width = self._normalized_width(profile.width)
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
         default_columns = TextConverter.default_columns_for_width(width)
         min_columns = max(5, int(round(default_columns * 0.5)))
         max_columns = max(min_columns + 1, int(round(default_columns * 1.5)))
@@ -647,7 +854,11 @@ class TiMiniPrintGUI(tk.Tk):
             self._set_widget_state(self.refresh_button, False)
             self._set_connection_button("Connecting...", False)
             return
+<<<<<<< HEAD
         if self.connected_model:
+=======
+        if self.connected_device:
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
             return
         self._set_device_combo_state(True)
         self._set_widget_state(self.refresh_button, True)
@@ -671,3 +882,27 @@ class TiMiniPrintGUI(tk.Tk):
     def _set_device_combo_state(self, enabled: bool) -> None:
         state = "readonly" if enabled else "disabled"
         self.device_combo.configure(state=state)
+<<<<<<< HEAD
+=======
+
+    def _on_close(self) -> None:
+        if self._closing:
+            return
+        self._closing = True
+        self._stop_paper_motion()
+        try:
+            if self.connection is not None:
+                future = self.ble_loop.submit(self.connection.disconnect())
+                future.result(timeout=2.0)
+        except Exception:
+            pass
+        finally:
+            self.ble_loop.shutdown()
+            self.destroy()
+
+
+def main() -> int:
+    app = TiMiniPrintGUI()
+    app.mainloop()
+    return 0
+>>>>>>> 43c232936fb59e4ddab986334ca73b1fb5bab45f
